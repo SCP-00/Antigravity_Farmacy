@@ -1,0 +1,1 @@
+export { autenticarCliente } from './index'

@@ -1,0 +1,84 @@
+version: '3.9'
+
+# ══════════════════════════════════════════════════════════
+#  FARMACY — Docker Compose PRODUCCIÓN
+#  Levanta toda la aplicación: backend, frontend, BD, Redis
+#
+#  Uso:
+#    docker-compose up -d --build
+#    docker-compose down
+#    docker-compose logs -f backend
+# ══════════════════════════════════════════════════════════
+
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: farmacy_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-farmacy_db}
+      POSTGRES_USER: ${POSTGRES_USER:-farmacy_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: America/Bogota
+    volumes:
+      - farmacy_pg_data:/var/lib/postgresql/data
+    networks:
+      - farmacy_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farmacy_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: farmacy_redis
+    restart: always
+    volumes:
+      - farmacy_redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    networks:
+      - farmacy_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: farmacy_backend
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - farmacy_network
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_APP_NAME: ${VITE_APP_NAME}
+    container_name: farmacy_frontend
+    restart: always
+    networks:
+      - farmacy_network
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  farmacy_pg_data:
+  farmacy_redis_data:
+
+networks:
+  farmacy_network:
+    name: farmacy_prod_network

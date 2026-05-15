@@ -1,0 +1,263 @@
+// ══════════════════════════════════════════════════════════
+//  services/index.ts — Todos los servicios de la API
+//  Cada función representa una llamada HTTP
+// ══════════════════════════════════════════════════════════
+
+import { api, apiCliente, apiPublica } from '@/config/api'
+import { filtrarCatalogo, mockCategorias, mockSedes } from '@/data/catalogo'
+
+// ── AUTH EMPLEADOS ────────────────────────────────────────
+export const authService = {
+  login: (email: string, password: string) =>
+    api.post('/auth/login', { email, password }).then(r => r.data.data),
+
+  me: () =>
+    api.get('/auth/me').then(r => r.data.data),
+
+  refresh: (refreshToken: string) =>
+    api.post('/auth/refresh', { refreshToken }).then(r => r.data.data),
+
+  logout: () =>
+    api.post('/auth/logout').then(r => r.data),
+}
+
+// ── AUTH CLIENTES ─────────────────────────────────────────
+export const authClienteService = {
+  registro: (data: {
+    nombre: string; apellido: string; email: string
+    password: string; autorizacionDatos: boolean
+  }) => apiPublica.post('/clientes/auth/registro', data).then(r => r.data),
+
+  login: (email: string, password: string) =>
+    apiPublica.post('/clientes/auth/login', { email, password }).then(r => r.data.data),
+
+  me: () =>
+    apiCliente.get('/clientes/auth/me').then(r => r.data.data),
+  actualizarMe: (data: Record<string, unknown>) =>
+    apiCliente.patch('/clientes/auth/me', data).then(r => r.data.data),
+
+  verificarEmail: (token: string) =>
+    apiPublica.post('/clientes/auth/verificar-email', { token }).then(r => r.data),
+
+  recuperarPassword: (email: string) =>
+    apiPublica.post('/clientes/auth/recuperar-password', { email }).then(r => r.data),
+
+  resetPassword: (token: string, password: string) =>
+    apiPublica.post('/clientes/auth/reset-password', { token, password }).then(r => r.data),
+
+  googleUrl:   () => `${import.meta.env.VITE_API_URL}/clientes/auth/google`,
+  facebookUrl: () => `${import.meta.env.VITE_API_URL}/clientes/auth/facebook`,
+}
+
+// ── PRODUCTOS ─────────────────────────────────────────────
+export const productosService = {
+  // Público — tienda web
+  buscar: async (params: {
+    q?: string; categoria?: string; marca?: string; rx?: boolean
+    precioMin?: number; precioMax?: number; envio?: boolean; tienda?: boolean
+    ordenar?: string; pagina?: number; limite?: number
+  }) => {
+    try {
+      const response = await apiPublica.get('/productos/buscar', { params })
+      return response.data
+    } catch {
+      return filtrarCatalogo(params)
+    }
+  },
+
+  // Empleados — panel admin
+  listar: (params?: Record<string, unknown>) =>
+    api.get('/productos', { params }).then(r => r.data).catch(() => filtrarCatalogo()),
+
+  obtener: (id: string) =>
+    apiPublica.get(`/productos/${id}`).then(r => r.data.data).catch(() => filtrarCatalogo().data.find((producto) => producto.id === id)),
+
+  crear: (data: Record<string, unknown>) =>
+    api.post('/productos', data).then(r => r.data.data),
+
+  actualizar: (id: string, data: Record<string, unknown>) =>
+    api.patch(`/productos/${id}`, data).then(r => r.data.data),
+
+  desactivar: (id: string) =>
+    api.delete(`/productos/${id}`).then(r => r.data),
+}
+
+// ── CATEGORÍAS ────────────────────────────────────────────
+export const categoriasService = {
+  listar: async () => {
+    try {
+      const response = await apiPublica.get('/categorias')
+      return response.data.data
+    } catch {
+      return mockCategorias
+    }
+  },
+}
+
+// ── INVENTARIO / LOTES ────────────────────────────────────
+export const inventarioService = {
+  listarLotes: (params?: Record<string, unknown>) =>
+    api.get('/lotes', { params }).then(r => r.data),
+
+  crearLote: (data: Record<string, unknown>) =>
+    api.post('/lotes', data).then(r => r.data.data),
+
+  ajustarStock: (loteId: string, data: { tipo: string; cantidad: number; motivo: string; descripcion?: string }) =>
+    api.post(`/inventario/ajuste`, { loteId, ...data }).then(r => r.data),
+
+  movimientos: (params?: Record<string, unknown>) =>
+    api.get('/inventario/movimientos', { params }).then(r => r.data),
+
+  alertas: (query = '') =>
+    api.get(`/inventario/alertas${query}`).then(r => r.data.data),
+}
+
+// ── PROVEEDORES ───────────────────────────────────────────
+export const proveedoresService = {
+  listar: (params?: Record<string, unknown>) =>
+    api.get('/proveedores', { params }).then(r => r.data),
+
+  crear: (data: Record<string, unknown>) =>
+    api.post('/proveedores', data).then(r => r.data.data),
+
+  actualizar: (id: string, data: Record<string, unknown>) =>
+    api.patch(`/proveedores/${id}`, data).then(r => r.data.data),
+}
+
+// ── COMPRAS ───────────────────────────────────────────────
+export const comprasService = {
+  listarOrdenes: (params?: Record<string, unknown>) =>
+    api.get('/compras', { params }).then(r => r.data),
+
+  crearOrden: (data: Record<string, unknown>) =>
+    api.post('/compras', data).then(r => r.data.data),
+
+  recibirMercancia: (ordenId: string, data: Record<string, unknown>) =>
+    api.post(`/compras/${ordenId}/recibir`, data).then(r => r.data),
+}
+
+// ── VENTAS ────────────────────────────────────────────────
+export const ventasService = {
+  registrar: (data: Record<string, unknown>) =>
+    api.post('/ventas', data).then(r => r.data.data),
+
+  listar: (params?: Record<string, unknown>) =>
+    api.get('/ventas', { params }).then(r => r.data),
+
+  dashboard: () =>
+    api.get('/ventas/dashboard').then(r => r.data.data),
+
+  devolucion: (ventaId: string, data: { motivo: string; reintegraStock: boolean }) =>
+    api.post(`/ventas/${ventaId}/devolucion`, data).then(r => r.data),
+}
+
+// ── CAJA ──────────────────────────────────────────────────
+export const cajaService = {
+  abrirCaja: (data: { sucursalId: number; montoApertura: number }) =>
+    api.post('/caja/abrir', data).then(r => r.data.data),
+
+  cerrarCaja: (cajaId: string, data: Record<string, unknown>) =>
+    api.post(`/caja/${cajaId}/cerrar`, data).then(r => r.data.data),
+
+  estadoActual: () =>
+    api.get('/caja/actual').then(r => r.data.data),
+
+  historial: (params?: Record<string, unknown>) =>
+    api.get('/caja/historial', { params }).then(r => r.data.data),
+}
+
+// ── CLIENTES ──────────────────────────────────────────────
+export const clientesService = {
+  listar: (params?: Record<string, unknown>) =>
+    api.get('/clientes', { params }).then(r => r.data),
+
+  obtener: (id: string) =>
+    api.get(`/clientes/${id}`).then(r => r.data.data),
+
+  historialCompras: (clienteId: string) =>
+    api.get(`/clientes/${clienteId}/compras`).then(r => r.data.data),
+
+  // Carrito y favoritos (cliente logueado en tienda)
+  agregarCarrito: (productoId: string, cantidad: number) =>
+    apiCliente.post('/clientes/carrito', { productoId, cantidad }).then(r => r.data),
+
+  obtenerCarrito: () =>
+    apiCliente.get('/clientes/carrito').then(r => r.data.data),
+
+  toggleFavorito: (productoId: string) =>
+    apiCliente.post('/clientes/auth/favoritos', { productoId }).then(r => r.data),
+
+  obtenerFavoritos: () =>
+    apiCliente.get('/clientes/auth/favoritos').then(r => r.data.data),
+
+  misPedidos: () =>
+    apiCliente.get('/clientes/auth/pedidos').then(r => r.data.data),
+  solicitarDevolucion: (ventaId: string, motivo: string) =>
+    apiCliente.post(`/clientes/auth/pedidos/${ventaId}/devolucion-request`, { motivo }).then(r => r.data),
+}
+
+// ── EMPLEADOS ─────────────────────────────────────────────
+export const empleadosService = {
+  listar: (params?: Record<string, unknown>) =>
+    api.get('/empleados', { params }).then(r => r.data),
+
+  crear: (data: Record<string, unknown>) =>
+    api.post('/empleados', data).then(r => r.data.data),
+
+  actualizar: (id: string, data: Record<string, unknown>) =>
+    api.patch(`/empleados/${id}`, data).then(r => r.data.data),
+
+  cambiarEstado: (id: string, activo: boolean) =>
+    api.patch(`/empleados/${id}/estado`, { activo }).then(r => r.data),
+}
+
+// ── SUCURSALES ────────────────────────────────────────────
+export const sucursalesService = {
+  listar: async () => {
+    try {
+      const response = await apiPublica.get('/sucursales')
+      return response.data.data
+    } catch {
+      return mockSedes
+    }
+  },
+}
+
+// ── REPORTES ──────────────────────────────────────────────
+export const reportesService = {
+  ventas: (params: { desde: string; hasta: string; sucursalId?: number }) =>
+    api.get('/reportes/ventas', { params }).then(r => r.data.data),
+
+  inventario: () =>
+    api.get('/reportes/inventario').then(r => r.data.data),
+
+  compras: (params: { desde: string; hasta: string }) =>
+    api.get('/reportes/compras', { params }).then(r => r.data.data),
+
+  exportarCSV: (tipo: string, params: Record<string, unknown>) =>
+    api.get(`/reportes/${tipo}/csv`, { params, responseType: 'blob' }).then(r => r.data),
+}
+
+// ── CHATBOT ───────────────────────────────────────────────
+export const chatbotService = {
+  enviarMensaje: (mensaje: string, sessionToken: string) =>
+    apiPublica.post('/chatbot', { mensaje, sessionToken }).then(r => r.data.data),
+
+  verificarHorario: () =>
+    apiPublica.get('/chatbot/horario').then(r => r.data.data),
+}
+
+// ── PAGOS ─────────────────────────────────────────────────
+export const pagosService = {
+  crearWompi: (pedidoId: string, monto: number) =>
+    apiCliente.post('/pagos/wompi/crear', { pedidoId, monto }).then(r => r.data.data),
+
+  crearStripeIntent: (pedidoId: string) =>
+    apiCliente.post('/pagos/stripe/crear-intent', { pedidoId }).then(r => r.data.data),
+
+  crearMercadoPago: (pedidoId: string, items: unknown[]) =>
+    apiCliente.post('/pagos/mercadopago/crear', { pedidoId, items }).then(r => r.data.data),
+
+  registrarEfectivo: (ventaId: string, monto: number) =>
+    api.post('/pagos/efectivo/registrar', { ventaId, monto }).then(r => r.data),
+}

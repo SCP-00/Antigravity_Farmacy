@@ -1,0 +1,58 @@
+import { Link } from 'react-router-dom'
+
+interface PlaceholderOptions {
+  eyebrow?: string
+  title: string
+  description: string
+  actionLabel?: string
+  actionTo?: string
+}
+
+export function createPlaceholderPage({
+  eyebrow = 'Farmacy',
+  title,
+  description,
+  actionLabel,
+  actionTo,
+}: PlaceholderOptions) {
+  return function PlaceholderPage() {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12 md:py-16">
+        <section className="rounded-[2rem] border border-white/70 bg-white/95 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-teal-900 via-teal-700 to-blue-700 text-white px-6 py-8 md:px-10">
+            <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]">
+              {eyebrow}
+            </span>
+            <h1 className="mt-4 text-3xl md:text-5xl font-serif leading-tight">
+              {title}
+              <span className="text-red-200">.</span>
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm md:text-base text-white/80">
+              {description}
+            </p>
+          </div>
+
+          <div className="px-6 py-8 md:px-10">
+            <div className="grid gap-4 md:grid-cols-[1.4fr_0.6fr] items-center">
+              <div className="space-y-3 text-sm text-gray-600">
+                <p>
+                  Esta pantalla aún está en fase base. El objetivo ahora es que el recorrido principal del catálogo y carrito quede operativo.
+                </p>
+                <p>
+                  Más adelante reemplazaré este bloque por la versión funcional específica del módulo.
+                </p>
+              </div>
+              {actionLabel && actionTo && (
+                <div className="flex md:justify-end">
+                  <Link to={actionTo} className="btn-primary w-full md:w-auto justify-center">
+                    {actionLabel}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+}
