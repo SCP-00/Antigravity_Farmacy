@@ -2,35 +2,26 @@
 chcp 65001 >nul 2>&1
 setlocal EnableDelayedExpansion
 
-:: ══════════════════════════════════════════════════════════
-::  FARMACY — Lanzador Universal
-::
-::  Levanta los contenedores de Docker (PostgreSQL, Redis,
-::  pgAdmin), espera la base de datos, inicia backend y
-::  frontend en ventanas separadas, y abre el navegador.
-::
-::  Requisitos previos:
-::    • Haber ejecutado  setup.bat  al menos una vez
-::    • Docker Desktop corriendo
-::
-::  Uso:  Doble clic en run.bat  ó  ejecutar desde terminal
-:: ══════════════════════════════════════════════════════════
+REM FARMACY - Launcher
+REM Start Docker containers (Postgres, Redis, pgAdmin),
+REM wait for DB, start backend and frontend, and open browser.
+REM Requirements: run setup.bat first and have Docker Desktop running.
+REM Usage: double-click run.bat or run from a terminal.
 
-title Farmacy — Iniciando Aplicacion
+title Farmacy - Starting Application
 
 echo.
-echo  ╔══════════════════════════════════════════════╗
-echo  ║     FARMACY — Lanzador de Aplicacion         ║
-echo  ╚══════════════════════════════════════════════╝
+echo FARMACY - Launcher
+echo -------------------
 echo.
 
-:: ── 1. Verificar Docker ─────────────────────────────────
-echo [1/5] Verificando Docker...
+REM 1) Verify Docker
+echo [1/5] Verifying Docker...
 where docker >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo  [ERROR] Docker no esta instalado o no esta en el PATH.
-    echo  Instala Docker Desktop: https://www.docker.com/products/docker-desktop
+    echo  [ERROR] Docker is not installed or not in PATH.
+    echo  Install Docker Desktop: https://www.docker.com/products/docker-desktop
     echo.
     pause
     exit /b 1
@@ -39,17 +30,17 @@ if %ERRORLEVEL% neq 0 (
 docker info >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo  [ERROR] Docker no esta corriendo.
-    echo  Abre Docker Desktop y espera a que inicie, luego vuelve a ejecutar run.bat.
+    echo  [ERROR] Docker daemon is not running.
+    echo  Start Docker Desktop, wait for it to initialize, then run run.bat again.
     echo.
     pause
     exit /b 1
 )
-echo    Docker activo.
+echo Docker activo.
 echo.
 
-:: ── 2. Levantar contenedores ─────────────────────────────
-echo [2/5] Levantando contenedores (PostgreSQL, Redis, pgAdmin)...
+REM 2) Start containers
+echo [2/5] Starting containers (PostgreSQL, Redis, pgAdmin)...
 cd /d "%~dp0"
 docker compose -f docker-compose.dev.yml up -d
 if %ERRORLEVEL% neq 0 (
@@ -60,11 +51,11 @@ if %ERRORLEVEL% neq 0 (
     pause
     exit /b 1
 )
-echo    Contenedores iniciados.
+echo Contenedores iniciados.
 echo.
 
-:: ── 3. Esperar a que PostgreSQL esté listo ───────────────
-echo [3/5] Esperando a que PostgreSQL este listo...
+REM 3) Wait for PostgreSQL to be ready
+echo [3/5] Waiting for PostgreSQL to be ready...
 set MAX_RETRIES=30
 set RETRY_COUNT=0
 
@@ -81,60 +72,56 @@ if %RETRY_COUNT% gtr %MAX_RETRIES% (
 
 docker exec farmacy_postgres_dev pg_isready -U farmacy_user -d farmacy_db >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-    echo    Intento %RETRY_COUNT%/%MAX_RETRIES% - Esperando...
+    echo    Attempt %RETRY_COUNT%/%MAX_RETRIES% - Waiting...
     timeout /t 2 /nobreak >nul
     goto pg_wait_loop
 )
-echo    PostgreSQL listo y aceptando conexiones.
+echo PostgreSQL is ready and accepting connections.
 echo.
 
-:: ── 4. Iniciar servidores de desarrollo ──────────────────
-echo [4/5] Iniciando servidores de desarrollo...
+REM 4) Start development servers
+echo [4/5] Starting development servers...
 
-:: Copiar .env a backend si no existe
+REM Copy .env to backend if not present
 if not exist "%~dp0backend\.env" (
     if exist "%~dp0.env" (
-        echo    Copiando .env a backend...
+        echo    Copying .env to backend...
         copy "%~dp0.env" "%~dp0backend\.env" >nul
     )
 )
 
-:: Iniciar Backend en nueva ventana
-echo    Abriendo Backend (puerto 3001)...
+REM Start Backend in new window
+echo Opening Backend (port 3001)...
 start "Farmacy Backend" cmd /k "cd /d "%~dp0backend" && npm run dev"
 
-:: Pequeña pausa para que el backend arranque primero
+REM Small pause for backend to start first
 timeout /t 3 /nobreak >nul
 
-:: Iniciar Frontend en nueva ventana
-echo    Abriendo Frontend (puerto 5173)...
+REM Start Frontend in new window
+echo Opening Frontend (port 5173)...
 start "Farmacy Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
 
 echo.
-echo    Servidores iniciandose en ventanas separadas.
+echo Servidores iniciandose en ventanas separadas.
 echo.
 
-:: ── 5. Abrir navegador ───────────────────────────────────
-echo [5/5] Abriendo navegador en http://localhost:5173 ...
+REM 5) Open browser
+echo [5/5] Opening browser at http://localhost:5173 ...
 timeout /t 5 /nobreak >nul
 start "" "http://localhost:5173"
 
-:: ── Información final ────────────────────────────────────
+REM Final information
 echo.
-echo  ╔══════════════════════════════════════════════╗
-echo  ║   Farmacy esta corriendo!                    ║
-echo  ║                                              ║
-echo  ║   Frontend:  http://localhost:5173            ║
-echo  ║   Backend:   http://localhost:3001/api/v1     ║
-echo  ║   pgAdmin:   http://localhost:5050            ║
-echo  ║                                              ║
-echo  ║   Para detener todo:                         ║
-echo  ║   1. Cierra las ventanas de Backend/Frontend  ║
-echo  ║   2. Ejecuta:                                ║
-echo  ║      docker compose -f docker-compose.dev.yml down ║
-echo  ╚══════════════════════════════════════════════╝
-echo.
-echo  Puedes cerrar esta ventana. Los servidores siguen
-echo  corriendo en sus propias ventanas.
+echo Farmacy is running!
+echo
+echo Frontend: http://localhost:5173
+echo Backend:  http://localhost:3001/api/v1
+echo pgAdmin:  http://localhost:5050
+echo
+echo To stop everything:
+echo  1) Close the Backend/Frontend windows
+echo  2) Run: docker compose -f docker-compose.dev.yml down
+echo
+echo You can close this window. The servers will keep running in their own windows.
 echo.
 pause
