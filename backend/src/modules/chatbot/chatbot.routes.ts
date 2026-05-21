@@ -50,17 +50,17 @@ const FAQ: Array<{ patrones: string[]; respuesta: string }> = [
 
 // ── Verificar horario laboral ─────────────────────────────
 function estaEnHorarioLaboral(): boolean {
-  const tz       = env.HORARIO_TIMEZONE
+  const tz = env.HORARIO_TIMEZONE
   const diasConf = env.HORARIO_DIAS.split(',').map(Number)  // [1,2,3,4,5]
   const [hIni, mIni] = env.HORARIO_INICIO.split(':').map(Number)
   const [hFin, mFin] = env.HORARIO_FIN.split(':').map(Number)
 
-  const ahora    = new Date()
+  const ahora = new Date()
   const enBogota = new Date(ahora.toLocaleString('en-US', { timeZone: tz }))
   const diaSemana = enBogota.getDay() === 0 ? 7 : enBogota.getDay() // 1=Lun...7=Dom
   const minutosDia = enBogota.getHours() * 60 + enBogota.getMinutes()
-  const minInicio  = hIni * 60 + mIni
-  const minFin     = hFin * 60 + mFin
+  const minInicio = hIni * 60 + mIni
+  const minFin = hFin * 60 + mFin
 
   return diasConf.includes(diaSemana) && minutosDia >= minInicio && minutosDia < minFin
 }
@@ -107,7 +107,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
   try {
     const palabras = msg
       .split(/\s+/)
-      .filter((p: string) => p.length > 3)
+      .filter((p: string) => p.length >= 3) // Cambiado para permitir búsquedas más cortas (>= 3)
       .slice(0, 3)
 
     if (palabras.length === 0) {
@@ -120,9 +120,9 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
       where: {
         activo: true,
         OR: palabras.flatMap((p: string) => [
-          { nombre:       { contains: p, mode: 'insensitive' as any } },
-          { concentracion:{ contains: p, mode: 'insensitive' as any } },
-          { laboratorio:  { contains: p, mode: 'insensitive' as any } },
+          { nombre: { contains: p, mode: 'insensitive' as any } },
+          { concentracion: { contains: p, mode: 'insensitive' as any } },
+          { laboratorio: { contains: p, mode: 'insensitive' as any } },
         ]),
         lotes: {
           some: {
@@ -208,8 +208,8 @@ async function guardarMensaje(
     const sesion = await prisma.chatbotSesion.findUnique({ where: { sessionToken } })
     const mensajes = (sesion?.mensajes as any[]) ?? []
     mensajes.push(
-      { role: 'user', text: userMsg,  timestamp: new Date().toISOString() },
-      { role: 'bot',  text: botReply, timestamp: new Date().toISOString() }
+      { role: 'user', text: userMsg, timestamp: new Date().toISOString() },
+      { role: 'bot', text: botReply, timestamp: new Date().toISOString() }
     )
 
     await prisma.chatbotSesion.upsert({

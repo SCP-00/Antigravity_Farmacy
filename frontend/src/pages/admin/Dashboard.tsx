@@ -9,20 +9,20 @@ import { subDays, subMonths, subYears, format } from 'date-fns'
 
 function KpiCard({ label, value, sub, icon: Icon, color }: any) {
   const colors = {
-    teal:  { bar: 'bg-teal-400',  bg: 'bg-teal-50', text: 'text-teal-700' },
+    teal: { bar: 'bg-teal-400', bg: 'bg-teal-50', text: 'text-teal-700' },
     amber: { bar: 'bg-amber-400', bg: 'bg-amber-50', text: 'text-amber-700' },
-    red:   { bar: 'bg-red-400',   bg: 'bg-red-50',   text: 'text-red-700' },
-    blue:  { bar: 'bg-blue-400',  bg: 'bg-blue-50',  text: 'text-blue-700' },
+    red: { bar: 'bg-red-400', bg: 'bg-red-50', text: 'text-red-700' },
+    blue: { bar: 'bg-blue-400', bg: 'bg-blue-50', text: 'text-blue-700' },
   }
   const c = colors[color as keyof typeof colors]
 
   return (
     <div className="card relative overflow-hidden p-4 bg-white border border-gray-100 shadow-sm rounded-xl">
-      <div className={`absolute top-0 left-0 right-0 h-1 ${c.bar}`}/>
+      <div className={`absolute top-0 left-0 right-0 h-1 ${c.bar}`} />
       <div className="flex items-start justify-between mb-3">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
         <div className={`w-8 h-8 ${c.bg} rounded-xl flex items-center justify-center`}>
-          <Icon size={16} className={c.text}/>
+          <Icon size={16} className={c.text} />
         </div>
       </div>
       <p className="text-3xl font-semibold text-gray-900 leading-none mb-1">{value}</p>
@@ -33,7 +33,7 @@ function KpiCard({ label, value, sub, icon: Icon, color }: any) {
 
 export default function Dashboard() {
   const { cop, fechaCorta } = useFormateo()
-  const [rango, setRango] = useState<'SEMANA'|'MES'|'AÑO'>('SEMANA')
+  const [rango, setRango] = useState<'SEMANA' | 'MES' | 'AÑO'>('SEMANA')
 
   // Calcular fechas según rango
   const fechasRango = useMemo(() => {
@@ -47,13 +47,13 @@ export default function Dashboard() {
 
   const { data: kpis, isLoading: kpisLoading } = useQuery({
     queryKey: ['dashboard', 'kpis'],
-    queryFn:  ventasService.dashboard,
+    queryFn: ventasService.dashboard,
     refetchInterval: 60_000,
   })
 
   const { data: alertas } = useQuery({
     queryKey: ['inventario', 'alertas'],
-    queryFn:  () => inventarioService.alertas(),
+    queryFn: () => inventarioService.alertas(''),
   })
 
   // Consulta de reportes para las gráficas
@@ -84,9 +84,8 @@ export default function Dashboard() {
             <button
               key={r}
               onClick={() => setRango(r as any)}
-              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                rango === r ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${rango === r ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               {r.charAt(0) + r.slice(1).toLowerCase()}
             </button>
@@ -117,8 +116,8 @@ export default function Dashboard() {
               <BarChart data={datosGrafica}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="fecha" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={(val) => `$${val/1000}k`} />
-                <Tooltip 
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={(val) => `$${val / 1000}k`} />
+                <Tooltip
                   cursor={{ fill: '#F3F4F6' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   formatter={(value: number) => [cop(value), 'Total']}
@@ -140,14 +139,13 @@ export default function Dashboard() {
         <div className="divide-y divide-gray-100 max-h-60 overflow-y-auto">
           {(Array.isArray(alertas) ? alertas : []).map((a: any) => (
             <div key={a.id} className="flex items-start gap-3 p-4 hover:bg-gray-50/50 transition-colors">
-              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                a.tipo === 'STOCK_MINIMO' ? 'bg-red-400' :
-                a.tipo === 'PROXIMO_VENCER' ? 'bg-amber-400' : 'bg-blue-400'
-              }`}/>
+              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${a.tipo === 'STOCK_MINIMO' ? 'bg-red-400' :
+                  a.tipo === 'PROXIMO_VENCER' ? 'bg-amber-400' : 'bg-blue-400'
+                }`} />
               <div>
                 <p className="text-xs font-semibold text-gray-800">
                   {a.tipo === 'STOCK_MINIMO' ? 'Stock Crítico' :
-                   a.tipo === 'PROXIMO_VENCER' ? 'Por Vencer' : 'Alerta'}
+                    a.tipo === 'PROXIMO_VENCER' ? 'Por Vencer' : 'Alerta'}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">{a.mensaje}</p>
               </div>

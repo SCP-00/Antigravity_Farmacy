@@ -4,6 +4,7 @@ import { useChatbot } from '@/hooks'
 import { useUiStore } from '@/store/uiStore'
 
 const SUGERENCIAS = ['¿Tienen ibuprofeno?', 'Horarios', 'Sedes y ubicaciones', 'Servicio a domicilio']
+const DELAY_CLASSES = ['[animation-delay:0ms]', '[animation-delay:150ms]', '[animation-delay:300ms]']
 
 export default function ChatbotWidget() {
   const { chatbotAbierto, toggleChatbot } = useUiStore()
@@ -22,6 +23,10 @@ export default function ChatbotWidget() {
     enviar(txt)
   }
 
+  const handleResetMenu = () => {
+    enviar('hola') // El backend interpreta "hola" y despliega el FAQ de bienvenida [1]
+  }
+
   return (
     <>
       {/* FAB */}
@@ -30,13 +35,14 @@ export default function ChatbotWidget() {
         className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg
                     flex items-center justify-center transition-all duration-200
                     ${chatbotAbierto
-                      ? 'bg-gray-600 scale-90'
-                      : 'bg-teal-700 hover:bg-teal-600 hover:scale-110'}`}
+            ? 'bg-gray-600 scale-90'
+            : 'bg-teal-700 hover:bg-teal-600 hover:scale-110'}`}
         title="Chatbot Farmacy"
+        aria-label="Abrir asistente virtual"
       >
         {chatbotAbierto
-          ? <X size={22} className="text-white"/>
-          : <MessageCircle size={22} className="text-white"/>}
+          ? <X size={22} className="text-white" />
+          : <MessageCircle size={22} className="text-white" />}
         {!chatbotAbierto && mensajes.length === 0 && (
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full
                            border-2 border-white animate-pulse"/>
@@ -49,17 +55,31 @@ export default function ChatbotWidget() {
                         shadow-lg border border-[#D8EBE4] flex flex-col overflow-hidden
                         animate-fade-in max-h-[75vh]">
           {/* Header */}
-          <div className="bg-teal-700 px-4 py-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-teal-500 rounded-full flex items-center justify-center">
-              <Bot size={18} className="text-white"/>
+          <div className="bg-teal-700 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-teal-500 rounded-full flex items-center justify-center">
+                <Bot size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="text-white font-medium text-sm">FarmaBot</p>
+                <p className="text-teal-200 text-xs flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                  En línea
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-white font-medium text-sm">FarmaBot</p>
-              <p className="text-teal-200 text-xs flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full"/>
-                En línea
-              </p>
-            </div>
+
+            {/* Botón interactivo para resetear al menú inicial */}
+            {mensajes.length > 0 && (
+              <button
+                onClick={handleResetMenu}
+                className="text-xs bg-teal-800 text-teal-100 px-3 py-1.5 rounded-full hover:bg-teal-600 active:scale-95 transition-all"
+                title="Volver al menú principal"
+                aria-label="Volver al menú principal"
+              >
+                Menú Principal
+              </button>
+            )}
           </div>
 
           {/* Mensajes */}
@@ -68,7 +88,7 @@ export default function ChatbotWidget() {
             {mensajes.length === 0 && (
               <div className="flex gap-2 items-start">
                 <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Bot size={13} className="text-teal-700"/>
+                  <Bot size={13} className="text-teal-700" />
                 </div>
                 <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%]
                                 border border-[#D8EBE4] shadow-soft">
@@ -87,14 +107,14 @@ export default function ChatbotWidget() {
                                  flex-shrink-0 mt-0.5
                                  ${m.role === 'user' ? 'bg-teal-700' : 'bg-teal-100'}`}>
                   {m.role === 'user'
-                    ? <UserIcon size={12} className="text-white"/>
-                    : <Bot size={12} className="text-teal-700"/>}
+                    ? <UserIcon size={12} className="text-white" />
+                    : <Bot size={12} className="text-teal-700" />}
                 </div>
                 <div className={`rounded-2xl px-3 py-2 max-w-[80%] text-xs leading-relaxed
                                  whitespace-pre-wrap shadow-soft
                                  ${m.role === 'user'
-                                   ? 'bg-teal-700 text-white rounded-tr-sm'
-                                   : 'bg-white text-gray-700 border border-[#D8EBE4] rounded-tl-sm'}`}>
+                    ? 'bg-teal-700 text-white rounded-tr-sm'
+                    : 'bg-white text-gray-700 border border-[#D8EBE4] rounded-tl-sm'}`}>
                   {m.texto}
                 </div>
               </div>
@@ -103,20 +123,20 @@ export default function ChatbotWidget() {
             {escribiendo && (
               <div className="flex gap-2 items-start">
                 <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot size={12} className="text-teal-700"/>
+                  <Bot size={12} className="text-teal-700" />
                 </div>
                 <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 border border-[#D8EBE4]">
                   <div className="flex gap-1 items-center">
-                    {[0,1,2].map(i => (
+                    {[0, 1, 2].map(i => (
                       <div key={i}
-                        className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}/>
+                        className={`w-1.5 h-1.5 bg-teal-400 rounded-full animate-bounce ${DELAY_CLASSES[i]}`}
+                      />
                     ))}
                   </div>
                 </div>
               </div>
             )}
-            <div ref={endRef}/>
+            <div ref={endRef} />
           </div>
 
           {/* Sugerencias (solo si no hay mensajes) */}
@@ -125,7 +145,8 @@ export default function ChatbotWidget() {
               {SUGERENCIAS.map(s => (
                 <button key={s} onClick={() => enviar(s)}
                   className="text-xs px-3 py-1 bg-white border border-teal-200 text-teal-700
-                             rounded-full hover:bg-teal-50 transition-colors">
+                             rounded-full hover:bg-teal-50 transition-colors"
+                >
                   {s}
                 </button>
               ))}
@@ -156,8 +177,10 @@ export default function ChatbotWidget() {
               className="w-9 h-9 bg-teal-700 rounded-xl flex items-center justify-center
                          text-white hover:bg-teal-600 disabled:opacity-40 transition-all
                          flex-shrink-0"
+              title="Enviar mensaje"
+              aria-label="Enviar mensaje"
             >
-              <Send size={14}/>
+              <Send size={14} />
             </button>
           </div>
         </div>

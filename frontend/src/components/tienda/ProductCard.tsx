@@ -3,6 +3,9 @@ import { Heart, ShoppingCart, Pill, Truck } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import type { ProductoCatalogo } from '@/types/producto.types'
 import toast from 'react-hot-toast'
+import { useAuthCliente } from '@/hooks'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { clientesService } from '@/services'
 
 interface ProductCardProps {
   producto: ProductoCatalogo
@@ -11,6 +14,19 @@ interface ProductCardProps {
 
 export function ProductCard({ producto, variant = 'grid' }: ProductCardProps) {
   const agregarCarrito = useCarritoStore((state) => state.agregar)
+  const { estaLogueado } = useAuthCliente()
+  const queryClient = useQueryClient()
+
+  const favoritoMutation = useMutation({
+    mutationFn: () => clientesService.toggleFavorito(producto.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favoritos-cliente'] })
+      toast.success('Lista de favoritos actualizada')
+    },
+    onError: () => {
+      toast.error('Error al actualizar favoritos')
+    }
+  })
 
   const handleAgregarCarrito = () => {
     agregarCarrito({
@@ -59,6 +75,8 @@ export function ProductCard({ producto, variant = 'grid' }: ProductCardProps) {
           onClick={handleAgregarCarrito}
           className="self-center p-2 bg-teal-700 text-white rounded-xl hover:bg-teal-600"
           disabled={producto.stockTotal === 0}
+          title="Agregar al carrito de compras"
+          aria-label="Agregar al carrito de compras"
         >
           <ShoppingCart className="w-5 h-5" />
         </button>
@@ -93,10 +111,21 @@ export function ProductCard({ producto, variant = 'grid' }: ProductCardProps) {
           </div>
         )}
 
-        {/* Favorite button */}
-        <button className="absolute bottom-2 right-2 bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition shadow-md">
-          <Heart className="w-5 h-5 text-slate-400 hover:text-red-500" />
-        </button>
+        {/* Favorite button (Interactivo y visible si está logueado) */}
+        {estaLogueado && (
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              favoritoMutation.mutate()
+            }}
+            disabled={favoritoMutation.isPending}
+            className="absolute bottom-2 right-2 bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition shadow-md hover:scale-110 active:scale-95 z-10"
+            title="Agregar a mis favoritos"
+            aria-label="Agregar a mis favoritos"
+          >
+            <Heart className="w-5 h-5 text-slate-400 hover:text-red-500 hover:fill-red-500" />
+          </button>
+        )}
       </Link>
 
       {/* Content */}
@@ -127,6 +156,8 @@ export function ProductCard({ producto, variant = 'grid' }: ProductCardProps) {
           <button
             onClick={handleAgregarCarrito}
             className="w-full py-2 bg-teal-700 text-white rounded-full font-medium hover:bg-teal-600 transition flex items-center justify-center gap-2"
+            title="Agregar producto al carrito"
+            aria-label="Agregar producto al carrito"
           >
             <ShoppingCart className="w-4 h-4" />
             Agregar

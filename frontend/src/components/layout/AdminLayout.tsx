@@ -11,9 +11,9 @@ import { useAuth, usePermisos } from '@/hooks'
 import { useUiStore } from '@/store/uiStore'
 
 interface NavItem {
-  label:  string
-  href:   string
-  icon:   React.ReactNode
+  label: string
+  href: string
+  icon: React.ReactNode
   visible: boolean
 }
 
@@ -23,23 +23,23 @@ export default function AdminLayout() {
   const { sidebarAbierto, toggleSidebar } = useUiStore()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   // Mostrar solo alertas no leídas en el dropdown
-  const { data: alertas = [] } = useQuery({ 
-    queryKey: ['inventario','alertas'],
-    queryFn: () => inventarioService.alertas()
+  const { data: alertas = [] } = useQuery({
+    queryKey: ['inventario', 'alertas'],
+    queryFn: () => inventarioService.alertas('')
   })
   const alertasNoLeidas = (Array.isArray(alertas) ? alertas : []).filter((a: any) => !a.leida)
 
   const nav: NavItem[] = [
-    { label: 'Dashboard',  href: '/admin',                     icon: <LayoutDashboard size={17}/>,  visible: true },
-    { label: 'Punto Venta',href: '/admin/caja/pos',            icon: <ShoppingCart size={17}/>,     visible: permisos.puedeVerCaja },
-    { label: 'Historial Caja', href: '/admin/caja/historial',  icon: <CreditCard size={17}/>,       visible: permisos.puedeVerCaja },
-    { label: 'Inventario', href: '/admin/inventario/productos', icon: <Package size={17}/>,          visible: permisos.puedeVerInventario },
-    { label: 'Compras',    href: '/admin/compras/ordenes',      icon: <Truck size={17}/>,            visible: permisos.puedeVerCompras },
-    { label: 'Proveedores',href: '/admin/proveedores',         icon: <UserCheck size={17}/>,         visible: permisos.puedeVerCompras },
-    { label: 'Clientes',   href: '/admin/clientes',            icon: <Users size={17}/>,             visible: permisos.puedeVerClientes },
-    { label: 'Empleados',  href: '/admin/empleados',           icon: <Users size={17}/>,             visible: permisos.puedeVerEmpleados },
-    { label: 'Reportes',   href: '/admin/reportes/ventas',     icon: <BarChart3 size={17}/>,         visible: permisos.puedeVerReportes },
-    { label: 'Configuración', href: '/admin/configuracion',    icon: <Settings size={17}/>,          visible: permisos.puedeVerConfig },
+    { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard size={17} />, visible: true },
+    { label: 'Punto Venta', href: '/admin/caja/pos', icon: <ShoppingCart size={17} />, visible: permisos.puedeVerCaja },
+    { label: 'Historial Caja', href: '/admin/caja/historial', icon: <CreditCard size={17} />, visible: permisos.puedeVerCaja },
+    { label: 'Inventario', href: '/admin/inventario/productos', icon: <Package size={17} />, visible: permisos.puedeVerInventario },
+    { label: 'Compras', href: '/admin/compras/ordenes', icon: <Truck size={17} />, visible: permisos.puedeVerCompras },
+    { label: 'Proveedores', href: '/admin/proveedores', icon: <UserCheck size={17} />, visible: permisos.puedeVerCompras },
+    { label: 'Clientes', href: '/admin/clientes', icon: <Users size={17} />, visible: permisos.puedeVerClientes },
+    { label: 'Empleados', href: '/admin/empleados', icon: <Users size={17} />, visible: permisos.puedeVerEmpleados },
+    { label: 'Reportes', href: '/admin/reportes/ventas', icon: <BarChart3 size={17} />, visible: permisos.puedeVerReportes },
+    { label: 'Configuración', href: '/admin/configuracion', icon: <Settings size={17} />, visible: permisos.puedeVerConfig },
   ]
 
   const initials = empleado?.nombre
@@ -47,8 +47,8 @@ export default function AdminLayout() {
 
   const rolLabel: Record<string, string> = {
     ADMINISTRADOR: 'Administrador',
-    FARMACEUTA:    'Farmacéuta',
-    AUXILIAR:      'Auxiliar',
+    FARMACEUTA: 'Farmacéuta',
+    AUXILIAR: 'Auxiliar',
   }
 
   return (
@@ -77,8 +77,8 @@ export default function AdminLayout() {
                      flex items-center justify-center border border-teal-600 z-10"
         >
           {sidebarAbierto
-            ? <X size={12} className="text-white"/>
-            : <ChevronRight size={12} className="text-white"/>}
+            ? <X size={12} className="text-white" />
+            : <ChevronRight size={12} className="text-white" />}
         </button>
 
         {/* Nav */}
@@ -121,7 +121,7 @@ export default function AdminLayout() {
                 className="text-teal-300 hover:text-white transition-colors"
                 title="Cerrar sesión"
               >
-                <LogOut size={15}/>
+                <LogOut size={15} />
               </button>
             )}
           </div>
@@ -138,7 +138,7 @@ export default function AdminLayout() {
           <div>
             <h1 className="text-base font-semibold text-gray-900" id="page-title">Panel de Gestión</h1>
             <p className="text-xs text-gray-400">
-              {new Date().toLocaleDateString('es-CO', { weekday:'long', day:'numeric', month:'long' })}
+              {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function AdminLayout() {
                 className="relative p-2 text-gray-500 hover:text-teal-700 hover:bg-teal-50 rounded-xl"
                 aria-label="Alertas"
               >
-                <Bell size={18}/>
+                <Bell size={18} />
                 {Array.isArray(alertasNoLeidas) && alertasNoLeidas.length > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white
                                    text-[10px] rounded-full flex items-center justify-center font-bold">
