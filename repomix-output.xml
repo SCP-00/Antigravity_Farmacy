@@ -199,22 +199,6 @@ SOURCE_PACK.txt
 <files>
 This section contains the contents of the repository's files.
 
-<file path=".opencode/opencode.json">
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true,
-      "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-      }
-    }
-  }
-}
-</file>
-
 <file path=".gitattributes">
 # Auto detect text files and perform LF normalization
 * text=auto
@@ -260,6 +244,22 @@ Thumbs.db
 *.swo
 </file>
 
+<file path=".opencode/opencode.json">
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true,
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
+    }
+  }
+}
+</file>
+
 <file path="AGENTS.md">
 # AGENTS.md
 
@@ -289,69 +289,6 @@ Thumbs.db
   "exec": "ts-node src/server.ts",
   "env": {
     "NODE_ENV": "development"
-  }
-}
-</file>
-
-<file path="backend/package.json">
-{
-  "name": "farmacy-backend",
-  "version": "1.0.0",
-  "description": "Farmacy SGF — Backend API",
-  "main": "dist/server.js",
-  "scripts": {
-    "predev": "prisma generate --schema=../database/prisma/schema.prisma",
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "lint": "eslint src --ext .ts",
-    "test": "vitest run",
-    "db:generate": "npx prisma generate --schema=../database/prisma/schema.prisma",
-    "db:migrate": "npx prisma migrate dev --schema=../database/prisma/schema.prisma",
-    "db:push": "npx prisma db push --schema=../database/prisma/schema.prisma",
-    "db:seed": "npx ts-node ../database/seeds/seed.ts",
-    "db:studio": "npx prisma studio --schema=../database/prisma/schema.prisma"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.7.0",
-    "bcryptjs": "^2.4.3",
-    "cloudinary": "^2.10.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
-    "helmet": "^7.1.0",
-    "ioredis": "^5.3.2",
-    "jsonwebtoken": "^9.0.2",
-    "mercadopago": "^2.0.6",
-    "multer": "^1.4.5-lts.1",
-    "node-cron": "^3.0.3",
-    "nodemailer": "^8.0.7",
-    "passport": "^0.7.0",
-    "passport-facebook": "^3.0.0",
-    "passport-google-oauth20": "^2.0.0",
-    "passport-jwt": "^4.0.1",
-    "stripe": "^14.10.0",
-    "winston": "^3.11.0",
-    "zod": "^3.22.4"
-  },
-  "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/multer": "^1.4.11",
-    "@types/node": "^20.10.6",
-    "@types/node-cron": "^3.0.11",
-    "@types/nodemailer": "^6.4.14",
-    "@types/passport": "^1.0.16",
-    "@types/passport-facebook": "^3.0.3",
-    "@types/passport-google-oauth20": "^2.0.14",
-    "nodemon": "^3.0.2",
-    "prisma": "^5.7.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "vitest": "^4.1.6"
   }
 }
 </file>
@@ -11743,11 +11680,67 @@ cd /d "%~dp0"
 pause
 </file>
 
-<file path="backend/pnpm-workspace.yaml">
-allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  prisma: true
+<file path="backend/package.json">
+{
+  "name": "farmacy-backend",
+  "version": "1.0.0",
+  "description": "Farmacy SGF — Backend API",
+  "main": "dist/server.js",
+  "scripts": {
+    "predev": "prisma generate --schema=../database/prisma/schema.prisma",
+    "dev": "nodemon src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "db:generate": "npx prisma generate --schema=../database/prisma/schema.prisma",
+    "db:migrate": "npx prisma migrate dev --schema=../database/prisma/schema.prisma",
+    "db:push": "npx prisma db push --schema=../database/prisma/schema.prisma",
+    "db:seed": "npx ts-node ../database/seeds/seed.ts",
+    "db:studio": "npx prisma studio --schema=../database/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "mercadopago": "^2.0.6",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^8.0.7",
+    "passport": "^0.7.0",
+    "passport-facebook": "^3.0.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.1",
+    "stripe": "^14.10.0",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.10.6",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.14",
+    "@types/passport": "^1.0.16",
+    "@types/passport-facebook": "^3.0.3",
+    "@types/passport-google-oauth20": "^2.0.14",
+    "nodemon": "^3.0.2",
+    "prisma": "^5.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.6"
+  }
+}
 </file>
 
 <file path="backend/src/app.ts">
@@ -12835,6 +12828,27 @@ export default function Dashboard() {
 }
 </file>
 
+<file path="pnpm-workspace.yaml">
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true
+</file>
+
+<file path="backend/pnpm-workspace.yaml">
+packages:
+  - 'backend'
+  - 'frontend'
+
+allowBuilds:
+  '0': '@prisma/client'
+  '1': '@prisma/engines'
+  '2': prisma
+  '@prisma/client': set this to true or false
+  '@prisma/engines': set this to true or false
+  prisma: set this to true or false
+</file>
+
 <file path="package.json">
 {
   "devDependencies": {
@@ -12850,141 +12864,23 @@ export default function Dashboard() {
 }
 </file>
 
-<file path="pnpm-workspace.yaml">
-allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  prisma: true
-</file>
-
 <file path="run.bat">
 @echo off
-chcp 65001 >nul 2>&1
-setlocal EnableDelayedExpansion
-
-REM FARMACY - Launcher
-REM Start Docker containers (Postgres, Redis, pgAdmin),
-REM wait for DB, start backend and frontend, and open browser.
-REM Requirements: run setup.bat first and have Docker Desktop running.
-REM Usage: double-click run.bat or run from a terminal.
-
 title Farmacy - Starting Application
-
-echo.
-echo FARMACY - Launcher
-echo -------------------
-echo.
-
-REM 1) Verify Docker
-echo [1/5] Verifying Docker...
-where docker >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo  [ERROR] Docker is not installed or not in PATH.
-    echo  Install Docker Desktop: https://www.docker.com/products/docker-desktop
-    echo.
-    pause
-    exit /b 1
-)
-
-docker info >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo  [ERROR] Docker daemon is not running.
-    echo  Start Docker Desktop, wait for it to initialize, then run run.bat again.
-    echo.
-    pause
-    exit /b 1
-)
-echo Docker activo.
-echo.
-
-REM 2) Start containers
-echo [2/5] Starting containers (PostgreSQL, Redis, pgAdmin)...
+echo [1/3] Starting Docker containers...
 cd /d "%~dp0"
 docker compose -f docker-compose.dev.yml up -d
-if %ERRORLEVEL% neq 0 (
-    echo.
-    echo  [ERROR] No se pudieron levantar los contenedores.
-    echo  Revisa los logs con: docker compose -f docker-compose.dev.yml logs
-    echo.
-    pause
-    exit /b 1
-)
-echo Contenedores iniciados.
-echo.
 
-REM 3) Wait for PostgreSQL to be ready
-echo [3/5] Waiting for PostgreSQL to be ready...
-set MAX_RETRIES=30
-set RETRY_COUNT=0
-
-:pg_wait_loop
-set /a RETRY_COUNT+=1
-if %RETRY_COUNT% gtr %MAX_RETRIES% (
-    echo.
-    echo  [ERROR] PostgreSQL no respondio despues de %MAX_RETRIES% intentos.
-    echo  Revisa los logs: docker logs farmacy_postgres_dev
-    echo.
-    pause
-    exit /b 1
-)
-
-docker exec farmacy_postgres_dev pg_isready -U farmacy_user -d farmacy_db >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo    Attempt %RETRY_COUNT%/%MAX_RETRIES% - Waiting...
-    timeout /t 2 /nobreak >nul
-    goto pg_wait_loop
-)
-echo PostgreSQL is ready and accepting connections.
-echo.
-
-REM 4) Start development servers
-echo [4/5] Starting development servers...
-
-REM Copy .env to backend if not present
-if not exist "%~dp0backend\.env" (
-    if exist "%~dp0.env" (
-        echo    Copying .env to backend...
-        copy "%~dp0.env" "%~dp0backend\.env" >nul
-    )
-)
-
-REM Start Backend in new window
-echo Opening Backend (port 3001)...
-start "Farmacy Backend" cmd /k "cd /d "%~dp0backend" && npm run dev"
-
-REM Small pause for backend to start first
+echo [2/3] Starting Backend Server (Port 3000)...
+start "Farmacy Backend" cmd /k "cd /d "%~dp0backend" && pnpm run dev"
 timeout /t 3 /nobreak >nul
 
-REM Start Frontend in new window
-echo Opening Frontend (port 5173)...
-start "Farmacy Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+echo [3/3] Starting Frontend Store (Port 5173)...
+start "Farmacy Frontend" cmd /k "cd /d "%~dp0frontend" && pnpm run dev"
 
-echo.
-echo Servidores iniciandose en ventanas separadas.
-echo.
-
-REM 5) Open browser
-echo [5/5] Opening browser at http://localhost:5173 ...
-timeout /t 5 /nobreak >nul
+echo Opening browser...
+timeout /t 3 /nobreak >nul
 start "" "http://localhost:5173"
-
-REM Final information
-echo.
-echo Farmacy is running!
-echo
-echo Frontend: http://localhost:5173
-echo Backend:  http://localhost:3001/api/v1
-echo pgAdmin:  http://localhost:5050
-echo
-echo To stop everything:
-echo  1) Close the Backend/Frontend windows
-echo  2) Run: docker compose -f docker-compose.dev.yml down
-echo
-echo You can close this window. The servers will keep running in their own windows.
-echo.
-pause
 </file>
 
 </files>
