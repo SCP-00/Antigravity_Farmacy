@@ -1,4 +1,8 @@
+packages:
+  - 'backend'
+  - 'frontend'
+
 allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  prisma: true
+  - '@prisma/client'
+  - '@prisma/engines'
+  - 'prisma'

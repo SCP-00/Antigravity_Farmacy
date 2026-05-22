@@ -1,10 +1,10 @@
 {
   "devDependencies": {
-    "prisma": "^5.22.0"
+    "prisma": "^7.8.0"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "@types/bcryptjs": "^2.4.6",
+    "@prisma/client": "^7.8.0",
+    "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "i": "^0.3.7"
