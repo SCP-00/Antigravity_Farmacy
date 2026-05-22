@@ -5,6 +5,8 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^2.4.6",
-    "bcryptjs": "^3.0.3"
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
+    "i": "^0.3.7"
   }
 }
