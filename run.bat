@@ -1,7 +1,17 @@
 @echo off
 title Farmacy - Starting Application
-echo [1/3] Starting Docker containers...
 cd /d "%~dp0"
+
+if not exist "backend\.env" (
+  echo [0/3] backend/.env not found, copying root .env...
+  if exist ".env" (
+    copy /Y ".env" "backend\.env" >nul
+  ) else (
+    echo Root .env not found. Create it from .env.example first.
+  )
+)
+
+echo [1/3] Starting Docker containers...
 docker compose -f docker-compose.dev.yml up -d
 
 echo [2/3] Starting Backend Server (Port 3000)...

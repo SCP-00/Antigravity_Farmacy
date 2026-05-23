@@ -2,10 +2,10 @@
 
 **Fase 0 — Alineacion y limpieza**
 - /goals: mapa real de modulos; eliminar stubs; normalizar puertos/config; reducir deuda de estructura.
-- [ ] Inventariar `backend/src/modules` y `frontend/src/pages` para detectar stubs, duplicados y rutas huerfanas.
-- [ ] Consolidar modulos redundantes y mover logica compartida a un dominio unico (inventario/precios/stock).
-- [ ] Normalizar puertos y origen de `.env` entre backend, Vite y `run.bat`.
-- [ ] Definir catalogo oficial de modulos y retirar exclusiones temporales cuando esten listos.
+- [x] Inventariar `backend/src/modules` y `frontend/src/pages` para detectar stubs, duplicados y rutas huerfanas.
+- [x] Consolidar modulos redundantes y mover logica compartida a un dominio unico (inventario/precios/stock).
+- [x] Normalizar puertos y origen de `.env` entre backend, Vite y `run.bat`.
+- [x] Definir catalogo oficial de modulos y retirar exclusiones temporales cuando esten listos.
 
 **Fase 1 — Nucleo de datos y servicios compartidos**
 - /goals: modelo de datos consistente; servicios de dominio reutilizables; integracion POS+B2C.
