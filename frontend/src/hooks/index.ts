@@ -221,7 +221,13 @@ export function useFormateo() {
   const fechaCorta = (d: string | Date) =>
     new Date(d).toLocaleDateString('es-CO')
 
-  return { cop, fecha, fechaCorta }
+  const fechaHora = (d: string | Date) =>
+    new Date(d).toLocaleDateString('es-CO', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+    })
+
+  return { cop, fecha, fechaCorta, fechaHora }
 }
 
 // ── useLocalStorage ───────────────────────────────────────

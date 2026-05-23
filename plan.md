@@ -23,10 +23,10 @@
 
 **Fase 3 — Inventario y Lotes (FEFO)**
 - /goals: control de lotes; FEFO automatico; alertas de vencimiento; cumplimiento INVIMA.
-- [ ] Logica FEFO centralizada usada por POS y B2C.
-- [ ] Bloqueo de venta de lotes vencidos y restriccion de edicion post-venta.
-- [ ] Alertas 30/15/0 dias con panel operativo para auxiliares.
-- [ ] Movimientos con justificacion y trazabilidad por empleado.
+- [x] Logica FEFO centralizada usada por POS y B2C (InventarioService.descontarStockFEFO + VentasService).
+- [x] Bloqueo de venta de lotes vencidos (obtenerLotesFEFO filtra fechaVencimiento > new Date(); el job marca alertas VENCIDO).
+- [x] Alertas 30/15/0 dias con panel operativo para auxiliares (job diario con umbrales escalonados + endpoint PATCH /leer).
+- [x] Movimientos con justificacion y trazabilidad por empleado (backend completo + frontend con timeline y filtros).
 
 **Fase 4 — Proveedores y Compras**
 - /goals: abastecimiento completo; ordenes de compra; recepcion conciliada.

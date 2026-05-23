@@ -69,3 +69,14 @@ inventarioRouter.get('/alertas', autenticar, async (req: Request, res: Response)
     return responder.ok(res, alertas)
   } catch (err) { return responder.serverError(res, err) }
 })
+
+// PATCH /alertas/:id/leer — Marcar alerta como leída
+inventarioRouter.patch('/alertas/:id/leer', autenticar, async (req: Request, res: Response) => {
+  try {
+    const alerta = await prisma.alertaInventario.update({
+      where: { id: req.params.id },
+      data: { leida: true },
+    })
+    return responder.ok(res, alerta, 'Alerta marcada como leída')
+  } catch (err) { return responder.serverError(res, err) }
+})

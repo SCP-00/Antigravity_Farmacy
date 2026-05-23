@@ -20,18 +20,37 @@ export function iniciarJobAlertas(): void {
   logger.info('[Job Alertas] Programado — todos los días a las 7:00 AM')
 }
 
-// ── Verifica lotes próximos a vencer ──────────────────────
+// ── Umbrales de alerta de vencimiento ──────────────────────
+const UMBRALES_DIAS = [30, 15, 0]
+
+function obtenerUmbral(diasRestantes: number): { tipo: string; mensaje: string } | null {
+  if (diasRestantes <= 0) {
+    return { tipo: 'VENCIDO', mensaje: '⚠️ VENCIDO' }
+  }
+  if (diasRestantes <= 15) {
+    return { tipo: 'CRITICO', mensaje: `🔴 Vence en ${diasRestantes} días` }
+  }
+  if (diasRestantes <= 30) {
+    return { tipo: 'PROXIMO_VENCER', mensaje: `🟡 Vence en ${diasRestantes} días` }
+  }
+  return null
+}
+
+// ── Verifica lotes próximos a vencer (30/15/0 días) ────────
 async function verificarVencimientos(): Promise<void> {
   const hoy       = new Date()
   const en30Dias  = new Date(hoy)
   en30Dias.setDate(hoy.getDate() + 30)
+  // También incluir lotes ya vencidos (dias < 0)
+  const hace7Dias = new Date(hoy)
+  hace7Dias.setDate(hoy.getDate() - 7)
 
   try {
     const lotes = await prisma.lote.findMany({
       where: {
         cantidadActual: { gt: 0 },
         fechaVencimiento: {
-          gte: hoy,
+          gte: hace7Dias,
           lte: en30Dias,
         },
       },
@@ -46,48 +65,70 @@ async function verificarVencimientos(): Promise<void> {
       return
     }
 
-    // Crear alertas en la BD
+    // Agrupar por umbral para estadísticas
+    let vencidos = 0, criticos = 0, proximos = 0
+
+    // Limpiar alertas previas no leídas de estos lotes antes de crear las nuevas
+    const loteIds = lotes.map(l => l.id)
+    await prisma.alertaInventario.deleteMany({
+      where: { loteId: { in: loteIds }, leida: false },
+    }).catch(() => {})
+
+    // Crear alertas frescas en la BD
     for (const lote of lotes) {
       const diasRestantes = Math.ceil(
         (lote.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
       )
 
-      await prisma.alertaInventario.upsert({
-        where: { id: lote.id },
-        update: { leida: false },
-        create: {
+      const umbral = obtenerUmbral(diasRestantes)
+      if (!umbral) continue
+
+      if (umbral.tipo === 'VENCIDO') vencidos++
+      else if (umbral.tipo === 'CRITICO') criticos++
+      else proximos++
+
+      await prisma.alertaInventario.create({
+        data: {
           loteId: lote.id,
-          tipo: 'PROXIMO_VENCER',
-          mensaje: `${lote.producto.nombre} ${lote.producto.concentracion ?? ''} — Lote ${lote.codigoLote} vence en ${diasRestantes} días (${lote.sucursal.nombre})`,
+          tipo: umbral.tipo,
+          mensaje: `${lote.producto.nombre} ${lote.producto.concentracion ?? ''} — Lote ${lote.codigoLote} — ${umbral.mensaje} (${lote.sucursal.nombre})`,
         },
       }).catch(() => {})
     }
 
-    logger.warn(`[Job Alertas] ${lotes.length} lotes próximos a vencer detectados`)
+    logger.warn(`[Job Alertas] Vencidos: ${vencidos} | Críticos: ${criticos} | Próximos: ${proximos}`)
 
-    // Notificar al administrador por email
-    const admins = await prisma.empleado.findMany({
-      where: { rol: 'ADMINISTRADOR', activo: true },
-      select: { email: true, nombre: true },
-    })
-
-    const resumen = lotes
-      .map((l: any) => {
-        const dias = Math.ceil(
-          (l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
-        )
-        return `• ${l.producto.nombre} ${l.producto.concentracion ?? ''} — Lote ${l.codigoLote} — Vence en ${dias} días — ${l.sucursal.nombre}`
+    // Notificar al administrador por email (solo si hay críticos o vencidos)
+    if (vencidos + criticos > 0) {
+      const admins = await prisma.empleado.findMany({
+        where: { rol: 'ADMINISTRADOR', activo: true },
+        select: { email: true, nombre: true },
       })
-      .join('\n')
 
-    for (const admin of admins) {
-      sendEmail({
-        to: admin.email,
-        subject: `⚠️ Farmacy: ${lotes.length} lotes próximos a vencer`,
-        html: `<pre style="font-family:sans-serif;padding:20px">${resumen}</pre>`,
-      })
+      const resumen = lotes
+        .filter((l: any) => {
+          const d = Math.ceil((l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+          return d <= 15
+        })
+        .map((l: any) => {
+          const dias = Math.ceil((l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
+          const tag = dias <= 0 ? '⚠️ VENCIDO' : '🔴 CRÍTICO'
+          return `${tag} — ${l.producto.nombre} ${l.producto.concentracion ?? ''} — Lote ${l.codigoLote} (${l.sucursal.nombre})`
+        })
+        .join('\n')
+
+      const asunto = vencidos > 0
+        ? `🚨 Farmacy: ${vencidos} lotes VENCIDOS y ${criticos} críticos`
+        : `⚠️ Farmacy: ${criticos} lotes en estado crítico`
+
+      for (const admin of admins) {
+        sendEmail({
+          to: admin.email,
+          subject: asunto,
+          html: `<pre style="font-family:sans-serif;padding:20px">${resumen}</pre>`,
+        })
+      }
     }
-
   } catch (err) {
     logger.error('[Job Alertas] Error verificando vencimientos:', err)
   }

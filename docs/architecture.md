@@ -56,7 +56,7 @@
   - `GOOGLE_CALLBACK_URL` — http://localhost:3000/api/v1/clientes/auth/google/callback
 
 ## Jobs (CRON)
-- \backend/src/jobs/alertas.ts: Verificación diaria de lotes próximos a vencer (30/15/0 días) y stock crítico. Inactivo — requiere conexión en server.ts.
+- \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email. **Activo** — iniciado en server.ts.
 
 ## Source of truth for env
 - Source of truth: root .env.
