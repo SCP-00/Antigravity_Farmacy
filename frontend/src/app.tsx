@@ -44,6 +44,7 @@ const RegistroCliente    = lazy(() => import('@/pages/auth/RegistroCliente'))
 const RecuperarPassword  = lazy(() => import('@/pages/auth/RecuperarPassword'))
 const ResetPassword      = lazy(() => import('@/pages/auth/ResetPassword'))
 const VerificarEmail     = lazy(() => import('@/pages/auth/VerificarEmail'))
+const AuthCallback       = lazy(() => import('@/pages/auth/AuthCallback'))
 
 // ── Páginas ADMIN (lazy) ──────────────────────────────────
 const Dashboard          = lazy(() => import('@/pages/admin/Dashboard'))
@@ -192,6 +193,9 @@ export default function App() {
 
             </Route>
           </Route>
+
+          {/* ══ AUTH CALLBACK (layout propio, sin card) ══ */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* 404 */}
           <Route path="*" element={<NoEncontrado />} />

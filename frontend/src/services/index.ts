@@ -46,6 +46,14 @@ export const authClienteService = {
     apiPublica.post('/clientes/auth/reset-password', { token, password }).then(r => r.data),
 
   googleUrl: () => `${import.meta.env.VITE_API_URL}/clientes/auth/google`,
+
+  // Para OAuth callback — pasar token manualmente porque aún no está en el store
+  meConToken: async (token: string) => {
+    const { data } = await apiPublica.get('/clientes/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return data.data
+  },
 }
 
 // ── PRODUCTOS ─────────────────────────────────────────────
