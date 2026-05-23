@@ -3,7 +3,7 @@ import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
 import { registrarVentaSchema } from '../../schemas/ventas.schema'
-import { InventarioService } from '../../services/inventario.service'
+import { VentasService } from '../../services/ventas.service'
 
 export const ventasRouter: Router = Router()
 
@@ -78,7 +78,7 @@ ventasRouter.get('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
         ventas.map((v: any) => ({
           ...v,
           cajero: v.empleado ? `${v.empleado.nombre} ${v.empleado.apellido}` : 'Sistema',
-          cliente:v.cliente  ? `${v.cliente.nombre} ${v.cliente.apellido}`   : null,
+          cliente: v.cliente ? `${v.cliente.nombre} ${v.cliente.apellido}` : null,
           sucursal: v.caja?.sucursal?.nombre,
           items: v._count.detalles,
           empleado: undefined, _count: undefined,
@@ -89,78 +89,20 @@ ventasRouter.get('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
   }
 )
 
-// ── POST / — Registrar venta (transacción atómica) ────────
+// ── POST / — Registrar venta (transacción atómica limpia) ─
 ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
   validarCuerpo(registrarVentaSchema), async (req: Request, res: Response) => {
-    const { sucursalId, cajaId, clienteId, metodoPago, items, descuento } = req.body
-
     try {
-      const client = await prisma.$transaction(async (tx: any) => {
-        let subtotal = 0
-        const detalles: any[] = []
-
-        for (const item of items) {
-          // Uso del nuevo servicio FEFO
-          const lotesUsados = await InventarioService.descontarStockFEFO(tx, item.productoId, sucursalId, item.cantidad)
-
-          let descuentoRestante = item.descuento || 0
-
-          for (const lu of lotesUsados) {
-            const valorBruto = item.precioUnitario * lu.cantidad
-            const descuentoAplicar = Math.min(valorBruto, descuentoRestante)
-            const valorNeto = valorBruto - descuentoAplicar
-
-            subtotal += valorNeto
-            descuentoRestante -= descuentoAplicar
-
-            detalles.push({
-              productoId:    item.productoId,
-              loteId:        lu.loteId,
-              cantidad:      lu.cantidad,
-              precioUnitario:item.precioUnitario,
-              descuento:     descuentoAplicar,
-              subtotal:      valorNeto,
-            })
-          }
-        }
-
-        const total = subtotal - (descuento ?? 0)
-
-        const venta = await tx.venta.create({
-          data: {
-            sucursalId, cajaId: cajaId ?? null,
-            empleadoId: req.empleado!.id,
-            clienteId:  clienteId ?? null,
-            metodoPago, subtotal, descuento: descuento ?? 0,
-            iva: 0, total, estado: 'PAGADO',
-            detalles: { createMany: { data: detalles } },
-          },
-          include: { detalles: true },
-        })
-
-        // Sumar puntos de fidelidad
-        if (clienteId) {
-          const puntos = Math.floor(total / 1000)
-          if (puntos > 0) {
-            const expira = new Date()
-            expira.setFullYear(expira.getFullYear() + 1)
-            await tx.cliente.update({
-              where: { id: clienteId },
-              data: {
-                puntosAcumulados: { increment: puntos },
-                puntosExpiranEn: expira,
-              },
-            })
-          }
-        }
-
-        return venta
+      // Delegamos la complejidad al Servicio de Dominio
+      const venta = await VentasService.registrarVenta({
+        ...req.body,
+        empleadoId: req.empleado!.id
       })
 
       return responder.creado(res, {
-        ventaId: client.id,
-        ventaNum: client.numero,
-        total: client.total,
+        ventaId: venta.id,
+        ventaNum: venta.numero,
+        total: venta.total,
       }, 'Venta registrada exitosamente')
     } catch (err: any) {
       return responder.error(res, err.message || 'Error procesando la venta', 400)
