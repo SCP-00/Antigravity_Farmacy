@@ -28,23 +28,32 @@
 - [x] Apertura/cierre de caja con arqueo y justificacion.
 - [x] Generacion de PDF de tirilla.
 - [x] Sistema de Puntos (Cashback $100 = 1pto = $1) y UI de Descuentos.
-- [ ] Construir página: Devoluciones (Admin).
-- [ ] Construir páginas: Clientes, DetalleCliente y ProgramaFidelidad (Admin).
-- [ ] Construir páginas: Empleados y DetalleEmpleado (Admin).
-- [ ] Construir páginas: Reportes (Ventas, Inventario, Compras, Clientes).
-- [ ] Construir páginas: Configuración (General, Usuarios, Sucursales, Seguridad).
+- [x] Construir página: Devoluciones (Admin).
+- [x] Construir páginas: Clientes, DetalleCliente y ProgramaFidelidad (Admin).
+- [x] Construir página: ListaEmpleados.
+- [ ] Construir página: DetalleEmpleado (Admin).
+- [x] Construir página: ReporteVentas.
+- [x] Construir página: ReporteInventario.
+- [ ] Construir páginas: ReporteCompras y ReporteClientes.
+- [x] Construir página: Configuración de Sucursales.
+- [ ] Construir páginas: Configuración (General, Usuarios, Seguridad).
+*Sugerencia Arquitectónica: Para "Configuración General", recomiendo crear una tabla de clave-valor (ej. ConfiguracionGlobal) en BD para guardar IVA, nombre de empresa y metas, o manejarlo limpiamente vía variables de entorno si el negocio no muta mucho.*
 
 **Fase 6 — Tienda B2C**
 - [x] Catalogo publico con filtros conectados a BD.
 - [x] Carrito y validacion FEFO.
 - [x] Cuenta cliente: perfil, favoritos, pedidos.
 - [ ] Politica de Privacidad y Terminos (Páginas publicas).
+*Sugerencia de UI: Reemplazar estos placeholders por textos legales enriquecidos utilizando la clase '.surface' y HTML semántico puro sin peticiones de red.*
 
 **Fase 7 — Pagos**
 - [ ] Wompi, Stripe, MercadoPago (Intencion, Webhooks).
+*Sugerencia Arquitectónica: El backend ya procesa los Webhooks y la creación de intenciones (pagos.routes.ts). El paso a seguir es incrustar el Widget de Wompi y el Elements de Stripe directamente en Checkout.tsx del frontend para capturar las tarjetas de forma segura (PCI-DSS).*
 
 **Fase 8 — Chatbot**
 - [ ] Escalamiento a humano y memoria LLM.
+*Sugerencia Tecnológica: Integrar la API de OpenAI (ChatGPT) u otra alternativa Open Source. En vez de depender del filtro por tokens actual, inyectarle el esquema JSON del inventario al LLM mediante function calling para que de recomendaciones de venta cruzada ("Veo que llevas analgésicos, ¿necesitas agua o algo más?").*
 
 **Fase 9 — Auditoria Final**
 - [ ] Logs de actividad completos y revision de rendimiento.
+*Sugerencia Funcional: Construir un visor de "Logs de Auditoría" en la Configuración de Seguridad para que el Administrador Principal pueda revisar la tabla 'logs_actividad' y detectar ingresos denegados.*
