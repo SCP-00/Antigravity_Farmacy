@@ -54,6 +54,25 @@ comprasRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
+comprasRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+  async (req: Request, res: Response) => {
+    try {
+      const orden = await prisma.ordenCompra.findUnique({
+        where: { id: req.params.id },
+        include: {
+          proveedor: { select: { nombre: true, nit: true } },
+          empleado:  { select: { nombre: true, apellido: true } },
+          detalles: {
+            include: { producto: { select: { nombre: true, presentacion: true } } },
+          },
+        },
+      })
+      if (!orden) return responder.noEncontrado(res, 'Orden de compra')
+      return responder.ok(res, orden)
+    } catch (err) { return responder.serverError(res, err) }
+  }
+)
+
 comprasRouter.post('/:id/recibir', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   async (req: Request, res: Response) => {
     try {

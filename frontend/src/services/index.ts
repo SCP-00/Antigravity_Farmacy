@@ -45,7 +45,7 @@ export const authClienteService = {
   resetPassword: (token: string, password: string) =>
     apiPublica.post('/clientes/auth/reset-password', { token, password }).then(r => r.data),
 
-  googleUrl: () => `${import.meta.env.VITE_API_URL}/clientes/auth/google`,
+  googleUrl: () => `${import.meta.env.VITE_API_URL ?? '/api/v1'}/clientes/auth/google`,
 
   // Para OAuth callback — pasar token manualmente porque aún no está en el store
   meConToken: async (token: string) => {
@@ -127,6 +127,9 @@ export const proveedoresService = {
   crear: (data: Record<string, unknown>) =>
     api.post('/proveedores', data).then(r => r.data.data),
 
+  obtener: (id: string) =>
+    api.get(`/proveedores/${id}`).then(r => r.data.data),
+
   actualizar: (id: string, data: Record<string, unknown>) =>
     api.patch(`/proveedores/${id}`, data).then(r => r.data.data),
 }
@@ -138,6 +141,9 @@ export const comprasService = {
 
   crearOrden: (data: Record<string, unknown>) =>
     api.post('/compras', data).then(r => r.data.data),
+
+  obtenerOrden: (id: string) =>
+    api.get(`/compras/${id}`).then(r => r.data.data),
 
   recibirMercancia: (ordenId: string, data: Record<string, unknown>) =>
     api.post(`/compras/${ordenId}/recibir`, data).then(r => r.data),

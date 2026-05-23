@@ -21,9 +21,9 @@ export function iniciarJobAlertas(): void {
 }
 
 // ── Umbrales de alerta de vencimiento ──────────────────────
-const UMBRALES_DIAS = [30, 15, 0]
+export const UMBRALES_DIAS = [30, 15, 0]
 
-function obtenerUmbral(diasRestantes: number): { tipo: string; mensaje: string } | null {
+export function obtenerUmbral(diasRestantes: number): { tipo: string; mensaje: string } | null {
   if (diasRestantes <= 0) {
     return { tipo: 'VENCIDO', mensaje: '⚠️ VENCIDO' }
   }

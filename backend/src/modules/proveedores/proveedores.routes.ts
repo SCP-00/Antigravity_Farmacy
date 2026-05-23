@@ -39,6 +39,19 @@ proveedoresRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
+proveedoresRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+  async (req: Request, res: Response) => {
+    try {
+      const p = await prisma.proveedor.findUnique({
+        where: { id: req.params.id },
+        include: { _count: { select: { ordenesCompra: true, lotes: true } } },
+      })
+      if (!p) return responder.noEncontrado(res, 'Proveedor')
+      return responder.ok(res, p)
+    } catch (err) { return responder.serverError(res, err) }
+  }
+)
+
 proveedoresRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   async (req: Request, res: Response) => {
     try {

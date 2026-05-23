@@ -30,10 +30,10 @@
 
 **Fase 4 — Proveedores y Compras**
 - /goals: abastecimiento completo; ordenes de compra; recepcion conciliada.
-- [ ] CRUD de proveedores con validacion NIT y condiciones comerciales.
-- [ ] Ordenes de compra automaticas por stock minimo y manuales.
-- [ ] Recepcion de mercancia con actualizacion de lotes y costos.
-- [ ] Historial y estados con auditoria.
+- [x] CRUD de proveedores con validacion NIT y condiciones comerciales.
+- [x] Ordenes de compra automaticas por stock minimo y manuales.
+- [x] Recepcion de mercancia con actualizacion de lotes y costos.
+- [x] Historial y estados con auditoria.
 
 **Fase 5 — POS y Caja**
 - /goals: venta rapida; control de caja; comprobantes; devoluciones.

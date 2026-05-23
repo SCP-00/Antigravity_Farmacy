@@ -53,6 +53,6 @@
     "prisma": "^5.7.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.6"
+    "vitest": "^3.2.4"
   }
 }
