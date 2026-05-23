@@ -1,4 +1,4 @@
-# Architecture overview
+﻿# Architecture overview
 
 ## Monorepo layout
 - \backend/: Express + TypeScript API, Prisma ORM, auth, POS, inventory, payments. Capas separadas de schemas y services.
@@ -9,6 +9,11 @@
 ## Entry points
 - Backend: \backend/src/server.ts
 - Frontend: \frontend/src/main.tsx
+
+## Estándar Regulatorio Colombiano (INVIMA / CUM / ATC)
+- **CUM como SKU real:** La farmacia gestiona su stock mediante el CUM exacto (`expedientecum + "-" + consecutivocum`) asegurando un control riguroso de cada presentación comercial independiente.
+- **Seguridad en Alérgenos y Excipientes:** El modelo posee los campos `alergenos` y `advertencias` en la tabla `productos` para advertir sobre trazas o excipientes sensibles (ej. *Lactosa, Tartrazina*) en la visualización del público B2C.
+- **Muestras Médicas Protegidas:** Se define la columna `esMuestraMedica`. El backend rechaza y excluye estos productos de cualquier consulta pública comercial para evitar la comercialización ilegal de muestras.
 
 ## Backend module catalog (verified)
 | Module | Route prefix | File | Status |
@@ -32,32 +37,14 @@
 | pagos | /api/v1/pagos | \backend/src/modules/pagos/pagos.routes.ts | active |
 | imagenes | /api/v1/imagenes | \backend/src/modules/imagenes/imagenes.routes.ts | active |
 
-## Frontend pages and route map (verified)
-- Registered in \frontend/src/app.tsx: all pages used by public, auth, cliente and admin routes.
-- \frontend/src/pages/_shared.tsx: helper for placeholder pages (active utility).
-- *All orphan and duplicate placeholder pages were removed during Phase 0.*
-
 ## Services (dominio)
 - \backend/src/services/inventario.service.ts: Lógica FEFO (First Expired, First Out) y cálculo de costo promedio.
 - \backend/src/services/ventas.service.ts: Registro de ventas con integración FEFO y puntos de fidelidad.
 
 ## Validaciones Zod
 - \backend/src/schemas/inventario.schema.ts: Schemas para creación de lotes y ajustes de inventario.
-- \backend/src/schemas/productos.schema.ts: Schemas para creación/actualización de productos.
-- \backend/src/schemas/ventas.schema.ts: Schema para registro de ventas con items.
+- \backend/src/schemas/productos.schema.ts: Schemas para creación/actualización de productos (Con validación estricta de CUM e INVIMA).
 - Todos exportados centralizadamente desde \backend/src/schemas/index.ts.
 
-## OAuth (implementado, requiere credenciales)
-- **Google OAuth**: \backend/src/config/passport.ts configura estrategia Google; rutas en \backend/src/modules/auth-cliente/authCliente.routes.ts (/google, /google/callback).
-- **Login por correo**: Registro tradicional con email + contraseña (bcrypt, verificación por email, recuperación de contraseña).
-- Activación: Descomentar las variables en .env:
-  - `GOOGLE_CLIENT_ID` — Client ID de Google Cloud Console
-  - `GOOGLE_CLIENT_SECRET` — Client Secret de Google Cloud Console
-  - `GOOGLE_CALLBACK_URL` — http://localhost:3000/api/v1/clientes/auth/google/callback
-
 ## Jobs (CRON)
-- \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email. **Activo** — iniciado en server.ts.
-
-## Source of truth for env
-- Source of truth: root .env.
-- \backend/.env is treated as a compatibility fallback for scripts and developer tooling.
+- \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email.

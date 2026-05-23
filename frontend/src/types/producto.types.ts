@@ -1,4 +1,4 @@
-export interface CategoriaCatalogo {
+﻿export interface CategoriaCatalogo {
 	id: string
 	nombre: string
 	slug: string
@@ -15,8 +15,15 @@ export interface SedeCatalogo {
 
 export interface ProductoCatalogo {
 	id: string
+	cum: string
+	registroInvima: string
 	slug: string
 	nombre: string
+	principioActivo: string
+	atc?: string
+	titular?: string
+	formaFarmaceutica?: string
+	viaAdministracion?: string
 	marca: string
 	categoriaSlug: string
 	categoriaNombre: string
@@ -30,6 +37,10 @@ export interface ProductoCatalogo {
 	requiereRx: boolean
 	laboratorio: string
 	imagenUrl?: string
+	estadoCum?: string
+	esMuestraMedica: boolean
+	alergenos?: string | null
+	advertencias?: string | null
 }
 
 export interface CarritoProducto {

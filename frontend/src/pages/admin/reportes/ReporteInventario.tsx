@@ -49,7 +49,7 @@ export default function ReporteInventario() {
       <div className="surface overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="font-semibold text-gray-900">Lotes próximos a vencer (Siguientes 30 días)</h2>
-          <Link to="/admin/inventario/lotes" className="text-sm text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1">Ver todos los lotes <ArrowRight size={14}/></Link>
+          <Link to="/admin/inventario/lotes" className="text-sm text-teal-700 hover:text-teal-900 font-medium flex items-center gap-1 font-semibold">Ver todos los lotes <ArrowRight size={14}/></Link>
         </div>
         
         {data?.porVencer?.length === 0 ? (
@@ -77,8 +77,8 @@ export default function ReporteInventario() {
                       <td className="px-5 py-4 font-semibold text-gray-900">{lote.producto?.nombre}</td>
                       <td className="px-5 py-4 text-center font-medium">{lote.cantidadActual}</td>
                       <td className="px-5 py-4 text-right">
-                        <span className={inline-flex px-2.5 py-1 rounded-full text-xs font-bold }>
-                          {fechaCorta(lote.fechaVencimiento)} ({diasRestantes <= 0 ? 'Vencido' : n  d})
+                        <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          {fechaCorta(lote.fechaVencimiento)} ({diasRestantes <= 0 ? 'Vencido' : `${diasRestantes} días`})
                         </span>
                       </td>
                     </tr>
