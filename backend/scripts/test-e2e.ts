@@ -25,7 +25,7 @@ async function runTests() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'admin@farmacy.co', password: 'Admin@1234' })
     });
-    const dataAdmin: any = await resLoginAdmin.json();
+    const dataAdmin = await resLoginAdmin.json();
     assert(resLoginAdmin.ok && dataAdmin.data.token, 'Login exitoso para Admin - Generación de JWT (Fase 2)');
     const adminToken = dataAdmin.data.token;
     const adminRefresh = dataAdmin.data.refreshToken;
@@ -34,7 +34,7 @@ async function runTests() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'farmaceuta@farmacy.co', password: 'Farm@1234' })
     });
-    const dataFarm: any = await resLoginFarm.json();
+    const dataFarm = await resLoginFarm.json();
     const farmToken = dataFarm.data.token;
 
     // ── 3. RBAC (Fase 2) ────────────────────────────────────
@@ -53,7 +53,7 @@ async function runTests() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: adminRefresh })
     });
-    const dataRefresh: any = await resRefresh.json();
+    const dataRefresh = await resRefresh.json();
     assert(resRefresh.ok && dataRefresh.data.token, 'Refresh Token: Rotación genera un nuevo par de tokens exitosamente (Fase 2)');
     const newAdminToken = dataRefresh.data.token;
 

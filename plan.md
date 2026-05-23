@@ -18,7 +18,7 @@
 - /goals: autenticacion unificada; roles SRS; sesiones seguras.
 - [x] Alinear hashing con Argon2id (excepción formalizada: se mantiene bcryptjs).
 - [x] Implementar RBAC por rol y auditoría de accesos denegados. (ADMINISTRADOR, FARMACEUTA, AUXILIAR/CAJERO).
-- [ ] OAuth Google/Facebook para clientes con linking seguro a cuentas existentes.
+- [x] OAuth Google/Facebook para clientes con linking seguro a cuentas existentes (código implementado en passport.ts + rutas /google /facebook; solo falta proveer credenciales en .env).
 - [x] Rotacion de refresh tokens e invalidacion (Blacklisting) en Redis completada.
 
 **Fase 3 — Inventario y Lotes (FEFO)**
