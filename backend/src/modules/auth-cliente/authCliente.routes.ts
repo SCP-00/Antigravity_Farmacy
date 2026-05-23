@@ -311,3 +311,14 @@ authClienteRouter.post('/favoritos', autenticarCliente, async (req: Request, res
     return responder.creado(res, fav, 'Agregado a favoritos')
   } catch (err) { return responder.serverError(res, err) }
 })
+// ── POST /logout ──────────────────────────────────────────
+authClienteRouter.post('/logout', autenticarCliente, async (req: Request, res: Response) => {
+  const header = req.headers.authorization
+  const token = header?.startsWith('Bearer ') ? header.slice(7) : null
+  
+  // Agregar el token del cliente a la lista negra por 30 días (expiración máxima de clientes)
+  if (token) {
+    await cache.set(`bl_cli_${token}`, 'revoked', 60 * 60 * 24 * 30)
+  }
+  return responder.ok(res, null, 'Sesión cerrada exitosamente')
+})

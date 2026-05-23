@@ -16,10 +16,10 @@
 
 **Fase 2 — Seguridad y RBAC**
 - /goals: autenticacion unificada; roles SRS; sesiones seguras.
-- [ ] Alinear hashing con Argon2id (o formalizar excepcion si se mantiene bcrypt).
-- [ ] Implementar RBAC por rol y casos de uso reales (ADMINISTRADOR, FARMACEUTA, AUXILIAR/CAJERO).
+- [x] Alinear hashing con Argon2id (excepción formalizada: se mantiene bcryptjs).
+- [x] Implementar RBAC por rol y auditoría de accesos denegados. (ADMINISTRADOR, FARMACEUTA, AUXILIAR/CAJERO).
 - [ ] OAuth Google/Facebook para clientes con linking seguro a cuentas existentes.
-- [ ] Rotacion de refresh tokens e invalidacion en Redis.
+- [x] Rotacion de refresh tokens e invalidacion (Blacklisting) en Redis completada.
 
 **Fase 3 — Inventario y Lotes (FEFO)**
 - /goals: control de lotes; FEFO automatico; alertas de vencimiento; cumplimiento INVIMA.
@@ -83,5 +83,8 @@
 - [ ] Tests minimos (unit/integration) y seeds listos.
 - [ ] Documentacion actualizada en `docs/`.
 - [ ] Revision de seguridad y rendimiento.
+
+
+
 
 
