@@ -1,61 +1,85 @@
-import React from 'react'
+import { Printer, X } from 'lucide-react'
 
-export default function InvoicePreview({ venta }: any) {
-  // venta: { numero, fecha, cliente, items: [{nombre, cantidad, precio}], subtotal, descuento, iva, total }
-  const v = venta ?? {
-    numero: '0001', fecha: new Date().toLocaleString(), cliente: { nombre: 'Consumidor final' },
-    items: [ { nombre: 'Acetaminofén 500mg', cantidad: 1, precio: 6800 } ], subtotal: 6800, descuento: 0, iva: 0, total: 6800
+interface InvoiceProps {
+  venta: any
+  onClose: () => void
+}
+
+export default function InvoicePreview({ venta, onClose }: InvoiceProps) {
+  const handlePrint = () => {
+    window.print()
   }
 
+  // Estilos pensados para impresora térmica de 80mm
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold">Farmacy</h2>
-          <p className="text-sm text-gray-500">Sede principal</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-400">Factura</p>
-          <p className="font-mono font-bold">F-{String(v.numero).padStart(4, '0')}</p>
-          <p className="text-xs text-gray-400">{v.fecha}</p>
-        </div>
-      </header>
-
-      <section className="mb-4">
-        <p className="text-sm">Cliente: <strong>{v.cliente?.nombre}</strong></p>
-        <p className="text-sm text-gray-500">Documento: {v.cliente?.documento ?? 'N/A'}</p>
-      </section>
-
-      <table className="w-full text-sm mb-4">
-        <thead>
-          <tr className="text-left text-xs text-gray-500">
-            <th>Producto</th>
-            <th className="text-right">Cant.</th>
-            <th className="text-right">Precio</th>
-          </tr>
-        </thead>
-        <tbody>
-          {v.items.map((it: any, idx: number) => (
-            <tr key={idx} className="border-t">
-              <td className="py-2">{it.nombre}</td>
-              <td className="py-2 text-right">{it.cantidad}</td>
-              <td className="py-2 text-right">${it.precio.toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="text-sm space-y-1">
-        <div className="flex justify-between"><span>Subtotal</span><span>${(v.subtotal).toLocaleString()}</span></div>
-        <div className="flex justify-between"><span>Descuento</span><span>-${(v.descuento).toLocaleString()}</span></div>
-        <div className="flex justify-between"><span>IVA</span><span>${(v.iva).toLocaleString()}</span></div>
-        <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span>${(v.total).toLocaleString()}</span></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm print:bg-white print:fixed print:inset-0 print:z-[9999]">
+      {/* Botones de acción (ocultos al imprimir) */}
+      <div className="absolute top-4 right-4 flex gap-3 print:hidden">
+        <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white text-gray-800 rounded-xl font-medium hover:bg-gray-100 transition shadow-lg">
+          <Printer size={18} /> Imprimir tirilla
+        </button>
+        <button onClick={onClose} className="p-2 bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition shadow-lg">
+          <X size={20} />
+        </button>
       </div>
 
-      <footer className="mt-6 text-xs text-gray-500">
-        <p>Factura digital disponible en PDF y enviada por correo electrónico.</p>
-        <p>Para impresora térmica, use el modo "Imprimir" del navegador.</p>
-      </footer>
+      {/* Contenedor del recibo */}
+      <div className="bg-white w-[80mm] min-h-[100mm] p-4 shadow-2xl text-black font-mono text-xs print:shadow-none print:p-0 print:m-0 mx-auto">
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-bold uppercase tracking-wider">FARMACY</h2>
+          <p className="text-[10px]">NIT: 900.000.000-1</p>
+          <p className="text-[10px]">Sede Principal</p>
+          <p className="text-[10px]">Tel: (606) 335-0000</p>
+          <div className="border-b-2 border-dashed border-black my-2"></div>
+        </div>
+
+        <div className="mb-4">
+          <p>FECHA: {venta.fecha ? new Date(venta.fecha).toLocaleString('es-CO') : new Date().toLocaleString('es-CO')}</p>
+          <p>TICKET: #F-{String(venta.numero ?? 0).padStart(5, '0')}</p>
+          <p>CAJERO: {venta.cajero ?? 'Empleado'}</p>
+          <p>CLIENTE: {venta.cliente?.nombre ?? 'Consumidor Final'}</p>
+          {venta.cliente?.documento && <p>CC/NIT: {venta.cliente.documento}</p>}
+        </div>
+
+        <div className="border-b-2 border-dashed border-black my-2"></div>
+
+        <table className="w-full text-left mb-2">
+          <thead>
+            <tr>
+              <th className="py-1">CANT</th>
+              <th className="py-1">PRODUCTO</th>
+              <th className="py-1 text-right">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {venta.items.map((it: any, idx: number) => (
+              <tr key={idx}>
+                <td className="py-1 align-top">{it.cantidad}</td>
+                <td className="py-1 align-top pr-1">{it.nombre}</td>
+                <td className="py-1 align-top text-right">${(it.precioUnitario * it.cantidad).toLocaleString('es-CO')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="border-b-2 border-dashed border-black my-2"></div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between"><span>SUBTOTAL:</span><span>${(venta.subtotal ?? 0).toLocaleString('es-CO')}</span></div>
+          {venta.descuento > 0 && <div className="flex justify-between"><span>DESCUENTO:</span><span>-${venta.descuento.toLocaleString('es-CO')}</span></div>}
+          <div className="flex justify-between font-bold text-sm mt-1 pt-1 border-t border-black">
+            <span>TOTAL:</span><span>${(venta.total ?? 0).toLocaleString('es-CO')}</span>
+          </div>
+        </div>
+
+        <div className="text-center mt-6 space-y-1">
+          <p>MÉTODO DE PAGO: {venta.metodoPago ?? 'EFECTIVO'}</p>
+          <div className="border-b-2 border-dashed border-black my-3"></div>
+          <p className="font-bold">¡GRACIAS POR SU COMPRA!</p>
+          <p className="text-[9px]">Conserve este recibo para cualquier reclamo.</p>
+          <p className="text-[9px]">Devoluciones max. 15 dias.</p>
+        </div>
+      </div>
     </div>
   )
 }

@@ -361,3 +361,18 @@ model ChatbotSesion {
   creadoEn     DateTime @default(now()) @map("creado_en")
   @@map("chatbot_sesiones")
 }
+
+// ── CÓDIGOS DE DESCUENTO ───────────────────────────────────
+model CodigoDescuento {
+  id              String    @id @default(uuid()) @db.Uuid
+  codigo          String    @unique @db.VarChar(50)
+  tipo            String    @db.VarChar(20)   // PORCENTAJE | MONTO
+  valor           Decimal   @db.Decimal(12, 2)
+  activo          Boolean   @default(true)
+  usosMaximos     Int?      @map("usos_maximos")
+  usosActuales    Int       @default(0) @map("usos_actuales")
+  fechaInicio     DateTime? @map("fecha_inicio")
+  fechaFin        DateTime? @map("fecha_fin")
+  creadoEn        DateTime  @default(now()) @map("creado_en")
+  @@map("codigos_descuento")
+}

@@ -72,3 +72,13 @@ Use this log to record completed milestones and the files changed for each phase
   - `docs/architecture.md`: Actualizada sección OAuth (solo Google + correo)
   - `plan.md`: Actualizada línea de OAuth (solo Google)
   - Dependencias `passport-facebook` y `@types/passport-facebook` desinstaladas
+
+## 2026-05-23 (Fases 5 y 6 completadas)
+- **Fase 5 (POS y Caja) Finalizada**:
+  - Implementación del modal de Arqueo y Cierre de Caja calculando diferencias automáticas (HistorialCaja.tsx).
+  - Generación visual de Tirilla Térmica POS imprimible tras registrar una venta (InvoicePreview.tsx).
+  - Flujo fluido entre escáner de códigos de barras, carrito POS y cobro.
+- **Fase 6 (Tienda B2C) Funcional**:
+  - Se conectó el Catálogo, Carrito y Mis Pedidos a la Base de Datos real.
+  - Implementación del flujo de "Checkout" reservando stock y deduciendo con método FEFO.
+  - El sistema exige ahora validación o login según sea configurado.

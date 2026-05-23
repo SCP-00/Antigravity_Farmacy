@@ -9,6 +9,7 @@ export class VentasService {
     empleadoId: string
     metodoPago: string
     descuento: number
+    puntosUsados?: number
     items: Array<{ productoId: string; cantidad: number; precioUnitario: number; descuento?: number }>
   }) {
     return await prisma.$transaction(async (tx: any) => {
@@ -16,7 +17,7 @@ export class VentasService {
       const detalles: any[] = []
 
       for (const item of data.items) {
-        // Uso del servicio FEFO para descontar el inventario
+        // Descontar inventario FEFO
         const lotesUsados = await InventarioService.descontarStockFEFO(
           tx,
           item.productoId,
@@ -45,9 +46,11 @@ export class VentasService {
         }
       }
 
-      const total = subtotal - (data.descuento ?? 0)
+      // El total ahora resta el descuento manual/código y los puntos usados ($1 = 1 punto)
+      const puntosDescontados = data.puntosUsados ?? 0
+      const total = Math.max(0, subtotal - (data.descuento ?? 0) - puntosDescontados)
 
-      // Registrar la venta principal
+      // Registrar venta
       const venta = await tx.venta.create({
         data: {
           sucursalId: data.sucursalId,
@@ -56,7 +59,7 @@ export class VentasService {
           clienteId: data.clienteId ?? null,
           metodoPago: data.metodoPago,
           subtotal,
-          descuento: data.descuento ?? 0,
+          descuento: (data.descuento ?? 0) + puntosDescontados,
           iva: 0,
           total,
           estado: 'PAGADO',
@@ -65,16 +68,25 @@ export class VentasService {
         include: { detalles: true },
       })
 
-      // Sumar puntos de fidelidad si hay un cliente asociado
+      // Manejo de puntos (Fidelidad)
       if (data.clienteId) {
-        const puntos = Math.floor(total / 1000)
-        if (puntos > 0) {
+        // 1. Restar los puntos usados
+        if (puntosDescontados > 0) {
+          await tx.cliente.update({
+            where: { id: data.clienteId },
+            data: { puntosAcumulados: { decrement: puntosDescontados } }
+          })
+        }
+
+        // 2. Sumar los nuevos puntos generados (1 punto por cada $100 COP pagados en TOTAL FINAL)
+        const puntosGanados = Math.floor(total / 100)
+        if (puntosGanados > 0) {
           const expira = new Date()
           expira.setFullYear(expira.getFullYear() + 1)
           await tx.cliente.update({
             where: { id: data.clienteId },
             data: {
-              puntosAcumulados: { increment: puntos },
+              puntosAcumulados: { increment: puntosGanados },
               puntosExpiranEn: expira,
             },
           })

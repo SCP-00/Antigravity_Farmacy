@@ -1,90 +1,50 @@
 # Roadmap plan
 
 **Fase 0 — Alineacion y limpieza**
-- /goals: mapa real de modulos; eliminar stubs; normalizar puertos/config; reducir deuda de estructura.
-- [x] Inventariar `backend/src/modules` y `frontend/src/pages` para detectar stubs, duplicados y rutas huerfanas.
-- [x] Consolidar modulos redundantes y mover logica compartida a un dominio unico (inventario/precios/stock).
-- [x] Normalizar puertos y origen de `.env` entre backend, Vite y `run.bat`.
-- [x] Definir catalogo oficial de modulos y retirar exclusiones temporales cuando esten listos.
+- [x] Inventariar modulos y detectar stubs.
+- [x] Normalizar puertos y origen de .env.
 
 **Fase 1 — Nucleo de datos y servicios compartidos**
-- /goals: modelo de datos consistente; servicios de dominio reutilizables; integracion POS+B2C.
-- [x] Validar el esquema Prisma actual contra SRS y fijar el modelo canonico.
-- [x] Crear servicios de dominio: catalogo, pricing/IVA, stock, FEFO, sucursales.
-- [x] Establecer DTOs y validaciones Zod compartidas para API y UI.
-- [x] Asegurar seeds/migraciones idempotentes y coherentes con el dominio.
+- [x] Validar el esquema Prisma y crear servicios FEFO.
+- [x] Establecer DTOs y validaciones Zod.
 
 **Fase 2 — Seguridad y RBAC**
-- /goals: autenticacion unificada; roles SRS; sesiones seguras.
-- [x] Alinear hashing con Argon2id (excepción formalizada: se mantiene bcryptjs).
-- [x] Implementar RBAC por rol y auditoría de accesos denegados. (ADMINISTRADOR, FARMACEUTA, AUXILIAR/CAJERO).
-- [x] OAuth Google para clientes con linking seguro a cuentas existentes (código implementado en passport.ts + rutas /google; solo falta proveer credenciales en .env).
-- [x] Rotacion de refresh tokens e invalidacion (Blacklisting) en Redis completada.
+- [x] Implementar RBAC por rol y auditoría.
+- [x] OAuth Google implementado.
+- [x] Rotacion de refresh tokens y Blacklisting en Redis.
 
 **Fase 3 — Inventario y Lotes (FEFO)**
-- /goals: control de lotes; FEFO automatico; alertas de vencimiento; cumplimiento INVIMA.
-- [x] Logica FEFO centralizada usada por POS y B2C (InventarioService.descontarStockFEFO + VentasService).
-- [x] Bloqueo de venta de lotes vencidos (obtenerLotesFEFO filtra fechaVencimiento > new Date(); el job marca alertas VENCIDO).
-- [x] Alertas 30/15/0 dias con panel operativo para auxiliares (job diario con umbrales escalonados + endpoint PATCH /leer).
-- [x] Movimientos con justificacion y trazabilidad por empleado (backend completo + frontend con timeline y filtros).
+- [x] Logica FEFO centralizada.
+- [x] Alertas 30/15/0 dias (job diario).
+- [x] Movimientos con trazabilidad.
 
 **Fase 4 — Proveedores y Compras**
-- /goals: abastecimiento completo; ordenes de compra; recepcion conciliada.
-- [x] CRUD de proveedores con validacion NIT y condiciones comerciales.
-- [x] Ordenes de compra automaticas por stock minimo y manuales.
-- [x] Recepcion de mercancia con actualizacion de lotes y costos.
-- [x] Historial y estados con auditoria.
+- [x] CRUD de proveedores.
+- [x] Ordenes de compra y recepcion de mercancia.
 
-**Fase 5 — POS y Caja**
-- /goals: venta rapida; control de caja; comprobantes; devoluciones.
-- [ ] Flujo POS con busqueda/escaneo y respuesta <1.5s.
-- [ ] Apertura/cierre de caja con arqueo y justificacion de descuadres.
-- [ ] Generacion de PDF de tirilla + export CSV contable.
-- [ ] Devoluciones con reintegro de stock y logs inmutables.
+**Fase 5 — POS, Caja, Fidelidad y Erradicación de Placeholders (ACTUAL - PRIORIDAD)**
+- /goals: venta rapida; caja; sistema de puntos/descuentos; construir TODAS las paginas faltantes.
+- [x] Flujo POS con busqueda/escaneo y respuesta <1.5s.
+- [x] Apertura/cierre de caja con arqueo y justificacion.
+- [x] Generacion de PDF de tirilla.
+- [x] Sistema de Puntos (Cashback $100 = 1pto = $1) y UI de Descuentos.
+- [ ] Construir página: Devoluciones (Admin).
+- [ ] Construir páginas: Clientes, DetalleCliente y ProgramaFidelidad (Admin).
+- [ ] Construir páginas: Empleados y DetalleEmpleado (Admin).
+- [ ] Construir páginas: Reportes (Ventas, Inventario, Compras, Clientes).
+- [ ] Construir páginas: Configuración (General, Usuarios, Sucursales, Seguridad).
 
 **Fase 6 — Tienda B2C**
-- /goals: catalogo publico; carrito/checkout; cuenta cliente; fidelizacion.
-- [ ] Catalogo con filtros y disponibilidad por sucursal en tiempo real.
-- [ ] Carrito y reservas temporales conectadas a stock/FEFO.
-- [ ] Cuenta cliente: perfil, favoritos, pedidos, consentimiento Habeas Data.
-- [ ] Programa de puntos integrado a ventas y descuentos.
+- [x] Catalogo publico con filtros conectados a BD.
+- [x] Carrito y validacion FEFO.
+- [x] Cuenta cliente: perfil, favoritos, pedidos.
+- [ ] Politica de Privacidad y Terminos (Páginas publicas).
 
 **Fase 7 — Pagos**
-- /goals: pagos multipasarela; webhooks; conciliacion fiable.
-- [ ] Wompi: intencion, confirmacion, webhook y estados idempotentes.
-- [ ] Stripe: PaymentIntent, webhook, manejo de reintentos.
-- [ ] MercadoPago: preference, IPN/webhook, conciliacion.
-- [ ] Registro de transacciones y anti-fraude basico.
+- [ ] Wompi, Stripe, MercadoPago (Intencion, Webhooks).
 
 **Fase 8 — Chatbot**
-- /goals: consulta de stock; reserva temporal; escalamiento humano; compliance medico.
-- [ ] Busqueda por producto/sucursal con latencia <2.5s.
-- [ ] Reserva temporal (4h) con expiracion y bloqueo de stock.
-- [ ] Escalamiento a humano con registro JSONB de conversacion.
-- [ ] Disclaimer obligatorio y bloqueo de prescripcion.
+- [ ] Escalamiento a humano y memoria LLM.
 
-**Fase 9 — Reportes y Auditoria**
-- /goals: visibilidad operativa; cumplimiento legal; control financiero.
-- [ ] Reportes ventas/inventario/caja en admin con Recharts.
-- [ ] Logs de actividad con valores anteriores/nuevos e IP.
-- [ ] Alertas de eventos criticos (lotes vencidos, descuadres).
-- [ ] Backups programados y verificacion periodica.
-
-**Fase 10 — Modulo de documentacion**
-- /goals: documentacion viva; trazabilidad; guia operativa.
-- [ ] Crear `docs/` con arquitectura, flujos POS/B2C y mapa de modulos.
-- [ ] ADRs para decisiones clave (hashing, roles, pagos, FEFO).
-- [ ] Playbooks de operacion (deploy, backups, webhooks, fallos).
-- [ ] Actualizar docs en cada fase completada.
-
-**Definition of Done por modulo**
-- [ ] Endpoints API + validaciones completas.
-- [ ] UI funcional con estados de error y loading.
-- [ ] Tests minimos (unit/integration) y seeds listos.
-- [ ] Documentacion actualizada en `docs/`.
-- [ ] Revision de seguridad y rendimiento.
-
-
-
-
-
+**Fase 9 — Auditoria Final**
+- [ ] Logs de actividad completos y revision de rendimiento.
