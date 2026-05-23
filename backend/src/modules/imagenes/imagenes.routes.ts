@@ -9,7 +9,7 @@ import { responder } from '../../utils/respuesta.utils'
 import { autenticar, autorizar } from '../../middlewares/index'
 import { env } from '../../config/env'
 
-export const imagenesRouter = Router()
+export const imagenesRouter: Router = Router()
 
 // Configurar Cloudinary si las credenciales están disponibles
 if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {

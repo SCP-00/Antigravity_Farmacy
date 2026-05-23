@@ -1,8 +1,9 @@
 // ══════════════════════════════════════════════════════════
-//  FARMACY Backend — app.ts  (versión corregida)
-//  Conecta todos los módulos reales, sin datos mock
+//  FARMACY Backend — app.ts
+//  Conecta todos los módulos reales, separados por dominio
 // ══════════════════════════════════════════════════════════
-import express from 'express'
+import express, { Express } from 'express'
+import { Request, Response } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import passport from 'passport'
@@ -10,7 +11,7 @@ import { env } from './config/env'
 import { configurePassport } from './config/passport'
 import { manejarErrores, limitarPeticiones, loggerHttp } from './middlewares/index'
 
-// ── Módulos con implementación propia ─────────────────────
+// ── Módulos ─────────────────────────────────────────────
 import { authRouter } from './modules/auth/auth.routes'
 import { authClienteRouter } from './modules/auth-cliente/authCliente.routes'
 import { authClientePerfilRouter } from './modules/auth-cliente/authCliente.perfil.routes'
@@ -22,21 +23,17 @@ import { chatbotRouter } from './modules/chatbot/chatbot.routes'
 import { pagosRouter } from './modules/pagos/pagos.routes'
 import { imagenesRouter } from './modules/imagenes/imagenes.routes'
 
-// ── Módulos centralizados en inventario.routes.ts ─────────
-// (lotesRouter, inventarioRouter, proveedoresRouter, comprasRouter,
-//  clientesAdminRouter, empleadosRouter, sucursalesRouter, reportesRouter)
-import {
-  lotesRouter,
-  inventarioRouter,
-  proveedoresRouter,
-  comprasRouter,
-  clientesAdminRouter,
-  empleadosRouter,
-  sucursalesRouter,
-  reportesRouter,
-} from './modules/inventario/inventario.routes'
+// ── Módulos separados en la refactorización ──────────────
+import { lotesRouter } from './modules/lotes/lotes.routes'
+import { inventarioRouter } from './modules/inventario/inventario.routes'
+import { proveedoresRouter } from './modules/proveedores/proveedores.routes'
+import { comprasRouter } from './modules/compras/compras.routes'
+import { clientesAdminRouter } from './modules/clientes/clientes.admin.routes'
+import { empleadosRouter } from './modules/empleados/empleados.routes'
+import { sucursalesRouter } from './modules/sucursales/sucursales.routes'
+import { reportesRouter } from './modules/reportes/reportes.routes'
 
-export function createApp() {
+export function createApp(): Express {
   const app = express()
   const prefix = env.API_PREFIX   // '/api/v1'
 
@@ -56,7 +53,7 @@ export function createApp() {
   app.use(limitarPeticiones)
 
   // ── Health check ──────────────────────────────────────
-  app.get(`${prefix}/health`, (_req, res) => {
+  app.get(`${prefix}/health`, (_req: Request, res: Response) => {
     res.json({
       ok: true,
       app: env.FARMACIA_NOMBRE,
@@ -66,33 +63,34 @@ export function createApp() {
   })
 
   // ── Rutas públicas / autenticación ───────────────────
-  app.use(`${prefix}/auth`, authRouter)          // POST /login /refresh /me /logout
-  app.use(`${prefix}/clientes/auth`, authClienteRouter)   // POST /registro /login /me ...
-  app.use(`${prefix}/clientes/auth`, authClientePerfilRouter) // GET/PATCH /me, GET /favoritos
-  app.use(`${prefix}/categorias`, categoriasRouter)    // GET / (público) POST PATCH (admin)
-  app.use(`${prefix}/sucursales`, sucursalesRouter)    // GET / (público) POST PATCH (admin)
-  app.use(`${prefix}/chatbot`, chatbotRouter)       // POST / GET /horario
-  app.use(`${prefix}/imagenes`, imagenesRouter)      // POST /subir (Cloudinary)
+  app.use(`${prefix}/auth`, authRouter)
+  app.use(`${prefix}/clientes/auth`, authClienteRouter)
+  app.use(`${prefix}/clientes/auth`, authClientePerfilRouter)
+  app.use(`${prefix}/categorias`, categoriasRouter)
+  app.use(`${prefix}/sucursales`, sucursalesRouter)
+  app.use(`${prefix}/chatbot`, chatbotRouter)
+  app.use(`${prefix}/imagenes`, imagenesRouter)
 
   // ── Productos: GET /buscar público, resto protegido ──
   app.use(`${prefix}/productos`, productosRouter)
 
   // ── Rutas protegidas (requieren Bearer token) ─────────
-  app.use(`${prefix}/lotes`, lotesRouter)         // CRUD lotes
-  app.use(`${prefix}/inventario`, inventarioRouter)    // ajustes, movimientos, alertas
-  app.use(`${prefix}/ventas`, ventasRouter)        // POS + dashboard
-  app.use(`${prefix}/caja`, cajaRouter)          // apertura, cierre, historial
-  app.use(`${prefix}/clientes`, clientesAdminRouter) // panel admin de clientes
-  app.use(`${prefix}/empleados`, empleadosRouter)     // CRUD empleados
-  app.use(`${prefix}/proveedores`, proveedoresRouter)   // CRUD proveedores
-  app.use(`${prefix}/compras`, comprasRouter)       // órdenes de compra
-  app.use(`${prefix}/reportes`, reportesRouter)      // ventas, inventario
-  app.use(`${prefix}/pagos`, pagosRouter)         // Wompi / Stripe / MercadoPago
+  app.use(`${prefix}/lotes`, lotesRouter)
+  app.use(`${prefix}/inventario`, inventarioRouter)
+  app.use(`${prefix}/ventas`, ventasRouter)
+  app.use(`${prefix}/caja`, cajaRouter)
+  app.use(`${prefix}/clientes`, clientesAdminRouter)
+  app.use(`${prefix}/empleados`, empleadosRouter)
+  app.use(`${prefix}/proveedores`, proveedoresRouter)
+  app.use(`${prefix}/compras`, comprasRouter)
+  app.use(`${prefix}/reportes`, reportesRouter)
+  app.use(`${prefix}/pagos`, pagosRouter)
 
   // ── 404 y manejador global de errores ─────────────────
-  app.use((_req, res) => {
+  app.use((_req: Request, res: Response) => {
     res.status(404).json({ ok: false, error: 'Ruta no encontrada' })
-  })
+  }
+)
   app.use(manejarErrores)
 
   return app

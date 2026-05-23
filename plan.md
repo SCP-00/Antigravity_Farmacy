@@ -9,10 +9,10 @@
 
 **Fase 1 — Nucleo de datos y servicios compartidos**
 - /goals: modelo de datos consistente; servicios de dominio reutilizables; integracion POS+B2C.
-- [ ] Validar el esquema Prisma actual contra SRS y fijar el modelo canonico.
-- [ ] Crear servicios de dominio: catalogo, pricing/IVA, stock, FEFO, sucursales.
-- [ ] Establecer DTOs y validaciones Zod compartidas para API y UI.
-- [ ] Asegurar seeds/migraciones idempotentes y coherentes con el dominio.
+- [x] Validar el esquema Prisma actual contra SRS y fijar el modelo canonico.
+- [x] Crear servicios de dominio: catalogo, pricing/IVA, stock, FEFO, sucursales.
+- [x] Establecer DTOs y validaciones Zod compartidas para API y UI.
+- [x] Asegurar seeds/migraciones idempotentes y coherentes con el dominio.
 
 **Fase 2 — Seguridad y RBAC**
 - /goals: autenticacion unificada; roles SRS; sesiones seguras.
@@ -83,3 +83,5 @@
 - [ ] Tests minimos (unit/integration) y seeds listos.
 - [ ] Documentacion actualizada en `docs/`.
 - [ ] Revision de seguridad y rendimiento.
+
+

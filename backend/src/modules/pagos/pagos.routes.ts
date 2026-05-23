@@ -18,7 +18,7 @@ import { autenticar, autenticarCliente } from '../../middlewares/index'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
 
-export const pagosRouter = Router()
+export const pagosRouter: Router = Router()
 
 // Clientes de pasarelas (opcionales según .env)
 const stripe = env.STRIPE_SECRET_KEY

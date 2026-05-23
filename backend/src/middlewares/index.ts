@@ -1,7 +1,7 @@
 // Centralized middleware exports for backend routes.
 
 import { Request, Response, NextFunction } from 'express'
-import rateLimit from 'express-rate-limit'
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit'
 import { ZodSchema } from 'zod'
 import { jwtEmpleado, jwtCliente } from '../utils/jwt.utils'
 import { responder } from '../utils/respuesta.utils'
@@ -143,7 +143,7 @@ export function manejarErrores(
   return responder.serverError(res, err)
 }
 
-export const limitarPeticiones = rateLimit({
+export const limitarPeticiones: RateLimitRequestHandler = rateLimit({
   windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS),
   max: parseInt(env.RATE_LIMIT_MAX),
   standardHeaders: true,
@@ -151,7 +151,7 @@ export const limitarPeticiones = rateLimit({
   message: { ok: false, error: 'Demasiadas peticiones, intenta mas tarde' },
 })
 
-export const limitarLogin = rateLimit({
+export const limitarLogin: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parseInt(env.RATE_LIMIT_AUTH_MAX),
   skipSuccessfulRequests: true,

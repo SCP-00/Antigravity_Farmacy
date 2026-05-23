@@ -12,7 +12,7 @@ export function Header() {
   const location = useLocation()
   
   const totalItems = useCarritoStore((state: any) => state.totalItems())
-  const { usuario, cerrarSesion } = useAuthClienteStore()
+  const { cliente, cerrarSesion } = useAuthClienteStore()
 
   const handleBuscar = (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,7 +80,7 @@ export function Header() {
             </Link>
 
             {/* User menu */}
-            {usuario ? (
+            {cliente ? (
               <div className="hidden sm:flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                   <User className="w-4 h-4 text-blue-600" />
@@ -187,7 +187,7 @@ export function Header() {
               className="text-blue-600 font-medium py-2"
               onClick={() => setMenuAbierto(false)}
             >
-              {usuario ? 'Mi Cuenta' : 'Iniciar Sesión'}
+              {cliente ? 'Mi Cuenta' : 'Iniciar Sesión'}
             </Link>
           </nav>
         </div>

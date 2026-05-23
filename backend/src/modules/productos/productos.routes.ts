@@ -15,7 +15,7 @@ import { cache } from '../../config/redis'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo, validarQuery } from '../../middlewares/index'
 
-export const productosRouter = Router()
+export const productosRouter: Router = Router()
 
 // ── Schemas ───────────────────────────────────────────────
 const buscarSchema = z.object({
@@ -107,9 +107,9 @@ productosRouter.get('/buscar', validarQuery(buscarSchema), async (req: Request, 
     ])
 
     // Calcula stock total por producto
-    const resultado = productos.map(p => ({
+    const resultado = productos.map((p: any) => ({
       ...p,
-      stockTotal: p.lotes.reduce((s, l) => s + l.cantidadActual, 0),
+      stockTotal: p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0),
       lotes: undefined,
     }))
 
@@ -164,11 +164,11 @@ productosRouter.get(
         }),
       ])
 
-      const resultado = productos.map(p => ({
+      const resultado = productos.map((p: any) => ({
         ...p,
-        stockTotal: p.lotes.reduce((s, l) => s + l.cantidadActual, 0),
+        stockTotal: p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0),
         proximoVencer: p.lotes[0]?.fechaVencimiento ?? null,
-        stockBajo: p.lotes.reduce((s, l) => s + l.cantidadActual, 0) <= p.stockMinimo,
+        stockBajo: p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0) <= p.stockMinimo,
       }))
 
       return responder.lista(res, resultado, {

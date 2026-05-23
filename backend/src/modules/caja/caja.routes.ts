@@ -6,7 +6,7 @@ import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
 import { autenticar, autorizar } from '../../middlewares/index'
 
-export const cajaRouter = Router()
+export const cajaRouter: Router = Router()
 
 cajaRouter.get('/actual', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA'),
   async (req: Request, res: Response) => {

@@ -22,7 +22,7 @@ const loginSchema = z.object({
 })
 
 // ── Router ────────────────────────────────────────────────
-export const authRouter = Router()
+export const authRouter: Router = Router()
 
 // POST /api/v1/auth/login
 authRouter.post(

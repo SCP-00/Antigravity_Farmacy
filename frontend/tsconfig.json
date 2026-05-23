@@ -22,10 +22,7 @@
 	},
 	"include": ["src"],
 	"exclude": [
-		"src/pages/admin/**",
-		"src/pages/tienda/CheckoutCompleto.tsx",
-		"src/pages/tienda/DetalleProducto.tsx",
-		"src/components/tienda/Header.tsx"
+		"src/pages/admin/**"
 	],
 	"references": []
 }

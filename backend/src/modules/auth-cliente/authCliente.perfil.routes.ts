@@ -3,7 +3,7 @@ import { prisma } from '../../config/database'
 import { autenticarCliente } from '../../middlewares/index'
 import { responder } from '../../utils/respuesta.utils'
 
-export const authClientePerfilRouter = Router()
+export const authClientePerfilRouter: Router = Router()
 
 // GET /me - perfil del cliente autenticado
 authClientePerfilRouter.get('/me', autenticarCliente, async (req: Request, res: Response) => {

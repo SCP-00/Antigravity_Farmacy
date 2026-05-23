@@ -10,7 +10,7 @@ import { cache } from '../../config/redis'
 import { responder } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
 
-export const categoriasRouter = Router()
+export const categoriasRouter: Router = Router()
 
 const crearSchema = z.object({
   nombre:      z.string().min(2),

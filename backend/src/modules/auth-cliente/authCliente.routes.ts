@@ -46,7 +46,7 @@ const loginSchema = z.object({
 })
 
 // ── Router ────────────────────────────────────────────────
-export const authClienteRouter = Router()
+export const authClienteRouter: Router = Router()
 
 // ── POST /registro ────────────────────────────────────────
 authClienteRouter.post(

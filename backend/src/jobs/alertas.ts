@@ -72,7 +72,7 @@ async function verificarVencimientos(): Promise<void> {
     })
 
     const resumen = lotes
-      .map(l => {
+      .map((l: any) => {
         const dias = Math.ceil(
           (l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
         )
@@ -110,8 +110,8 @@ async function verificarStockMinimo(): Promise<void> {
       },
     })
 
-    const criticos = productos.filter(p => {
-      const stock = p.lotes.reduce((s, l) => s + l.cantidadActual, 0)
+    const criticos = productos.filter((p: any) => {
+      const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
       return stock <= p.stockMinimo
     })
 
@@ -121,7 +121,7 @@ async function verificarStockMinimo(): Promise<void> {
     }
 
     for (const prod of criticos) {
-      const stock = prod.lotes.reduce((s, l) => s + l.cantidadActual, 0)
+      const stock = prod.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
       await prisma.alertaInventario.create({
         data: {
           tipo: 'STOCK_MINIMO',

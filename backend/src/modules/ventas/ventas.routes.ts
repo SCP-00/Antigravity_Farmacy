@@ -1,33 +1,11 @@
-// ══════════════════════════════════════════════════════════
-//  MÓDULO VENTAS
-//  POST /api/v1/ventas          — registrar venta (POS)
-//  GET  /api/v1/ventas          — historial
-//  GET  /api/v1/ventas/dashboard — KPIs del día
-//  POST /api/v1/ventas/:id/devolucion
-// ══════════════════════════════════════════════════════════
 import { Router, Request, Response } from 'express'
-import { z } from 'zod'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
+import { registrarVentaSchema } from '../../schemas/ventas.schema'
+import { InventarioService } from '../../services/inventario.service'
 
-export const ventasRouter = Router()
-
-const itemVentaSchema = z.object({
-  productoId:    z.string().uuid(),
-  cantidad:      z.number().int().positive(),
-  precioUnitario:z.number().positive(),
-  descuento:     z.number().min(0).default(0),
-})
-
-const ventaSchema = z.object({
-  sucursalId: z.number().int().positive(),
-  cajaId:     z.string().uuid().optional(),
-  clienteId:  z.string().uuid().optional(),
-  metodoPago: z.enum(['EFECTIVO','WOMPI','STRIPE','MERCADOPAGO','TRANSFERENCIA']),
-  descuento:  z.number().min(0).default(0),
-  items:      z.array(itemVentaSchema).min(1, 'Agrega al menos un producto'),
-})
+export const ventasRouter: Router = Router()
 
 // ── GET /dashboard ────────────────────────────────────────
 ventasRouter.get('/dashboard',
@@ -113,80 +91,71 @@ ventasRouter.get('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
 
 // ── POST / — Registrar venta (transacción atómica) ────────
 ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
-  validarCuerpo(ventaSchema), async (req: Request, res: Response) => {
+  validarCuerpo(registrarVentaSchema), async (req: Request, res: Response) => {
     const { sucursalId, cajaId, clienteId, metodoPago, items, descuento } = req.body
 
     try {
-      const client = await prisma.$transaction(async (tx) => {
-      let subtotal = 0
-      const detalles = []
+      const client = await prisma.$transaction(async (tx: any) => {
+        let subtotal = 0
+        const detalles: any[] = []
 
-      for (const item of items) {
-        // Buscar lote disponible con FEFO (primero vence, primero sale)
-        const lote = await tx.lote.findFirst({
-          where: {
-            productoId:      item.productoId,
-            sucursalId,
-            cantidadActual:  { gte: item.cantidad },
-            fechaVencimiento:{ gt: new Date() },
+        for (const item of items) {
+          // Uso del nuevo servicio FEFO
+          const lotesUsados = await InventarioService.descontarStockFEFO(tx, item.productoId, sucursalId, item.cantidad)
+
+          let descuentoRestante = item.descuento || 0
+
+          for (const lu of lotesUsados) {
+            const valorBruto = item.precioUnitario * lu.cantidad
+            const descuentoAplicar = Math.min(valorBruto, descuentoRestante)
+            const valorNeto = valorBruto - descuentoAplicar
+
+            subtotal += valorNeto
+            descuentoRestante -= descuentoAplicar
+
+            detalles.push({
+              productoId:    item.productoId,
+              loteId:        lu.loteId,
+              cantidad:      lu.cantidad,
+              precioUnitario:item.precioUnitario,
+              descuento:     descuentoAplicar,
+              subtotal:      valorNeto,
+            })
+          }
+        }
+
+        const total = subtotal - (descuento ?? 0)
+
+        const venta = await tx.venta.create({
+          data: {
+            sucursalId, cajaId: cajaId ?? null,
+            empleadoId: req.empleado!.id,
+            clienteId:  clienteId ?? null,
+            metodoPago, subtotal, descuento: descuento ?? 0,
+            iva: 0, total, estado: 'PAGADO',
+            detalles: { createMany: { data: detalles } },
           },
-          orderBy: { fechaVencimiento: 'asc' },
+          include: { detalles: true },
         })
 
-        if (!lote) {
-          throw new Error(`Sin stock disponible para el producto ${item.productoId}`)
+        // Sumar puntos de fidelidad
+        if (clienteId) {
+          const puntos = Math.floor(total / 1000)
+          if (puntos > 0) {
+            const expira = new Date()
+            expira.setFullYear(expira.getFullYear() + 1)
+            await tx.cliente.update({
+              where: { id: clienteId },
+              data: {
+                puntosAcumulados: { increment: puntos },
+                puntosExpiranEn: expira,
+              },
+            })
+          }
         }
 
-        // Descontar stock
-        await tx.lote.update({
-          where: { id: lote.id },
-          data:  { cantidadActual: { decrement: item.cantidad } },
-        })
-
-        const sub = item.precioUnitario * item.cantidad - item.descuento
-        subtotal += sub
-        detalles.push({
-          productoId:    item.productoId,
-          loteId:        lote.id,
-          cantidad:      item.cantidad,
-          precioUnitario:item.precioUnitario,
-          descuento:     item.descuento,
-          subtotal:      sub,
-        })
-      }
-
-      const total = subtotal - (descuento ?? 0)
-
-      const venta = await tx.venta.create({
-        data: {
-          sucursalId, cajaId: cajaId ?? null,
-          empleadoId: req.empleado!.id,
-          clienteId:  clienteId ?? null,
-          metodoPago, subtotal, descuento: descuento ?? 0,
-          iva: 0, total, estado: 'PAGADO',
-          detalles: { createMany: { data: detalles } },
-        },
-        include: { detalles: true },
+        return venta
       })
-
-      // Sumar puntos de fidelidad al cliente ($1,000 = 1 punto)
-      if (clienteId) {
-        const puntos = Math.floor(total / 1000)
-        if (puntos > 0) {
-          const expira = new Date()
-          expira.setFullYear(expira.getFullYear() + 1)
-          await tx.cliente.update({
-            where: { id: clienteId },
-            data: {
-              puntosAcumulados: { increment: puntos },
-              puntosExpiranEn: expira,
-            },
-          })
-        }
-      }
-
-      return venta
-    })
 
       return responder.creado(res, {
         ventaId: client.id,
@@ -215,7 +184,6 @@ ventasRouter.post('/:id/devolucion', autenticar, autorizar('ADMINISTRADOR', 'FAR
       if (venta.devolucion)    return responder.error(res, 'Esta venta ya tiene una devolución')
       if (venta.estado !== 'PAGADO') return responder.error(res, 'Solo se pueden devolver ventas pagadas')
 
-      // Máximo 15 días (R_RF4.2.1)
       const diasDesdeVenta = Math.floor(
         (Date.now() - venta.creadoEn.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -223,7 +191,7 @@ ventasRouter.post('/:id/devolucion', autenticar, autorizar('ADMINISTRADOR', 'FAR
         return responder.error(res, 'Han pasado más de 15 días desde la compra')
       }
 
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         await tx.venta.update({ where: { id: ventaId }, data: { estado: 'DEVUELTO' } })
         await tx.devolucion.create({
           data: { ventaId, motivo, totalDevuelto: venta.total, reintegraStock },

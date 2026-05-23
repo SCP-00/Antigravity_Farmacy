@@ -10,7 +10,7 @@ import { responder } from '../../utils/respuesta.utils'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
 
-export const chatbotRouter = Router()
+export const chatbotRouter: Router = Router()
 
 // ── FAQ estáticas ─────────────────────────────────────────
 const FAQ: Array<{ patrones: string[]; respuesta: string }> = [
@@ -155,7 +155,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
         `¿Quieres que te conecte con un asesor? Escribe **"hablar con asesor"**.\n📞 También puedes llamarnos al **(606) 335-0000**.`
     } else if (productos.length === 1) {
       const p = productos[0]
-      const stock = p.lotes.reduce((s, l) => s + l.cantidadActual, 0)
+      const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
       const rxMsg = p.requiereRx ? '⚠️ *Requiere fórmula médica*' : '✅ Venta libre'
       respuesta =
         `💊 **${p.nombre} ${p.concentracion ?? ''}**\n` +
@@ -168,8 +168,8 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
       respuesta =
         `Encontré **${productos.length} productos** relacionados con "${mensaje}":\n\n` +
         productos
-          .map(p => {
-            const stock = p.lotes.reduce((s, l) => s + l.cantidadActual, 0)
+          .map((p: any) => {
+            const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
             return `• **${p.nombre} ${p.concentracion ?? ''}** — $${Number(p.precioVenta).toLocaleString('es-CO')} (${stock > 0 ? `${stock} und.` : 'Agotado'})`
           })
           .join('\n') +
@@ -181,7 +181,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
       id: p.id, nombre: p.nombre, concentracion: p.concentracion,
       presentacion: p.presentacion, precioVenta: p.precioVenta,
       requiereRx: p.requiereRx,
-      stockTotal: p.lotes.reduce((s, l) => s + l.cantidadActual, 0),
+      stockTotal: p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0),
     }))
 
     await guardarMensaje(sessionToken, mensaje, respuesta)
