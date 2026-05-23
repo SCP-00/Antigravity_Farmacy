@@ -2,21 +2,24 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, ShoppingCart, Truck, ShieldAlert, Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { mockProductos } from '@/data/catalogo'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useFormateo, useAuthCliente } from '@/hooks'
-import { clientesService } from '@/services'
+import { clientesService, productosService } from '@/services'
 import toast from 'react-hot-toast'
 
 export default function ProductoDetalle() {
-  const { slug } = useParams()
+  const { slug: id } = useParams() // El enrutador nos pasa el ID real en la variable slug
   const { cop } = useFormateo()
   const agregar = useCarritoStore((state) => state.agregar)
   const { estaLogueado } = useAuthCliente()
   const queryClient = useQueryClient()
   const [esFavorito, setEsFavorito] = useState(false)
 
-  const producto = mockProductos.find((item) => item.slug === slug || item.id === slug)
+  const { data: producto, isLoading: isLoadingProducto } = useQuery({
+    queryKey: ['producto', id],
+    queryFn: () => productosService.obtener(id!),
+    enabled: !!id
+  })
 
   const favoritosQuery = useQuery({
     queryKey: ['favoritos-cliente'],
@@ -39,17 +42,18 @@ export default function ProductoDetalle() {
       setEsFavorito(prev => !prev)
       toast.success(esFavorito ? 'Eliminado de favoritos' : 'Agregado a favoritos')
     },
-    onError: () => {
-      toast.error('Error al actualizar favoritos')
-    },
   })
+
+  if (isLoadingProducto) {
+    return <div className="py-20 text-center text-gray-500">Cargando producto desde BD...</div>
+  }
 
   if (!producto) {
     return (
       <div className="section-shell py-12">
         <div className="surface p-8 text-center">
           <h1 className="text-2xl font-bold text-slate-900">Producto no encontrado</h1>
-          <p className="mt-3 text-slate-600">El enlace no coincide con un producto disponible en esta versión local.</p>
+          <p className="mt-3 text-slate-600">El producto no existe o fue retirado del sistema.</p>
           <Link to="/productos" className="btn-primary mt-6">
             <ArrowLeft className="w-4 h-4" /> Volver al catálogo
           </Link>
@@ -58,22 +62,24 @@ export default function ProductoDetalle() {
     )
   }
 
+  const stockTotal = producto.lotes?.reduce((sum: number, l: any) => sum + l.cantidadActual, 0) ?? 0
+  const precio = Number(producto.precioVenta)
+
   const agregarAlCarrito = () => {
     agregar({
       productoId: producto.id,
       nombre: producto.nombre,
-      marca: producto.marca,
-      presentacion: producto.presentacion,
-      concentracion: producto.concentracion,
-      precioUnitario: producto.precioVenta,
+      marca: producto.laboratorio || 'Genérico',
+      presentacion: producto.presentacion || '',
+      concentracion: producto.concentracion || '',
+      precioUnitario: precio,
       cantidad: 1,
-      stockMaximo: producto.stockTotal,
+      stockMaximo: stockTotal,
       requiereRx: producto.requiereRx,
-      disponibleEnvio: producto.disponibleEnvio,
-      disponibleTienda: producto.disponibleTienda,
+      disponibleEnvio: true,
+      disponibleTienda: true,
       imagenUrl: producto.imagenUrl,
     })
-    toast.success(`${producto.nombre} agregado al carrito`)
   }
 
   return (
@@ -90,23 +96,23 @@ export default function ProductoDetalle() {
         </div>
 
         <div className="surface p-6 md:p-8">
-          <span className="section-chip">{producto.categoriaNombre}</span>
-          <h1 className="mt-4 text-3xl md:text-4xl font-bold text-slate-900">{producto.nombre}</h1>
-          <p className="mt-2 text-slate-600">{producto.marca} · {producto.presentacion} · {producto.concentracion}</p>
+          <span className="section-chip">{producto.categoria?.nombre || 'General'}</span>
+          <h1 className="mt-4 text-3xl md:text-4xl font-bold text-slate-900">{producto.nombre} {producto.concentracion}</h1>
+          <p className="mt-2 text-slate-600">{producto.laboratorio || 'Genérico'} · {producto.presentacion}</p>
 
           <div className="mt-6 flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-teal-700">{cop(producto.precioVenta)}</span>
-            <span className="text-sm text-slate-500 line-through">{cop(Math.round(producto.precioVenta * 1.18))}</span>
+            <span className="text-3xl font-bold text-teal-700">{cop(precio)}</span>
+            <span className="text-sm text-slate-500 line-through">{cop(Math.round(precio * 1.18))}</span>
           </div>
 
           <div className="mt-6 space-y-3 text-sm text-slate-700">
             <p className="flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-teal-700" /> {producto.requiereRx ? 'Requiere fórmula médica' : 'Venta libre'}</p>
-            <p className="flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> {producto.disponibleEnvio ? 'Disponible para domicilio' : 'Solo disponible en sede'}</p>
-            <p className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> {producto.stockTotal > 0 ? `${producto.stockTotal} unidades disponibles` : 'Agotado temporalmente'}</p>
+            <p className="flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> Disponible para domicilio</p>
+            <p className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-600" /> {stockTotal > 0 ? `${stockTotal} unidades disponibles (Stock Real)` : 'Agotado temporalmente'}</p>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <button onClick={agregarAlCarrito} disabled={producto.stockTotal === 0} className="btn-primary disabled:opacity-50">
+            <button onClick={agregarAlCarrito} disabled={stockTotal === 0} className="btn-primary disabled:opacity-50">
               <ShoppingCart className="w-4 h-4" /> Agregar al carrito
             </button>
             {estaLogueado && (
@@ -119,13 +125,6 @@ export default function ProductoDetalle() {
                 {esFavorito ? 'En favoritos' : 'Agregar a favoritos'}
               </button>
             )}
-          </div>
-
-          <div className="mt-8 rounded-3xl bg-slate-50 border border-slate-200 p-5">
-            <h2 className="font-semibold text-slate-900">Descripción rápida</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Esta vista usa datos locales para validación del flujo B2C. Puedes ampliar la ficha con indicaciones, composición, contraindicaciones y recomendaciones de uso.
-            </p>
           </div>
         </div>
       </div>

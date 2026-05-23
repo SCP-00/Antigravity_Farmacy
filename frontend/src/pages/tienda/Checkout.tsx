@@ -2,22 +2,59 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, CreditCard, Lock } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { ventasService } from '@/services'
+import { useAuthCliente } from '@/hooks'
 import toast from 'react-hot-toast'
 
 export function Checkout() {
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const { items, subtotal, total, limpiar } = useCarritoStore()
+  const { cliente } = useAuthCliente()
+  
   const [paso, setPaso] = useState<'datos' | 'pago' | 'confirmacion'>('datos')
-  const [procesando, setProcesando] = useState(false)
-  const [pedido, setPedido] = useState('')
+  const [pedidoInfo, setPedidoInfo] = useState<{ numero: number, total: number } | null>(null)
+
+  const [datos, setDatos] = useState({ 
+    nombre: cliente?.nombre || '', 
+    email: cliente?.email || '', 
+    telefono: '', 
+    direccion: '' 
+  })
+  
+  const [pago, setPago] = useState({ nombre: '', numero: '', mes: '', año: '', cvv: '' })
+
   const esDatos = paso === 'datos'
   const esPago = paso === 'pago'
   const esConfirmacion = paso === 'confirmacion'
 
-  const [datos, setDatos] = useState({ nombre: '', email: '', telefono: '', direccion: '' })
-  const [pago, setPago] = useState({ nombre: '', numero: '', mes: '', año: '', cvv: '' })
+  const ventaMutation = useMutation({
+    mutationFn: () => ventasService.registrar({
+      sucursalId: 1, // Por defecto al comprar web se asigna a sede principal
+      clienteId: cliente?.id, // ID del cliente si está logueado
+      metodoPago: 'STRIPE', // Simulación del método de pago
+      descuento: 0,
+      items: items.map(i => ({
+        productoId: i.productoId,
+        cantidad: i.cantidad,
+        precioUnitario: i.precioUnitario,
+        descuento: 0
+      }))
+    }),
+    onSuccess: (data) => {
+      setPedidoInfo({ numero: data.ventaNum, total: data.total })
+      limpiar()
+      qc.invalidateQueries({ queryKey: ['productos'] })
+      qc.invalidateQueries({ queryKey: ['cliente', 'pedidos'] })
+      setPaso('confirmacion')
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error ?? 'Error procesando tu pedido')
+    }
+  })
 
-  if (items.length === 0) {
+  if (items.length === 0 && paso !== 'confirmacion') {
     return (
       <div className="section-shell py-12">
         <div className="surface min-h-[60vh] flex items-center justify-center px-6 text-center">
@@ -39,17 +76,12 @@ export function Checkout() {
     setPaso('pago')
   }
 
-  const confirmar = async () => {
+  const confirmar = () => {
     if (!pago.nombre || !pago.numero || !pago.mes || !pago.año || !pago.cvv) {
-      toast.error('Completa los datos del pago')
+      toast.error('Completa los datos de tu tarjeta')
       return
     }
-    setProcesando(true)
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-    setPedido(`FMC-${Date.now().toString().slice(-8)}`)
-    limpiar()
-    setProcesando(false)
-    setPaso('confirmacion')
+    ventaMutation.mutate()
   }
 
   if (paso === 'confirmacion') {
@@ -59,12 +91,15 @@ export function Checkout() {
           <div className="max-w-md w-full">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Pedido confirmado</h1>
-            <p className="text-slate-600 mb-6">Tu orden fue creada con éxito.</p>
+            <p className="text-slate-600 mb-6">Tu orden fue creada con éxito y el pago ha sido procesado.</p>
             <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 mb-6">
               <p className="text-sm text-slate-500 mb-1">Número de pedido</p>
-              <p className="text-2xl font-bold text-teal-700">{pedido}</p>
+              <p className="text-3xl font-bold text-teal-700">
+                F-{String(pedidoInfo?.numero ?? 0).padStart(5, '0')}
+              </p>
+              <p className="text-sm text-slate-500 mt-2">Total cobrado: ${pedidoInfo?.total.toLocaleString()}</p>
             </div>
-            <button onClick={() => navigate('/productos')} className="btn-primary w-full justify-center">Seguir comprando</button>
+            <button onClick={() => navigate('/cuenta/pedidos')} className="btn-primary w-full justify-center">Ver mis pedidos</button>
           </div>
         </div>
       </div>
@@ -76,7 +111,7 @@ export function Checkout() {
       <div className="mb-8">
         <span className="section-kicker">Checkout</span>
         <h1 className="mt-2 text-3xl md:text-4xl font-bold text-slate-900">Finalizar compra</h1>
-        <p className="text-slate-600 mt-2">Flujo de prueba para validar la experiencia de pago.</p>
+        <p className="text-slate-600 mt-2">Completa tus datos para procesar el pedido.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -93,35 +128,35 @@ export function Checkout() {
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">Datos de envío</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input value={datos.nombre} onChange={(e) => setDatos({ ...datos, nombre: e.target.value })} placeholder="Nombre completo" className="input-base" />
-                  <input value={datos.email} onChange={(e) => setDatos({ ...datos, email: e.target.value })} placeholder="Correo electrónico" className="input-base" />
-                  <input value={datos.telefono} onChange={(e) => setDatos({ ...datos, telefono: e.target.value })} placeholder="Teléfono" className="input-base" />
-                  <input value={datos.direccion} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} placeholder="Dirección" className="input-base" />
+                  <input value={datos.email} onChange={(e) => setDatos({ ...datos, email: e.target.value })} placeholder="Correo electrónico" className="input-base" type="email" />
+                  <input value={datos.telefono} onChange={(e) => setDatos({ ...datos, telefono: e.target.value })} placeholder="Teléfono" className="input-base" type="tel" />
+                  <input value={datos.direccion} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} placeholder="Dirección completa" className="input-base" />
                 </div>
                 <button onClick={continuar} className="mt-6 w-full btn-primary justify-center">Continuar al pago</button>
               </div>
             ) : (
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Pago visual</h2>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Pago seguro</h2>
                 <div className="mb-4 p-4 rounded-3xl bg-teal-50 border border-teal-200 flex items-center gap-3 text-sm text-teal-900">
-                  <Lock className="w-4 h-4" />
-                  Esta versión es solo de pruebas locales. No procesa pagos reales.
+                  <Lock className="w-4 h-4 flex-shrink-0" />
+                  Esta es una integración de pruebas. Puedes usar datos ficticios en la tarjeta.
                 </div>
                 <div className="space-y-4">
                   <input value={pago.nombre} onChange={(e) => setPago({ ...pago, nombre: e.target.value })} placeholder="Nombre en la tarjeta" className="input-base" />
-                  <input value={pago.numero} onChange={(e) => setPago({ ...pago, numero: e.target.value })} placeholder="Número de tarjeta" className="input-base" />
+                  <input value={pago.numero} onChange={(e) => setPago({ ...pago, numero: e.target.value })} placeholder="Número de tarjeta" className="input-base" maxLength={16} />
                   <div className="grid grid-cols-3 gap-4">
-                    <input value={pago.mes} onChange={(e) => setPago({ ...pago, mes: e.target.value })} placeholder="MM" className="input-base" />
-                    <input value={pago.año} onChange={(e) => setPago({ ...pago, año: e.target.value })} placeholder="AA" className="input-base" />
-                    <input value={pago.cvv} onChange={(e) => setPago({ ...pago, cvv: e.target.value })} placeholder="CVV" className="input-base" />
+                    <input value={pago.mes} onChange={(e) => setPago({ ...pago, mes: e.target.value })} placeholder="MM" className="input-base" maxLength={2} />
+                    <input value={pago.año} onChange={(e) => setPago({ ...pago, año: e.target.value })} placeholder="AA" className="input-base" maxLength={2} />
+                    <input value={pago.cvv} onChange={(e) => setPago({ ...pago, cvv: e.target.value })} placeholder="CVV" className="input-base" maxLength={4} type="password" />
                   </div>
                 </div>
                 <div className="mt-6 flex gap-4">
-                  <button onClick={() => setPaso('datos')} className="flex-1 btn-secondary justify-center">
+                  <button onClick={() => setPaso('datos')} disabled={ventaMutation.isPending} className="flex-1 btn-secondary justify-center">
                     <ArrowLeft className="w-4 h-4" /> Atrás
                   </button>
-                  <button onClick={confirmar} disabled={procesando} className="flex-1 btn-primary justify-center disabled:opacity-60">
+                  <button onClick={confirmar} disabled={ventaMutation.isPending} className="flex-1 btn-primary justify-center disabled:opacity-60">
                     <CreditCard className="w-4 h-4" />
-                    {procesando ? 'Procesando...' : 'Confirmar pago'}
+                    {ventaMutation.isPending ? 'Procesando venta...' : 'Confirmar pago'}
                   </button>
                 </div>
               </div>
@@ -142,12 +177,12 @@ export function Checkout() {
             </div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>${subtotal().toLocaleString()}</span></div>
-              <div className="flex justify-between text-slate-600"><span>IVA (19%)</span><span>${Math.round(subtotal() * 0.19).toLocaleString()}</span></div>
+              <div className="flex justify-between text-slate-600"><span>IVA (0%)</span><span>$0</span></div>
               <div className="flex justify-between text-slate-600"><span>Envío</span><span className="text-green-600 font-semibold">Gratis</span></div>
             </div>
             <div className="flex justify-between items-end pt-4 mt-4 border-t border-slate-200">
-              <span className="font-semibold text-slate-900">Total</span>
-              <span className="text-2xl font-bold text-teal-700">${Math.round(total() * 1.19).toLocaleString()}</span>
+              <span className="font-semibold text-slate-900">Total a pagar</span>
+              <span className="text-2xl font-bold text-teal-700">${total().toLocaleString()}</span>
             </div>
           </div>
         </aside>
