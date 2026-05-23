@@ -45,8 +45,7 @@ export const authClienteService = {
   resetPassword: (token: string, password: string) =>
     apiPublica.post('/clientes/auth/reset-password', { token, password }).then(r => r.data),
 
-  googleUrl:   () => `${import.meta.env.VITE_API_URL}/clientes/auth/google`,
-  facebookUrl: () => `${import.meta.env.VITE_API_URL}/clientes/auth/facebook`,
+  googleUrl: () => `${import.meta.env.VITE_API_URL}/clientes/auth/google`,
 }
 
 // ── PRODUCTOS ─────────────────────────────────────────────

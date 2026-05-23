@@ -1,6 +1,5 @@
 import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
-import { Strategy as FacebookStrategy } from 'passport-facebook'
 import { prisma } from './database'
 import { env } from './env'
 import { logger } from '../utils/logger'
@@ -51,47 +50,4 @@ export function configurePassport(): void {
     logger.warn('[Passport] Google OAuth no configurado — omitido')
   }
 
-  // ── Facebook OAuth2 ───────────────────────────────────────
-  if (env.FACEBOOK_APP_ID && env.FACEBOOK_APP_SECRET) {
-    passport.use(
-      new FacebookStrategy(
-        {
-          clientID: env.FACEBOOK_APP_ID,
-          clientSecret: env.FACEBOOK_APP_SECRET,
-          callbackURL: env.FACEBOOK_CALLBACK_URL!,
-          profileFields: ['id', 'emails', 'name'],
-        },
-        async (_accessToken, _refreshToken, profile, done) => {
-          try {
-            const email = profile.emails?.[0]?.value
-            if (!email) return done(new Error('No se obtuvo email de Facebook'))
-
-            let cliente = await prisma.cliente.findUnique({ where: { email } })
-
-            if (!cliente) {
-              cliente = await prisma.cliente.create({
-                data: {
-                  nombre: profile.name?.givenName ?? 'Usuario',
-                  apellido: profile.name?.familyName ?? 'Facebook',
-                  email,
-                  emailVerificado: true,
-                  proveedorAuth: 'FACEBOOK',
-                  proveedorAuthId: profile.id,
-                  autorizacionDatos: true,
-                },
-              })
-              logger.info(`[Passport] Nuevo cliente via Facebook: ${email}`)
-            }
-
-            return done(null, cliente)
-          } catch (err) {
-            return done(err as Error)
-          }
-        }
-      )
-    )
-    logger.info('[Passport] Estrategia Facebook configurada')
-  } else {
-    logger.warn('[Passport] Facebook OAuth no configurado — omitido')
-  }
 }

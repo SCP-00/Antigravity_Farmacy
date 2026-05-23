@@ -33,11 +33,6 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_CALLBACK_URL: z.string().optional(),
 
-  // OAuth Facebook
-  FACEBOOK_APP_ID: z.string().optional(),
-  FACEBOOK_APP_SECRET: z.string().optional(),
-  FACEBOOK_CALLBACK_URL: z.string().optional(),
-
   // Email
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().default('587'),

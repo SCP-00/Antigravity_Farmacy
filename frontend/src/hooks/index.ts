@@ -99,8 +99,7 @@ export function useAuthCliente() {
     registro:         registroMutation.mutate,
     registroLoading:  registroMutation.isPending,
     cerrarSesion:     store.cerrarSesion,
-    googleUrl:        authClienteService.googleUrl(),
-    facebookUrl:      authClienteService.facebookUrl(),
+    googleUrl: authClienteService.googleUrl(),
   }
 }
 

@@ -13,7 +13,7 @@ Goal: establish an accurate, minimal module map, remove dead paths, and normaliz
 - [x] Identify dead/unused endpoints or routes and confirm before removal.
 
 Notes:
-- `backend/src/modules/inventario/inventario.routes.ts` centralizes multiple domains (lotes/inventario/proveedores/compras/clientes/empleados/sucursales/reportes): flagged for split in next phase.
+- ~~`backend/src/modules/inventario/inventario.routes.ts` centralizes multiple domains~~ → **RESUELTO en Fase 1**: El mega-router fue dividido en 8 submódulos independientes (lotes, inventario, proveedores, compras, clientes, empleados, sucursales, reportes).
 - Unused frontend files identified and documented in `docs/architecture.md`; deletion intentionally deferred until explicit approval.
 
 ## Config normalization

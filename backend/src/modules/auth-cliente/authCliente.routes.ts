@@ -4,8 +4,6 @@
 //  POST /api/v1/clientes/auth/login
 //  GET  /api/v1/clientes/auth/google
 //  GET  /api/v1/clientes/auth/google/callback
-//  GET  /api/v1/clientes/auth/facebook
-//  GET  /api/v1/clientes/auth/facebook/callback
 //  POST /api/v1/clientes/auth/verificar-email
 //  POST /api/v1/clientes/auth/recuperar-password
 //  POST /api/v1/clientes/auth/reset-password
@@ -147,22 +145,6 @@ authClienteRouter.get('/google/callback',
       id: cliente.id, nombre: cliente.nombre, email: cliente.email, tipo: 'cliente',
     })
     // Redirige al frontend con el token en la URL
-    res.redirect(`${env.FRONTEND_URL}/auth/callback?token=${token}`)
-  }
-)
-
-// ── GET /facebook ─────────────────────────────────────────
-authClienteRouter.get('/facebook',
-  passport.authenticate('facebook', { scope: ['email'], session: false })
-)
-
-authClienteRouter.get('/facebook/callback',
-  passport.authenticate('facebook', { session: false, failureRedirect: `${env.FRONTEND_URL}/login?error=facebook` }),
-  (req: Request, res: Response) => {
-    const cliente = req.user as any
-    const token = jwtCliente.firmar({
-      id: cliente.id, nombre: cliente.nombre, email: cliente.email, tipo: 'cliente',
-    })
     res.redirect(`${env.FRONTEND_URL}/auth/callback?token=${token}`)
   }
 )
