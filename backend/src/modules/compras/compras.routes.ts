@@ -31,7 +31,7 @@ comprasRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
 
 comprasRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   async (req: Request, res: Response) => {
-    const { proveedorId, detalles, notas, fechaEntregaEst } = req.body
+    const { proveedorId, detalles, notas: notes, fechaEntregaEst } = req.body
     try {
       let subtotal = 0
       const items = detalles.map((d: any) => {
@@ -43,7 +43,7 @@ comprasRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
       const orden = await prisma.ordenCompra.create({
         data: {
           proveedorId, empleadoId: req.empleado!.id,
-          subtotal, iva: 0, total: subtotal, notas,
+          subtotal, iva: 0, total: subtotal, notes,
           fechaEntregaEst: fechaEntregaEst ? new Date(fechaEntregaEst) : null,
           detalles: { createMany: { data: items } },
         },

@@ -107,7 +107,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
   try {
     const palabras = msg
       .split(/\s+/)
-      .filter((p: string) => p.length >= 3) // Cambiado para permitir búsquedas más cortas (>= 3)
+      .filter((p: string) => p.length >= 3)
       .slice(0, 3)
 
     if (palabras.length === 0) {
@@ -155,7 +155,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
         `¿Quieres que te conecte con un asesor? Escribe **"hablar con asesor"**.\n📞 También puedes llamarnos al **(606) 335-0000**.`
     } else if (productos.length === 1) {
       const p = productos[0]
-      const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
+      const stock = p.lotes.reduce((s: number, l: { cantidadActual: number }) => s + l.cantidadActual, 0)
       const rxMsg = p.requiereRx ? '⚠️ *Requiere fórmula médica*' : '✅ Venta libre'
       respuesta =
         `💊 **${p.nombre} ${p.concentracion ?? ''}**\n` +
@@ -169,7 +169,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
         `Encontré **${productos.length} productos** relacionados con "${mensaje}":\n\n` +
         productos
           .map((p: any) => {
-            const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
+            const stock = p.lotes.reduce((s: number, l: { cantidadActual: number }) => s + l.cantidadActual, 0)
             return `• **${p.nombre} ${p.concentracion ?? ''}** — $${Number(p.precioVenta).toLocaleString('es-CO')} (${stock > 0 ? `${stock} und.` : 'Agotado'})`
           })
           .join('\n') +
@@ -177,7 +177,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) => {
     }
 
     // Ocultar datos sensibles: precio de compra, proveedores (R_RF6.1)
-    const productosSeguros = productos.map(p => ({
+    const productosSeguros = productos.map((p: any) => ({
       id: p.id, nombre: p.nombre, concentracion: p.concentracion,
       presentacion: p.presentacion, precioVenta: p.precioVenta,
       requiereRx: p.requiereRx,

@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../backend/node_modules/.prisma/client"
 }
 
 datasource db {
@@ -82,7 +83,9 @@ model Producto {
   nombre            String               @db.VarChar(150)
   principioActivo   String               @default("") @map("principio_activo") @db.VarChar(200)
   atc               String?              @db.VarChar(20)
+  descripcionAtc    String?              @map("descripcion_atc") @db.VarChar(255)
   titular           String?              @db.VarChar(150)
+  expediente        String?              @db.VarChar(50)
   formaFarmaceutica String?              @map("forma_farmaceutica") @db.VarChar(100)
   viaAdministracion String?              @map("via_administracion") @db.VarChar(100)
   slug              String?              @unique @db.VarChar(180)
@@ -96,9 +99,24 @@ model Producto {
   precioPromedio    Decimal              @default(0) @map("precio_promedio") @db.Decimal(12, 2)
   stockMinimo       Int                  @default(10) @map("stock_minimo")
   estadoCum         String               @default("Activo") @map("estado_cum") @db.VarChar(50)
+  estadoRegistro    String?              @default("Vigente") @map("estado_registro") @db.VarChar(20)
+  fechaExpedicion   DateTime?            @map("fecha_expedicion") @db.Date
+  fechaVencimientoRegistro DateTime?      @map("fecha_vencimiento_registro") @db.Date
+  fechaActivoCum    DateTime?            @map("fecha_activo_cum") @db.Date
+  fechaInactivoCum  DateTime?            @map("fecha_inactivo_cum") @db.Date
   esMuestraMedica   Boolean              @default(false) @map("es_muestra_medica")
   alergenos         String?              @db.Text
   advertencias      String?              @db.Text
+  indicaciones      String?              @db.Text
+  contraindicaciones String?             @db.Text
+  reaccionesAdversas String?             @map("reacciones_adversas") @db.Text
+  interacciones     String?              @db.Text
+  modoUso           String?              @map("modo_uso") @db.Text
+  unidadReferencia  String?              @map("unidad_referencia") @db.VarChar(100)
+  cantidad          String?              @db.VarChar(50)
+  unidadMedida      String?              @map("unidad_medida") @db.VarChar(50)
+  modalidad         String?              @db.VarChar(50)
+  ium               String?              @db.VarChar(50)
   activo            Boolean              @default(true)
   creadoEn          DateTime             @default(now()) @map("creado_en")
   actualizadoEn     DateTime             @updatedAt @map("actualizado_en")

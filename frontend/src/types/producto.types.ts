@@ -21,7 +21,9 @@ export interface ProductoCatalogo {
 	nombre: string
 	principioActivo: string
 	atc?: string
+	descripcionAtc?: string
 	titular?: string
+	expediente?: string
 	formaFarmaceutica?: string
 	viaAdministracion?: string
 	marca: string
@@ -38,9 +40,24 @@ export interface ProductoCatalogo {
 	laboratorio: string
 	imagenUrl?: string
 	estadoCum?: string
+	estadoRegistro?: string
+	fechaExpedicion?: string
+	fechaVencimientoRegistro?: string
+	fechaActivoCum?: string
+	fechaInactivoCum?: string
 	esMuestraMedica: boolean
 	alergenos?: string | null
 	advertencias?: string | null
+	indicaciones?: string | null
+	contraindicaciones?: string | null
+	reaccionesAdversas?: string | null
+	interacciones?: string | null
+	modoUso?: string | null
+	unidadReferencia?: string | null
+	cantidad?: string | null
+	unidadMedida?: string | null
+	modalidad?: string | null
+	ium?: string | null
 }
 
 export interface CarritoProducto {

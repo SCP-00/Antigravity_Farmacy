@@ -69,7 +69,7 @@ async function verificarVencimientos(): Promise<void> {
     let vencidos = 0, criticos = 0, proximos = 0
 
     // Limpiar alertas previas no leídas de estos lotes antes de crear las nuevas
-    const loteIds = lotes.map(l => l.id)
+    const loteIds = lotes.map((l: any) => l.id)
     await prisma.alertaInventario.deleteMany({
       where: { loteId: { in: loteIds }, leida: false },
     }).catch(() => {})
@@ -106,11 +106,11 @@ async function verificarVencimientos(): Promise<void> {
       })
 
       const resumen = lotes
-        .filter((l: any) => {
+        .filter((l: { fechaVencimiento: Date }) => {
           const d = Math.ceil((l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
           return d <= 15
         })
-        .map((l: any) => {
+        .map((l: { producto: { nombre: string; concentracion: string | null }; codigoLote: string; fechaVencimiento: Date; sucursal: { nombre: string } }) => {
           const dias = Math.ceil((l.fechaVencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24))
           const tag = dias <= 0 ? '⚠️ VENCIDO' : '🔴 CRÍTICO'
           return `${tag} — ${l.producto.nombre} ${l.producto.concentracion ?? ''} — Lote ${l.codigoLote} (${l.sucursal.nombre})`
@@ -152,7 +152,7 @@ async function verificarStockMinimo(): Promise<void> {
     })
 
     const criticos = productos.filter((p: any) => {
-      const stock = p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0)
+      const stock = p.lotes.reduce((s: number, l: { cantidadActual: number }) => s + l.cantidadActual, 0)
       return stock <= p.stockMinimo
     })
 

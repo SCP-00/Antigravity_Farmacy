@@ -82,3 +82,18 @@ Use this log to record completed milestones and the files changed for each phase
   - Se conectó el Catálogo, Carrito y Mis Pedidos a la Base de Datos real.
   - Implementación del flujo de "Checkout" reservando stock y deduciendo con método FEFO.
   - El sistema exige ahora validación o login según sea configurado.
+
+## 2026-05-22 (Fase INVIMA-CSV completada)
+- **Mini-CSV INVIMA generado** con 56 productos representativos de 14 grupos ATC (26 KB vs 73 MB original)
+- **Script `backend/scripts/generar-mini-csv.mjs`**: Filtra productos activos comerciales, selecciona 4 por grupo ATC, asigna precios realistas
+- **`database/seeds/INVIMA-MINI.csv`**: Mini-CSV con preciocompra y precioventa
+- **Script `database/scripts/importar-y-generar.cjs`**: Script consolidado (CommonJS) que importa productos del mini-CSV y genera lotes de inventario
+- **Lotes generados**: 121 lotes para 55 productos (distribuidos en 2 sucursales, fechas de vencimiento variadas)
+- **Recálculo de costos promedios**: 55 productos actualizados automáticamente
+
+## 2026-05-22 (Fase 7 completada)
+- **Fase 7 — Pasarelas de Pago** implementada en modo Sandbox/Demo:
+  - `frontend/src/pages/tienda/Checkout.tsx`: Rediseño completo con selector visual de método de pago (Wompi, Stripe, MercadoPago, Efectivo), flujo de simulación con loading animado por pasos, indicador de progreso de checkout, códigos de descuento, y redención de puntos fidelidad
+  - `frontend/src/pages/tienda/ConfirmacionPago.tsx`: Página standalone que lee query params `estado`/`pedido` y muestra resultado (aprobado/rechazado/pendiente) con diseño responsivo
+  - Flujo: Selección de método → Simulación de pasarela con 3 pasos → Registro de venta → Confirmación con número de pedido y puntos ganados
+  - Todos los flujos son simulados (sandbox educativo), conectados al backend real para registro de ventas
