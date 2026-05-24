@@ -96,14 +96,14 @@ async function main() {
   console.log('📍 Verificando sucursales y proveedores...')
   const sucursales = await prisma.sucursal.findMany({ take: 2 })
   if (sucursales.length === 0) {
-    console.error('❌ No hay sucursales en la DB. Ejecuta primero: npm run db:seed')
+    console.error('❌ No hay sucursales en la DB. Ejecuta primero: pnpm run db:seed')
     process.exit(1)
   }
   console.log(`  ✅ ${sucursales.length} sucursales encontradas`)
 
   const proveedores = await prisma.proveedor.findMany({ take: 2 })
   if (proveedores.length === 0) {
-    console.error('❌ No hay proveedores en la DB. Ejecuta primero: npm run db:seed')
+    console.error('❌ No hay proveedores en la DB. Ejecuta primero: pnpm run db:seed')
     process.exit(1)
   }
   console.log(`  ✅ ${proveedores.length} proveedores encontrados`)

@@ -19,7 +19,7 @@ echo [3/4] Levantando contenedores Docker (PostgreSQL y Redis)...
 docker compose -f docker-compose.dev.yml up -d
 
 echo [4/4] Iniciando Backend...
-start "Farmacy Backend" cmd /k "cd /d "%~dp0backend" && npm run dev"
+start "Farmacy Backend" cmd /k "cd /d "%~dp0backend" && pnpm run dev"
 
 echo Esperando a que el backend inicie (puerto 3000)...
 :WAIT_BACKEND
@@ -30,7 +30,7 @@ if errorlevel 1 (
 )
 
 echo Backend listo. Iniciando Frontend...
-start "Farmacy Frontend" cmd /k "cd /d "%~dp0frontend" && npm run dev"
+start "Farmacy Frontend" cmd /k "cd /d "%~dp0frontend" && pnpm run dev"
 
 echo Abriendo navegador en breve...
 timeout /t 3 /nobreak >nul

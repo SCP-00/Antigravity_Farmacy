@@ -13,7 +13,7 @@
 - Prisma schema lives at "database/prisma/schema.prisma"; all prisma scripts in "backend/package.json" use "--schema=../database/prisma/schema.prisma".
 - The product table enforces strict regulatory properties: "cum" (unique SKU identifier), "registroInvima", "principioActivo", "atc" code, and safety warning fields "alergenos" and "advertencias".
 - Medical samples ("esMuestraMedica: true") are systematically blocked in public-facing B2C API routing "/buscar".
-- Seed command is "npm run db:seed" from "backend/" and runs "database/seeds/seed.ts" via ts-node, populating real datasets including Procaps Alercet syrup commercial and sample units.
+- Seed command is "pnpm run db:seed" from "backend/" and runs "database/seeds/seed.ts" via ts-node, populating real datasets including Procaps Alercet syrup commercial and sample units.
 
 ## Script entrypoints
 - Backend entrypoint is "backend/src/server.ts" (connects DB before HTTP).

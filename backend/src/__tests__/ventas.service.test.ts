@@ -86,27 +86,28 @@ describe('VentasService', () => {
 
       await VentasService.registrarVenta(ventaConCliente)
 
+      // 1 punto por cada $100 COP (total = 5000 → 50 puntos)
       expect(mockClienteUpdate).toHaveBeenCalledWith({
         where: { id: 'cliente-uuid' },
         data: {
-          puntosAcumulados: { increment: 5 },
+          puntosAcumulados: { increment: 50 },
           puntosExpiranEn: expect.any(Date),
         },
       })
     })
 
-    it('no suma puntos si total < 1000', async () => {
+    it('no suma puntos si total < 100 (1 punto cada $100)', async () => {
       const tx = crearTxMock()
       mockTransaction.mockImplementation(async (cb: any) => cb(tx))
       mockDescontarStockFEFO.mockResolvedValue([{ loteId: 'lote-1', cantidad: 1 }])
       mockVentaCreate.mockResolvedValue({
-        id: 'venta-456', numero: 3, total: 500, detalles: [],
+        id: 'venta-456', numero: 3, total: 50, detalles: [],
       })
 
       const ventaSinPuntos = {
         ...ventaBase,
         clienteId: 'cliente-uuid',
-        items: [{ productoId: 'prod-1', cantidad: 1, precioUnitario: 500, descuento: 0 }],
+        items: [{ productoId: 'prod-1', cantidad: 1, precioUnitario: 50, descuento: 0 }],
       }
 
       await VentasService.registrarVenta(ventaSinPuntos)

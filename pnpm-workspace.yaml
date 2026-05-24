@@ -1,8 +1,9 @@
-allowBuilds:
-  '@prisma/client': true
-  '@prisma/engines': true
-  esbuild: true
-  prisma: true
+# SoloBuiltDependencies se define en package.json (raíz)
 packages:
   - 'backend'
   - 'frontend'
+allowBuilds:
+  '@prisma/client': set this to true or false
+  '@prisma/engines': set this to true or false
+  esbuild: set this to true or false
+  prisma: set this to true or false

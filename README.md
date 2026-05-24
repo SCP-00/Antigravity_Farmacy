@@ -145,7 +145,7 @@ run.bat
 
 3. **Usar un hook de pre-commit** para detectar secrets accidentalmente (opcional):
    ```bash
-   npm install --save-dev secretlint
+   pnpm install --save-dev secretlint
    ```
 
 4. **Revisar cambios antes de commitear**:
@@ -238,21 +238,21 @@ database/
 ### Backend (`cd backend`)
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Inicia servidor en modo desarrollo (nodemon) |
-| `npm run build` | Compila TypeScript a JavaScript |
-| `npm run start` | Inicia servidor en producción |
-| `npm run test` | Ejecuta tests (Vitest) |
-| `npm run db:seed` | Ejecuta seeds de base de datos |
-| `npm run db:studio` | Abre Prisma Studio (UI para BD) |
-| `npm run db:migrate` | Ejecuta migraciones Prisma |
+| `pnpm run dev` | Inicia servidor en modo desarrollo (nodemon) |
+| `pnpm run build` | Compila TypeScript a JavaScript |
+| `pnpm run start` | Inicia servidor en producción |
+| `pnpm run test` | Ejecuta tests (Vitest) |
+| `pnpm run db:seed` | Ejecuta seeds de base de datos |
+| `pnpm run db:studio` | Abre Prisma Studio (UI para BD) |
+| `pnpm run db:migrate` | Ejecuta migraciones Prisma |
 
 ### Frontend (`cd frontend`)
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Inicia servidor de desarrollo Vite |
-| `npm run build` | Compila para producción |
-| `npm run preview` | Previsualiza build de producción |
-| `npm run test` | Ejecuta tests (Vitest) |
+| `pnpm run dev` | Inicia servidor de desarrollo Vite |
+| `pnpm run build` | Compila para producción |
+| `pnpm run preview` | Previsualiza build de producción |
+| `pnpm run test` | Ejecuta tests (Vitest) |
 
 ---
 
@@ -284,8 +284,8 @@ Actualmente el proyecto tiene:
 
 Para ejecutar los tests:
 ```bash
-cd backend && npm test
-cd frontend && npm test
+cd backend && pnpm test
+cd frontend && pnpm test
 ```
 
 ---

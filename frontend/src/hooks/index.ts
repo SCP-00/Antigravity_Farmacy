@@ -167,10 +167,33 @@ export function useCarrito() {
 }
 
 // ── useChatbot ────────────────────────────────────────────
-interface MensajeChat {
+export interface ProductoChatbot {
+  id: string
+  nombre: string
+  concentracion?: string
+  presentacion?: string
+  laboratorio?: string
+  precioVenta: number
+  requiereRx: boolean
+  principioActivo?: string
+  stockTotal: number
+}
+
+export interface AlertaChatbot {
+  tipo: string
+  productoA: string
+  productoB?: string
+  descripcion: string
+  severidad: string
+}
+
+export interface MensajeChat {
   role: 'user' | 'bot'
   texto: string
-  productos?: unknown[]
+  productos?: ProductoChatbot[]
+  alertas?: AlertaChatbot[]
+  alertasVisibles?: boolean
+  menuActivo?: string
 }
 
 export function useChatbot() {
@@ -191,7 +214,10 @@ export function useChatbot() {
       setMensajes(prev => [...prev, {
         role: 'bot',
         texto: res.respuesta,
-        productos: res.productos,
+        productos: res.productos ?? [],
+        alertas: res.alertas ?? [],
+        alertasVisibles: res.alertasVisibles ?? false,
+        menuActivo: res.menuActivo ?? 'menu',
       }])
     } catch {
       setMensajes(prev => [...prev, {

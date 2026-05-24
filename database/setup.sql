@@ -33,9 +33,9 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 --  IMPORTANTE: Las tablas las crea Prisma con:
 --
 --    cd backend
---    npm run db:generate   ← genera el cliente TypeScript
---    npm run db:push       ← aplica schema.prisma a la BD
---    npm run db:seed       ← inserta datos iniciales
+--    pnpm run db:generate   ← genera el cliente TypeScript
+--    pnpm run db:push       ← aplica schema.prisma a la BD
+--    pnpm run db:seed       ← inserta datos iniciales
 --
 --  Flujo completo de desarrollo:
 --
@@ -45,13 +45,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 --  2. cp .env.example .env
 --       (rellena DATABASE_URL y los secrets JWT)
 --
---  3. cd backend && npm install
---  4. npm run db:generate
---  5. npm run db:push
---  6. npm run db:seed
+--  3. cd backend && pnpm install
+--  4. pnpm run db:generate
+--  5. pnpm run db:push
+--  6. pnpm run db:seed
 --
---  7. npm run dev             ← backend en localhost:3001
---  8. cd ../frontend && npm install && npm run dev
+--  7. pnpm run dev             ← backend en localhost:3001
+--  8. cd ../frontend && pnpm install && pnpm run dev
 --       ← tienda en localhost:5173
 -- ══════════════════════════════════════════════════════════
 

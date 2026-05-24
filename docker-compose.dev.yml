@@ -4,7 +4,7 @@ version: '3.9'
 #  FARMACY — Docker Compose DESARROLLO LOCAL
 #
 #  Solo levanta la base de datos y Redis.
-#  El backend y frontend corren con npm run dev en tu máquina.
+#  El backend y frontend corren con pnpm run dev en tu máquina.
 #
 #  Uso:
 #    docker-compose -f docker-compose.dev.yml up -d

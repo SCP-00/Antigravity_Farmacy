@@ -115,7 +115,7 @@ async function main() {
   const categoriaCount = await prisma.categoria.count()
   if (categoriaCount === 0) {
     console.error('❌ No hay categorías en la base de datos.')
-    console.error('   Ejecuta primero los seeds: cd backend && npm run db:seed')
+    console.error('   Ejecuta primero los seeds: cd backend && pnpm run db:seed')
     console.error('   Luego asigna la categoría deseada editando CATEGORIA_DEFAULT_ID en este script.')
     process.exit(1)
   }

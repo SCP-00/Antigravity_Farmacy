@@ -55,11 +55,35 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 ## Jobs (CRON)
 - \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email.
 
+## Testing
+- **Framework:** Vitest v3 + supertest para tests de integración
+- **16 archivos de test** (234 tests, todos pasando)
+- **Coverage de archivos core:**
+  | Archivo | % Statements | % Branches | % Funciones |
+  |---------|:----------:|:---------:|:----------:|
+  | env.ts | 100% | 100% | 100% |
+  | redis.ts | 100% | 100% | 100% |
+  | mailer.ts | 100% | 100% | 100% |
+  | inventario.service.ts | 100% | 90.9% | 100% |
+  | jwt.utils.ts | 100% | 100% | 100% |
+  | respuesta.utils.ts | 100% | 100% | 100% |
+  | logger.ts | 100% | 100% | 0%* |
+  | alertas.ts | 98.59% | 90.69% | 100% |
+  | middlewares/index.ts | 97.84% | 87.8% | 87.5% |
+  | database.ts | 96.15% | 80% | 100% |
+  | interacciones.service.ts | 95.32% | 87.5% | 100% |
+  | schemas (productos/ventas/inventario) | 94.93% | 0%** | 0%** |
+  | chatbot.routes.ts | 68.39% | 84.49% | 66.66% |
+  \* logger.ts functions 0% porque son delegates de winston
+  \** schemas/branch y functions miden exportación de tipos, no lógica
+- **Para ejecutar:** `cd backend && pnpm run test`
+- **Para coverage:** `cd backend && pnpm run test -- --coverage`
+
 ## Scripts de Base de Datos
 - `database/scripts/importar-y-generar.cjs`: Script consolidado (CommonJS) que importa productos desde `INVIMA-MINI.csv` y genera lotes de inventario con fechas de vencimiento. Batch upsert por CUM + recálculo de costos promedios.
 - `backend/scripts/generar-mini-csv.mjs`: Genera subconjunto representativo (~56 productos) del CSV INVIMA original (~158K registros). Filtra activos + comerciales, selecciona 4 por grupo ATC.
 - `database/seeds/INVIMA-MINI.csv`: Mini-CSV con 56 productos, 14 grupos ATC, 26 KB, con precios de compra/venta.
 
 ## Flujo de Importación
-1. `cd backend && npm run db:seed` → Seeds base (sucursales, proveedores, categorías)
+1. `cd backend && pnpm run db:seed` → Seeds base (sucursales, proveedores, categorías)
 2. `cd backend && node ../database/scripts/importar-y-generar.cjs` → Importa productos del mini-CSV + genera ~120 lotes

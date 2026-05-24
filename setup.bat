@@ -38,17 +38,21 @@ if %ERRORLEVEL% neq 0 (
 for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
 echo    Node.js detectado: %NODE_VER%
 
-:: Verificar npm
-where npm >nul 2>&1
+:: Verificar pnpm
+where pnpm >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo  [ERROR] npm no esta instalado. Reinstala Node.js.
-    echo.
-    pause
-    exit /b 1
+    echo  [INFO] pnpm no encontrado. Instalandolo globalmente con npm...
+    call npm install -g pnpm
+    if !ERRORLEVEL! neq 0 (
+        echo  [ERROR] No se pudo instalar pnpm. Instalalo manualmente: npm install -g pnpm
+        pause
+        exit /b 1
+    )
+    echo    pnpm instalado globalmente.
 )
-for /f "tokens=*" %%v in ('npm -v') do set NPM_VER=%%v
-echo    npm detectado:     v%NPM_VER%
+for /f "tokens=*" %%v in ('pnpm -v') do set PNPM_VER=%%v
+echo    pnpm detectado:     v%PNPM_VER%
 echo.
 
 :: ── 2. Verificar Docker ─────────────────────────────────
@@ -62,7 +66,7 @@ if %ERRORLEVEL% neq 0 (
     echo    a) Instalar Docker Desktop: https://www.docker.com/products/docker-desktop
     echo    b) Tener PostgreSQL y Redis instalados localmente
     echo.
-    echo  Continuando con la instalacion de dependencias npm...
+    echo  Continuando con la instalacion de dependencias pnpm...
     echo.
 ) else (
     for /f "tokens=*" %%v in ('docker --version') do set DOCKER_VER=%%v
@@ -87,7 +91,7 @@ echo.
 
 echo    Raiz del proyecto...
 cd /d "%~dp0"
-call npm install
+call pnpm install
 if %ERRORLEVEL% neq 0 (
     echo  [ERROR] Fallo al instalar dependencias en la raiz.
     pause
@@ -97,7 +101,7 @@ echo.
 
 echo    Backend...
 cd /d "%~dp0backend"
-call npm install
+call pnpm install
 if %ERRORLEVEL% neq 0 (
     echo  [ERROR] Fallo al instalar dependencias del backend.
     pause
@@ -107,7 +111,7 @@ echo.
 
 echo    Frontend...
 cd /d "%~dp0frontend"
-call npm install
+call pnpm install
 if %ERRORLEVEL% neq 0 (
     echo  [ERROR] Fallo al instalar dependencias del frontend.
     pause
@@ -118,7 +122,7 @@ echo.
 :: ── 4. Generar Prisma Client ─────────────────────────────
 echo [4/6] Generando Prisma Client...
 cd /d "%~dp0backend"
-call npm run db:generate
+call pnpm run db:generate
 if %ERRORLEVEL% neq 0 (
     echo  [AVISO] No se pudo generar el Prisma Client.
     echo  Verifica que el schema.prisma exista en database/prisma/
@@ -132,7 +136,7 @@ if %ERRORLEVEL% neq 0 (
 echo [5/6] Aplicando esquema a la base de datos (db push)...
 echo    Asegurate de que PostgreSQL este corriendo.
 cd /d "%~dp0backend"
-call npm run db:push
+call pnpm run db:push
 if %ERRORLEVEL% neq 0 (
     echo.
     echo  [AVISO] No se pudo aplicar el esquema. Posibles causas:
@@ -148,13 +152,13 @@ if %ERRORLEVEL% neq 0 (
 :: ── 6. Poblar base de datos con seeds ────────────────────
 echo [6/6] Poblando base de datos con datos semilla...
 cd /d "%~dp0backend"
-call npm run db:seed
+call pnpm run db:seed
 if %ERRORLEVEL% neq 0 (
     echo.
     echo  [AVISO] No se pudieron cargar los seeds. Posibles causas:
     echo    - PostgreSQL no esta corriendo
     echo    - El esquema aun no se ha aplicado
-    echo  Puedes ejecutar manualmente: cd backend ^&^& npm run db:seed
+    echo  Puedes ejecutar manualmente: cd backend ^&^& pnpm run db:seed
     echo.
 ) else (
     echo    Datos semilla cargados correctamente.

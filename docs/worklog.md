@@ -97,3 +97,41 @@ Use this log to record completed milestones and the files changed for each phase
   - `frontend/src/pages/tienda/ConfirmacionPago.tsx`: Página standalone que lee query params `estado`/`pedido` y muestra resultado (aprobado/rechazado/pendiente) con diseño responsivo
   - Flujo: Selección de método → Simulación de pasarela con 3 pasos → Registro de venta → Confirmación con número de pedido y puntos ganados
   - Todos los flujos son simulados (sandbox educativo), conectados al backend real para registro de ventas
+
+## 2026-05-22 (Validación Checkout + Test run.bat)
+- **Validación de formularios agregada a Checkout.tsx**:
+  - Validación inline de 4 campos (nombre, email, teléfono formato Colombia, dirección) con mensajes específicos
+  - Estados `onBlur` para validación en vivo (solo muestra errores después de tocar el campo)
+  - Estilos de error: borde rojo, `ring-red`, ícono `AlertCircle` en inputs inválidos
+  - `InputError`, `SkeletonPago` (shimmer loading), `ErrorCard` (error con reintentar/volver)
+  - `aria-invalid` y `aria-describedby` para accesibilidad
+  - TypeScript sin errores ✅
+- **Ejecución de run.bat — Problemas encontrados y corregidos**:
+  - ❌ `backend/.env` faltante → Corregido: copiado desde `.env.example`
+  - ❌ Prisma Client `EPERM` en engine library → Corregido: cambiado a `engineType = "binary"` en `schema.prisma`
+  - ❌ Puerto 3000 ocupado por PID residual → Corregido: limpieza con PowerShell
+  - ✅ Backend inicia correctamente, DB conecta, Passport + Jobs configurados
+  - ✅ Frontend Vite sirve en localhost:5173 sin errores
+  - ⚠️ `run.bat` usa `npm` en vez de `pnpm` (funciona, pero debería migrarse)
+  - ⚠️ `run.bat` no verifica Docker Desktop antes de iniciar
+
+## 2026-05-24 (Full Testing + Coverage)
+- **Suite completa de tests unitarios (234 tests, 16 archivos):**
+  - `app.test.ts` (16 tests): Health check, 404, CORS, helmet, rutas protegidas, categorías, chatbot, productos/buscar
+  - `chatbot.routes.test.ts` (37 tests): Menú principal (8 opciones), detección por keywords, flujo de estados (buscar, faq, interacciones), FAQ numérica + keywords, POST /interacciones, GET /producto/:id, GET /horario
+  - `interacciones.service.test.ts` (30 tests): verificarInteracciones (13), verificarAlergenos (9), recomendarSimilares (5), obtenerPrincipiosActivos (3)
+  - `schemas.test.ts` (36 tests): Schemas de inventario, productos y ventas con todos los edge cases
+  - `middlewares.test.ts` (19 tests): autenticar, autenticarCliente, autorizar, validarCuerpo, validarQuery, manejarErrores, limitarPeticiones
+  - `respuesta.utils.test.ts` (19 tests): ok, creado, error, noEncontrado, lista, pagina, serverError, noAutorizado
+  - `redis.test.ts` (14 tests): instancia Redis, connect, cache.get/set/del/delPattern
+  - `alertas.job.test.ts` (14 tests)
+  - `inventario.service.test.ts` (10 tests)
+  - `jwt.utils.test.ts` (10 tests): generar/verificar tokens empleado y cliente, refresh tokens
+  - `database.test.ts` (4 tests): connectDB, disconnectDB, error handling
+  - `env.test.ts` (6 tests): defaults, env vars personalizados, validación NODE_ENV/JWT/DATABASE_URL
+  - `mailer.test.ts` (6 tests): plantillas email, sendEmail
+  - `logger.test.ts` (5 tests)
+  - `passport.test.ts` (3 tests): Google OAuth configurado/omitido, warning log
+- **Coverage core:** env (100%), redis (100%), mailer (100%), schemas (94.93%), middlewares (97.84%), jwt.utils (100%), respuesta.utils (100%), inventario.service (100%), interacciones.service (95.32%), alertas (98.59%)
+- **Fix preexistente:** ventas.service.test.ts — puntos de fidelidad calculados a $100 COP, no $1000
+- **Documentación actualizada:** `docs/architecture.md` — tabla de coverage añadida

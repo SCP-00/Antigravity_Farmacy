@@ -87,7 +87,7 @@ async function main() {
 
   const catCount = await prisma.categoria.count()
   if (catCount === 0) {
-    console.error('❌ No hay categorías. Ejecuta: npm run db:seed')
+    console.error('❌ No hay categorías. Ejecuta: pnpm run db:seed')
     process.exit(1)
   }
   console.log(`✅ ${catCount} categorías disponibles\n`)

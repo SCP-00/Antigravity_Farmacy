@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet } from 'lucide-react'
+import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { ventasService } from '@/services'
@@ -27,6 +27,52 @@ const METODOS: MetodoInfo[] = [
   { id: 'EFECTIVO', label: 'Efectivo', icon: <Banknote className="w-6 h-6" />, color: 'text-emerald-700', bgColor: 'bg-emerald-50 border-emerald-200 hover:border-emerald-400', description: 'Pago contra entrega', features: ['Paga al recibir', 'Sin necesidad de tarjeta', 'Efectivo o transferencia', 'Valido en Bogota'] },
 ]
 
+// ── Validación ────────────────────────────────────────────────
+type CampoEnvio = 'nombre' | 'email' | 'telefono' | 'direccion'
+type ErroresFormulario = Partial<Record<CampoEnvio | 'metodoPago', string>>
+type DatosEnvio = Record<CampoEnvio, string>
+
+const CAMPOS_ENVIO: CampoEnvio[] = ['nombre', 'email', 'telefono', 'direccion']
+
+function validarCampo(campo: CampoEnvio | 'metodoPago', valor: string): string {
+  switch (campo) {
+    case 'nombre':
+      if (!valor.trim()) return 'El nombre es obligatorio'
+      if (valor.trim().length < 3) return 'Debe tener al menos 3 caracteres'
+      if (valor.trim().length > 100) return 'Debe tener maximo 100 caracteres'
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$/.test(valor.trim())) return 'Solo se permiten letras y espacios'
+      return ''
+    case 'email':
+      if (!valor.trim()) return 'El correo es obligatorio'
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor.trim())) return 'Formato de correo invalido (ej: usuario@dominio.com)'
+      return ''
+    case 'telefono':
+      if (!valor.trim()) return 'El telefono es obligatorio'
+      const telefonoLimpio = valor.trim().replace(/\s+/g, '')
+      if (!/^3\d{9}$/.test(telefonoLimpio) && !/^60[1-9]\d{7}$/.test(telefonoLimpio) && !/^01\d{8,9}$/.test(telefonoLimpio))
+        return 'Ingresa un numero valido en Colombia (ej: 3001234567)'
+      return ''
+    case 'direccion':
+      if (!valor.trim()) return 'La direccion es obligatoria'
+      if (valor.trim().length < 5) return 'Debe tener al menos 5 caracteres'
+      if (valor.trim().length > 200) return 'Debe tener maximo 200 caracteres'
+      return ''
+    default:
+      return ''
+  }
+}
+
+function validarFormulario(datos: DatosEnvio): ErroresFormulario {
+  const errores: ErroresFormulario = {}
+  for (const campo of CAMPOS_ENVIO) {
+    const error = validarCampo(campo, datos[campo])
+    if (error) errores[campo] = error
+  }
+  return errores
+}
+
+// ── Componentes auxiliares ─────────────────────────────────────
+
 function StepIndicator({ paso }: { paso: number }) {
   const steps = [
     { n: 1, l: 'Envio' },
@@ -48,11 +94,15 @@ function StepIndicator({ paso }: { paso: number }) {
   )
 }
 
-function MetodoCard({ m, sel, onClick, disabled }: { m: MetodoInfo; sel: boolean; onClick: () => void; disabled: boolean }) {
+function MetodoCard({ m, sel, onClick, disabled, error }: { m: MetodoInfo; sel: boolean; onClick: () => void; disabled: boolean; error?: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className={`relative w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 ${sel ? 'border-teal-500 bg-teal-50 shadow-md shadow-teal-100' : m.bgColor + ' border-transparent'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}`}>
+      className={`relative w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 ${
+        error && !sel ? 'border-red-300 bg-red-50/50' :
+        sel ? 'border-teal-500 bg-teal-50 shadow-md shadow-teal-100' : m.bgColor + ' border-transparent'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}`}>
       {sel && <div className="absolute top-3 right-3 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center"><CheckCircle className="w-4 h-4 text-white" /></div>}
+      {error && !sel && <div className="absolute top-3 right-3"><AlertCircle className="w-5 h-5 text-red-400" /></div>}
       <div className="flex items-start gap-4">
         <div className={`p-3 rounded-xl ${sel ? 'bg-teal-100 text-teal-700' : 'bg-white shadow-sm ' + m.color}`}>{m.icon}</div>
         <div className="flex-1 min-w-0">
@@ -69,7 +119,27 @@ function MetodoCard({ m, sel, onClick, disabled }: { m: MetodoInfo; sel: boolean
   )
 }
 
-function SimulacionPasarela({ metodo, onComplete }: { metodo: MetodoPago; onComplete: () => void }) {
+function InputError({ error }: { error?: string }) {
+  if (!error) return null
+  return (
+    <p className="flex items-center gap-1 text-xs text-red-600 mt-1 animate-fade-in" role="alert">
+      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+      <span>{error}</span>
+    </p>
+  )
+}
+
+function SkeletonPago() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="h-24 bg-gray-100 rounded-2xl" />
+      ))}
+    </div>
+  )
+}
+
+function SimulacionPasarela({ metodo, onComplete, onCancel }: { metodo: MetodoPago; onComplete: () => void; onCancel: () => void }) {
   const [step, setStep] = useState(0)
   const steps: Record<MetodoPago, string[]> = {
     WOMPI: ['Conectando con Wompi...', 'Generando transaccion segura...', 'Redirigiendo a PSE / Nequi...'],
@@ -84,6 +154,7 @@ function SimulacionPasarela({ metodo, onComplete }: { metodo: MetodoPago; onComp
     EFECTIVO: <Banknote className="w-12 h-12 text-emerald-600" />,
   }
   useEffect(() => {
+    setStep(0)
     const t1 = setTimeout(() => setStep(1), 600)
     const t2 = setTimeout(() => setStep(2), 1400)
     const t3 = setTimeout(() => onComplete(), 2400)
@@ -91,6 +162,9 @@ function SimulacionPasarela({ metodo, onComplete }: { metodo: MetodoPago; onComp
   }, [metodo, onComplete])
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8 animate-fade-in">
+      <button onClick={onCancel} className="self-start mb-4 text-sm text-gray-400 hover:text-gray-600 transition flex items-center gap-1">
+        <ArrowLeft className="w-4 h-4" /> Cancelar y volver
+      </button>
       <div className="relative mb-8">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-100/50 to-transparent animate-pulse rounded-full blur-xl" />
         <div className="relative">{icons[metodo]}</div>
@@ -107,15 +181,64 @@ function SimulacionPasarela({ metodo, onComplete }: { metodo: MetodoPago; onComp
   )
 }
 
-export function Checkout() {
+function ErrorCard({ mensaje, onReintentar, onVolver }: { mensaje: string; onReintentar: () => void; onVolver: () => void }) {
+  return (
+    <div className="flex flex-col items-center py-12 px-8 animate-fade-in">
+      <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center shadow-sm">
+        <XCircle className="w-10 h-10 text-red-500" />
+      </div>
+      <h2 className="text-xl font-bold text-slate-900 mb-2">Error al procesar el pago</h2>
+      <p className="text-sm text-gray-500 mb-6 text-center max-w-sm">{mensaje}</p>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 w-full max-w-sm">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-red-700">
+            <p className="font-semibold mb-1">Posibles causas:</p>
+            <ul className="list-disc list-inside space-y-0.5 text-red-600/80">
+              <li>Fallo de conexion con la pasarela de pago</li>
+              <li>La transaccion fue rechazada por el banco</li>
+              <li>Tiempo de espera agotado</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <button onClick={onVolver} className="btn-secondary justify-center">
+          <ArrowLeft size={16} /> Volver a seleccionar
+        </button>
+        <button onClick={onReintentar} className="btn-primary justify-center bg-orange-600 hover:bg-orange-700 border-none">
+          <RefreshCw size={16} /> Reintentar
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Página principal de Checkout ───────────────────────────────
+
+function Checkout() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { items, subtotal, limpiar } = useCarritoStore()
   const { cliente } = useAuthCliente()
-  const [paso, setPaso] = useState<'datos' | 'pago' | 'simulando' | 'confirmacion'>('datos')
+  const [paso, setPaso] = useState<'datos' | 'pago' | 'simulando' | 'confirmacion' | 'error'>('datos')
   const [metodoPago, setMetodoPago] = useState<MetodoPago | null>(null)
   const [pedidoInfo, setPedidoInfo] = useState<{ numero: number; total: number; puntosGanados: number; metodoPago: MetodoPago } | null>(null)
-  const [datos, setDatos] = useState({ nombre: cliente?.nombre || '', email: cliente?.email || '', telefono: '', direccion: '' })
+  const DATOS_STORAGE_KEY = 'checkout_datos_envio'
+
+  const [datos, setDatos] = useState<DatosEnvio>(() => {
+    try {
+      const saved = localStorage.getItem(DATOS_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        return { nombre: '', email: '', telefono: '', direccion: '', ...parsed }
+      }
+    } catch { /* ignore corrupt data */ }
+    return { nombre: cliente?.nombre || '', email: cliente?.email || '', telefono: '', direccion: '' }
+  })
+  const [errores, setErrores] = useState<ErroresFormulario>({})
+  const [tocados, setTocados] = useState<Partial<Record<CampoEnvio | 'metodoPago', boolean>>>({})
+  const [errorPago, setErrorPago] = useState<string>('')
   const [codigo, setCodigo] = useState('')
   const [descuento, setDescuento] = useState(0)
   const [usarPuntos, setUsarPuntos] = useState(false)
@@ -125,6 +248,44 @@ export function Checkout() {
   const valPts = usarPuntos ? Math.min(saldoPts, sub - descuento) : 0
   const total = Math.max(0, sub - descuento - valPts)
   const ptsGanados = Math.floor(total / 100)
+
+  // Validacion en vivo — solo si el campo ya fue "tocado" (onBlur)
+  const erroresVisibles = useMemo(() => {
+    const errs: ErroresFormulario = {}
+    for (const key of CAMPOS_ENVIO) {
+      if (tocados[key]) {
+        const error = validarCampo(key, datos[key])
+        if (error) errs[key] = error
+      }
+    }
+    return errs
+  }, [datos, tocados])
+
+  // Errores de pago: si no seleccionó método
+  const errorMetodoPago = paso === 'pago' && metodoPago === null && tocados.metodoPago
+
+  const handleBlur = (campo: CampoEnvio) => {
+    setTocados(prev => ({ ...prev, [campo]: true }))
+    const error = validarCampo(campo, datos[campo])
+    if (error) {
+      setErrores(prev => ({ ...prev, [campo]: error }))
+    } else {
+      setErrores(prev => { const n = { ...prev }; delete n[campo]; return n })
+    }
+  }
+
+  const handleChange = (campo: CampoEnvio, valor: string) => {
+    setDatos(prev => ({ ...prev, [campo]: valor }))
+    // Limpiar error en vivo si el campo ya fue tocado
+    if (tocados[campo]) {
+      const error = validarCampo(campo, valor)
+      if (error) {
+        setErrores(prev => ({ ...prev, [campo]: error }))
+      } else {
+        setErrores(prev => { const n = { ...prev }; delete n[campo]; return n })
+      }
+    }
+  }
 
   const aplicarCodigo = () => {
     if (codigo.toUpperCase() === 'FARMACY10') { setDescuento(sub * 0.10); toast.success('Codigo aplicado! 10% de descuento') }
@@ -141,26 +302,91 @@ export function Checkout() {
       setPedidoInfo({ numero: data?.ventaNum ?? data?.numero ?? 0, total: data?.total ?? total, puntosGanados: ptsGanados, metodoPago: metodoPago ?? 'EFECTIVO' })
       limpiar(); qc.invalidateQueries({ queryKey: ['productos'] }); qc.invalidateQueries({ queryKey: ['cliente'] }); setPaso('confirmacion')
     },
-    onError: (err: any) => { toast.error(err?.response?.data?.error ?? 'Error procesando tu pedido'); setPaso('pago') },
+    onError: (err: any) => {
+      setErrorPago(err?.response?.data?.error ?? 'Error al procesar el pedido. Verifica tu conexion e intenta de nuevo.')
+      setPaso('error')
+    },
   })
 
-  const continuar = () => {
-    if (!metodoPago) { toast.error('Selecciona un metodo de pago'); return }
+  const continuarDatos = () => {
+    const errs = validarFormulario(datos)
+    setErrores(errs)
+    // Marcar todos como tocados
+    setTocados({ nombre: true, email: true, telefono: true, direccion: true })
+    if (Object.keys(errs).length > 0) {
+      toast.error('Corrige los errores antes de continuar')
+      return
+    }
+    setPaso('pago')
+  }
+
+  const continuarPago = () => {
+    if (!metodoPago) {
+      setTocados(prev => ({ ...prev, metodoPago: true }))
+      toast.error('Selecciona un metodo de pago')
+      return
+    }
     if (metodoPago === 'EFECTIVO') { ventaMut.mutate(); return }
     setPaso('simulando')
   }
 
+  const handleReintentar = () => {
+    setPaso('simulando')
+    setErrorPago('')
+  }
+
+  const handleCancelarPago = () => {
+    setPaso('pago')
+    setErrorPago('')
+  }
+
+  // ── Pantalla: carrito vacío ────────────────────────────────
   if (items.length === 0 && paso !== 'confirmacion') {
     return (
       <div className="section-shell py-12 flex justify-center">
         <div className="surface p-12 text-center max-w-md w-full">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <ShoppingCart className="w-8 h-8 text-gray-400" />
+          </div>
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Tu carrito esta vacio</h1>
-          <button onClick={() => navigate('/productos')} className="btn-primary mt-4">Volver al catalogo</button>
+          <p className="text-gray-500 text-sm mb-6">Agrega productos desde nuestro catalogo para empezar tu compra</p>
+          <button onClick={() => navigate('/productos')} className="btn-primary justify-center">Ver catalogo</button>
         </div>
       </div>
     )
   }
 
+  // ── Pantalla: error post-pago ──────────────────────────────
+  if (paso === 'error') {
+    return (
+      <div className="section-shell py-12 flex justify-center">
+        <div className="surface p-10 max-w-lg w-full">
+          <StepIndicator paso={2} />
+          <ErrorCard
+            mensaje={errorPago}
+            onReintentar={handleReintentar}
+            onVolver={() => { setPaso('pago'); setErrorPago('') }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  // Persistir datos de envío en localStorage
+  useEffect(() => {
+    if (paso === 'datos' || paso === 'pago') {
+      localStorage.setItem(DATOS_STORAGE_KEY, JSON.stringify(datos))
+    }
+  }, [datos, paso])
+
+  // Limpiar localStorage al completar la compra exitosamente
+  useEffect(() => {
+    if (paso === 'confirmacion') {
+      localStorage.removeItem(DATOS_STORAGE_KEY)
+    }
+  }, [paso])
+
+  // ── Pantalla: confirmación ─────────────────────────────────
   if (paso === 'confirmacion' && pedidoInfo) {
     return (
       <div className="section-shell py-12 flex justify-center">
@@ -190,17 +416,19 @@ export function Checkout() {
     )
   }
 
+  // ── Pantalla: simulación de pasarela ───────────────────────
   if (paso === 'simulando' && metodoPago) {
     return (
       <div className="section-shell py-12 flex justify-center">
         <div className="surface p-10 max-w-lg w-full">
           <StepIndicator paso={2} />
-          <SimulacionPasarela metodo={metodoPago} onComplete={() => ventaMut.mutate()} />
+          <SimulacionPasarela metodo={metodoPago} onComplete={() => ventaMut.mutate()} onCancel={handleCancelarPago} />
         </div>
       </div>
     )
   }
 
+  // ── Pantalla principal: datos + pago ────────────────────────
   return (
     <div className="section-shell py-8 md:py-10 px-4 md:px-0">
       <div className="mb-6"><h1 className="text-3xl font-bold text-slate-900">Finalizar compra</h1></div>
@@ -208,58 +436,204 @@ export function Checkout() {
         <div className="lg:col-span-2 space-y-6">
           <div className="surface p-6 md:p-8">
             <StepIndicator paso={paso === 'datos' ? 1 : 2} />
+
+            {/* ── Step 1: Datos de envío ─────────────────── */}
             {paso === 'datos' && (
               <div className="animate-fade-in">
+                <p className="text-sm text-gray-500 mb-6">Ingresa tus datos para realizar el envio</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><label className="label">Nombre completo</label><input value={datos.nombre} onChange={e => setDatos({ ...datos, nombre: e.target.value })} className="input-base" placeholder="Tu nombre" /></div>
-                  <div><label className="label">Correo electronico</label><input value={datos.email} onChange={e => setDatos({ ...datos, email: e.target.value })} className="input-base" placeholder="correo@ejemplo.com" /></div>
-                  <div><label className="label">Telefono</label><input value={datos.telefono} onChange={e => setDatos({ ...datos, telefono: e.target.value })} className="input-base" placeholder="300 123 4567" /></div>
-                  <div><label className="label">Direccion de envio</label><input value={datos.direccion} onChange={e => setDatos({ ...datos, direccion: e.target.value })} className="input-base" placeholder="Cra 1 # 2-3, Bogota" /></div>
+                  <div>
+                    <label className="label">Nombre completo <span className="text-red-500">*</span></label>
+                    <input
+                      value={datos.nombre}
+                      onChange={e => handleChange('nombre', e.target.value)}
+                      onBlur={() => handleBlur('nombre')}
+                      className={`input-base ${erroresVisibles.nombre || errores.nombre ? 'border-red-400 ring-red-200 focus:ring-red-400' : ''}`}
+                      placeholder="Tu nombre"
+                      disabled={false}
+                      aria-invalid={!!errores.nombre}
+                      aria-describedby={errores.nombre ? 'err-nombre' : undefined}
+                    />
+                    <InputError error={erroresVisibles.nombre || errores.nombre} />
+                  </div>
+                  <div>
+                    <label className="label">Correo electronico <span className="text-red-500">*</span></label>
+                    <input
+                      value={datos.email}
+                      onChange={e => handleChange('email', e.target.value)}
+                      onBlur={() => handleBlur('email')}
+                      className={`input-base ${erroresVisibles.email || errores.email ? 'border-red-400 ring-red-200 focus:ring-red-400' : ''}`}
+                      placeholder="correo@ejemplo.com"
+                      aria-invalid={!!errores.email}
+                      aria-describedby={errores.email ? 'err-email' : undefined}
+                    />
+                    <InputError error={erroresVisibles.email || errores.email} />
+                  </div>
+                  <div>
+                    <label className="label">Telefono <span className="text-red-500">*</span></label>
+                    <input
+                      value={datos.telefono}
+                      onChange={e => handleChange('telefono', e.target.value)}
+                      onBlur={() => handleBlur('telefono')}
+                      className={`input-base ${erroresVisibles.telefono || errores.telefono ? 'border-red-400 ring-red-200 focus:ring-red-400' : ''}`}
+                      placeholder="300 123 4567"
+                      aria-invalid={!!errores.telefono}
+                      aria-describedby={errores.telefono ? 'err-tel' : undefined}
+                    />
+                    <InputError error={erroresVisibles.telefono || errores.telefono} />
+                  </div>
+                  <div>
+                    <label className="label">Direccion de envio <span className="text-red-500">*</span></label>
+                    <input
+                      value={datos.direccion}
+                      onChange={e => handleChange('direccion', e.target.value)}
+                      onBlur={() => handleBlur('direccion')}
+                      className={`input-base ${erroresVisibles.direccion || errores.direccion ? 'border-red-400 ring-red-200 focus:ring-red-400' : ''}`}
+                      placeholder="Cra 1 # 2-3, Bogota"
+                      aria-invalid={!!errores.direccion}
+                      aria-describedby={errores.direccion ? 'err-dir' : undefined}
+                    />
+                    <InputError error={erroresVisibles.direccion || errores.direccion} />
+                  </div>
                 </div>
-                <button onClick={() => { if (!datos.nombre || !datos.direccion || !datos.telefono) { toast.error('Completa los campos obligatorios'); return }; setPaso('pago') }} className="mt-6 w-full btn-primary justify-center">Continuar al pago</button>
+                <div className="mt-6 flex gap-4">
+                  <button onClick={() => navigate('/carrito')} className="btn-secondary justify-center">
+                    <ArrowLeft size={16} /> Volver al carrito
+                  </button>
+                  <button onClick={continuarDatos} className="flex-1 btn-primary justify-center">
+                    Continuar al pago &rarr;
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* ── Step 2: Selección de pago ─────────────────── */}
             {paso === 'pago' && (
               <div className="animate-fade-in">
                 <div className="mb-4 p-4 rounded-xl bg-teal-50 border border-teal-200 flex items-start gap-3 text-sm text-teal-900">
                   <Lock className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <div><p className="font-semibold">Conexion segura</p><p className="text-teal-700/80 mt-0.5">Tus datos estan protegidos con cifrado SSL. Modo sandbox - demo educativa.</p></div>
+                  <div>
+                    <p className="font-semibold">Conexion segura</p>
+                    <p className="text-teal-700/80 mt-0.5">Tus datos estan protegidos con cifrado SSL. Modo sandbox - demo educativa.</p>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-gray-600 mb-4">Selecciona tu metodo de pago preferido:</p>
-                <div className="grid gap-3">
-                  {METODOS.map(m => <MetodoCard key={m.id} m={m} sel={metodoPago === m.id} onClick={() => setMetodoPago(m.id)} disabled={ventaMut.isPending} />)}
+
+                {/* Resumen de envío colapsable */}
+                <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-600 flex items-center gap-2">
+                  <Info className="w-4 h-4 text-gray-400" />
+                  <span>Envio a: <strong className="text-gray-800">{datos.nombre}</strong> — {datos.direccion}</span>
                 </div>
+
+                <p className="text-sm font-medium text-gray-600 mb-4">
+                  Selecciona tu metodo de pago preferido:
+                </p>
+
+                {ventaMut.isPending ? (
+                  <SkeletonPago />
+                ) : (
+                  <div className="grid gap-3">
+                    {METODOS.map(m => (
+                      <MetodoCard
+                        key={m.id}
+                        m={m}
+                        sel={metodoPago === m.id}
+                        onClick={() => { setMetodoPago(m.id); setTocados(prev => ({ ...prev, metodoPago: true })) }}
+                        disabled={ventaMut.isPending}
+                        error={errorMetodoPago}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {errorMetodoPago && (
+                  <p className="flex items-center gap-1 text-xs text-red-600 mt-2" role="alert">
+                    <AlertCircle className="w-3 h-3" /> Selecciona un metodo de pago para continuar
+                  </p>
+                )}
+
                 <div className="mt-6 flex gap-4">
-                  <button onClick={() => setPaso('datos')} disabled={ventaMut.isPending} className="flex-1 btn-secondary justify-center"><ArrowLeft size={16} /> Volver</button>
-                  <button onClick={continuar} disabled={ventaMut.isPending || !metodoPago} className="flex-1 btn-primary justify-center bg-green-600 hover:bg-green-700 border-none disabled:opacity-50">
-                    {ventaMut.isPending ? 'Procesando...' : `Pagar $${total.toLocaleString()}`}
+                  <button onClick={() => setPaso('datos')} disabled={ventaMut.isPending} className="btn-secondary justify-center">
+                    <ArrowLeft size={16} /> Volver
+                  </button>
+                  <button
+                    onClick={continuarPago}
+                    disabled={ventaMut.isPending || !metodoPago}
+                    className={`flex-1 btn-primary justify-center border-none disabled:opacity-50 ${
+                      ventaMut.isPending
+                        ? 'bg-teal-500 cursor-wait'
+                        : 'bg-teal-600 hover:bg-teal-700'
+                    }`}
+                  >
+                    {ventaMut.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                      </span>
+                    ) : (
+                      `Pagar $${total.toLocaleString()} COP`
+                    )}
                   </button>
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* ── Sidebar ───────────────────────────────────── */}
         <aside className="lg:col-span-1 space-y-4">
-          <div className="surface p-5 space-y-4">
+          <div className={`surface p-5 space-y-4 ${ventaMut.isPending ? 'opacity-60 pointer-events-none' : ''}`}>
             <h3 className="font-semibold text-slate-800 flex items-center gap-2"><Tag size={16} /> Codigo de descuento</h3>
             <div className="flex gap-2">
-              <input value={codigo} onChange={e => setCodigo(e.target.value)} placeholder="Ej: FARMACY10" className="input-base flex-1 uppercase text-sm" />
-              <button onClick={aplicarCodigo} className="px-4 bg-slate-800 text-white text-sm font-medium rounded-xl hover:bg-slate-700 transition">Aplicar</button>
+              <input
+                value={codigo}
+                onChange={e => setCodigo(e.target.value)}
+                placeholder="Ej: FARMACY10"
+                className="input-base flex-1 uppercase text-sm"
+                disabled={ventaMut.isPending}
+                onKeyDown={e => e.key === 'Enter' && aplicarCodigo()}
+              />
+              <button
+                onClick={aplicarCodigo}
+                disabled={ventaMut.isPending || !codigo.trim()}
+                className="px-4 bg-slate-800 text-white text-sm font-medium rounded-xl hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {ventaMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+              </button>
             </div>
+            {codigo.toUpperCase() === 'FARMACY10' && descuento > 0 && (
+              <p className="text-green-600 text-xs font-medium flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Descuento del 10% aplicado!
+              </p>
+            )}
+
             {cliente && saldoPts > 0 && (
               <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-slate-800 flex items-center gap-2"><Coins size={16} className="text-amber-500" /> Mis Puntos</h3>
                   <span className="text-xs font-bold text-amber-600 border border-amber-200 bg-amber-50 px-2 py-1 rounded-lg">{saldoPts.toLocaleString()} pts</span>
                 </div>
-                <label className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition">
-                  <input type="checkbox" checked={usarPuntos} onChange={e => setUsarPuntos(e.target.checked)} className="w-5 h-5 accent-teal-600" />
-                  <div className="text-sm"><p className="font-medium text-gray-800">Usar puntos como cashback</p><p className="text-xs text-gray-500">Ahorras ${saldoPts.toLocaleString()} COP</p></div>
+                <label className={`flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition ${ventaMut.isPending ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={usarPuntos}
+                    onChange={e => setUsarPuntos(e.target.checked)}
+                    className="w-5 h-5 accent-teal-600"
+                    disabled={ventaMut.isPending}
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium text-gray-800">Usar puntos como cashback</p>
+                    <p className="text-xs text-gray-500">Ahorras hasta ${saldoPts.toLocaleString()} COP</p>
+                  </div>
                 </label>
+                {usarPuntos && (
+                  <p className="text-amber-600 text-xs font-medium mt-1 flex items-center gap-1">
+                    <Coins className="w-3 h-3" /> Redimiendo {valPts.toLocaleString()} puntos
+                  </p>
+                )}
               </div>
             )}
           </div>
-          <div className="surface p-5">
+
+          <div className={`surface p-5 ${ventaMut.isPending ? 'opacity-60' : ''}`}>
             <h3 className="font-semibold text-slate-800 mb-4">Resumen del pedido</h3>
             <div className="space-y-2 text-sm border-b border-slate-100 pb-4 mb-4 max-h-48 overflow-y-auto">
               {items.map(i => (
@@ -275,9 +649,14 @@ export function Checkout() {
               {descuento > 0 && <div className="flex justify-between text-teal-600 font-medium"><span>Codigo promocional</span><span>-${descuento.toLocaleString()}</span></div>}
               {valPts > 0 && <div className="flex justify-between text-amber-600 font-medium"><span>Puntos redimidos</span><span>-${valPts.toLocaleString()}</span></div>}
             </div>
-            <div className="flex justify-between items-end pt-4 mt-4 border-t border-slate-200">
-              <div><span className="font-bold text-slate-900 block">Total a pagar</span>{cliente && <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">+ {ptsGanados} pts nuevos</span>}</div>
-              <span className="text-2xl font-bold text-teal-700">${total.toLocaleString()}</span>
+            <div className={`flex justify-between items-end pt-4 mt-4 border-t border-slate-200 ${ventaMut.isPending ? 'animate-pulse' : ''}`}>
+              <div>
+                <span className="font-bold text-slate-900 block">Total a pagar</span>
+                {cliente && <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">+ {ptsGanados} pts nuevos</span>}
+              </div>
+              <span className={`text-2xl font-bold ${ventaMut.isPending ? 'text-gray-400' : 'text-teal-700'}`}>
+                {ventaMut.isPending ? '...' : `$${total.toLocaleString()}`}
+              </span>
             </div>
           </div>
         </aside>

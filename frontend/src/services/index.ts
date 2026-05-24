@@ -258,6 +258,12 @@ export const chatbotService = {
 
   verificarHorario: () =>
     apiPublica.get('/chatbot/horario').then(r => r.data.data),
+
+  verificarInteracciones: (productoIds: string[], alergenosCliente?: string[]) =>
+    apiPublica.post('/chatbot/interacciones', { productoIds, alergenosCliente }).then(r => r.data.data),
+
+  obtenerDetalleProducto: (productoId: string) =>
+    apiPublica.get(`/chatbot/producto/${productoId}`).then(r => r.data.data),
 }
 
 // ── PAGOS ─────────────────────────────────────────────────

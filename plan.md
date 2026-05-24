@@ -86,9 +86,13 @@
 - [x] Flujo completo: selección → simulación → registro de venta → confirmación con puntos
 - [x] Modo Sandbox/Demo — conectado al backend real para registro de ventas
 
-### Fase 8 — Chatbot Asistente ⏳
-- [ ] Enlace del FarmaBot con LLM/OpenAI para recomendaciones cruzadas inteligentes
-- [ ] Alertas de interacciones medicamentosas y excipientes alérgenos
+### Fase 8 — Chatbot Asistente ✅
+- [x] Enlace del FarmaBot con LLM/OpenAI para recomendaciones cruzadas inteligentes
+- [x] Servicio de detección de interacciones medicamentosas y excipientes alérgenos
+- [x] Product cards con precio y stock en respuestas del chatbot
+- [x] Alertas visuales de seguridad con severidad (ALTA/MEDIA/INFO) expandibles
+- [x] LLM indicator y badge de alertas en FAB
+- [x] Tipo de respuesta “✨ Respuesta inteligente” cuando usa LLM
 
 ### Fase 9 — Auditoría y Seguridad Final ⏳
 - [ ] Visor de auditoría de logs de acceso en el panel admin
