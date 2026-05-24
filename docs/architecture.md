@@ -11,9 +11,15 @@
 - Frontend: \frontend/src/main.tsx
 
 ## Estándar Regulatorio Colombiano (INVIMA / CUM / ATC)
-- **CUM como SKU real:** La farmacia gestiona su stock mediante el CUM exacto (`expedientecum + "-" + consecutivocum`) asegurando un control riguroso de cada presentación comercial independiente.
-- **Seguridad en Alérgenos y Excipientes:** El modelo posee los campos `alergenos` y `advertencias` en la tabla `productos` para advertir sobre trazas o excipientes sensibles (ej. *Lactosa, Tartrazina*) en la visualización del público B2C.
-- **Muestras Médicas Protegidas:** Se define la columna `esMuestraMedica`. El backend rechaza y excluye estos productos de cualquier consulta pública comercial para evitar la comercialización ilegal de muestras.
+- **CUM como SKU real:** La farmacia gestiona su stock mediante el CUM exacto (expedientecum + "-" + consecutivocum) asegurando un control riguroso de cada presentación comercial independiente.
+- **Seguridad en Alérgenos y Excipientes:** El modelo posee los campos "alergenos" y "advertencias" en la tabla "productos" para advertir sobre trazas o excipientes sensibles (ej. Lactosa, Tartrazina) en la visualización del público B2C.
+- **Muestras Médicas Protegidas:** Se define la columna "esMuestraMedica". El backend de la tienda rechaza y excluye estos productos de cualquier consulta pública comercial para evitar la comercialización ilegal de muestras.
+
+## UX (User Experience) Improvements - B2C & POS
+Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planificado componentes de optimización de interfaz en el frontend:
+- **POS Keyboard Interactivity:** Atajos rápidos con manejadores globales de eventos de teclado (Keydowns) para agilizar el registro y cobro en cajas físicas (F2 cobro, F4 reset).
+- **Drug-Interaction Alerts:** Un motor de advertencia visual en el POS que compare los principios activos agregados al carrito, alertando al farmacéuta si existe una interacción riesgosa antes de facturar.
+- **B2C Health Profiles:** Una sección en la cuenta del cliente para auto-bloquear o alertar la compra de medicamentos que contengan alérgenos definidos por el usuario (ej. Lactosa).
 
 ## Backend module catalog (verified)
 | Module | Route prefix | File | Status |
@@ -43,7 +49,7 @@
 
 ## Validaciones Zod
 - \backend/src/schemas/inventario.schema.ts: Schemas para creación de lotes y ajustes de inventario.
-- \backend/src/schemas/productos.schema.ts: Schemas para creación/actualización de productos (Con validación estricta de CUM e INVIMA).
+- \backend/src/schemas/productos.schema.ts: Schemas para creación/actualización de productos.
 - Todos exportados centralizadamente desde \backend/src/schemas/index.ts.
 
 ## Jobs (CRON)

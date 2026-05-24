@@ -15,3 +15,28 @@ Project startup and docs referenced mixed local backend ports (`3000` and `3001`
 - Startup behavior is predictable across backend, frontend proxy, and scripts.
 - New developers can copy `.env.example` and run without immediate port mismatches.
 - Existing tooling expecting `backend/.env` keeps working due to compatibility copy.
+
+# ADR 0002: Colombian Regulatory INVIMA/CUM Data Model
+
+## Context
+Standard e-commerce platforms handle products with generic, loose SKUs. In the Colombian pharmaceutical market, operations are strictly governed by the Ministry of Health and INVIMA (Decree 2200 of 2005 and Resolution 1403 of 2007).
+
+Key regulatory challenges identified:
+1. Commercial Presentation (CUM) Uniqueness: A single sanitary registry (e.g. ALERCET, Jarabe) can have multiple presentations (30ml, 60ml, institutional, commercial). Each has a unique CUM code (expediente-consecutivo) which acts as the real SKU.
+2. Illegal Sale of Medical Samples: Commercializing medical samples (labeled muestramedica: "Si" in the INVIMA dataset) is strictly illegal.
+3. Allergens and Patient Safety: Excipientes and critical allergens (e.g. Lactose, Tartrazine, Sorbitol) must be prominently displayed to protect consumer health during B2C transactions.
+
+## Decision
+Align the core "Producto" database model strictly with INVIMA standards:
+- Set "cum" as a unique database constraint.
+- Introduce fields for "principioActivo", "atc" classification, "formaFarmaceutica", and "viaAdministracion".
+- Introduce safety fields: "alergenos" and "advertencias" to record potential allergies and precautions.
+- Add "esMuestraMedica" boolean and configure the B2C "/buscar" endpoint to strictly filter out any product where "esMuestraMedica" is true.
+- Update the admin panel to allow managers to view and edit these regulatory properties.
+- Enhance the public product details layout with distinct alert cards and excipient warnings.
+
+## Consequences
+- Ensure 100% legal compliance with INVIMA and territorial health audits.
+- Zero risk of illegal, accidental commercialization of medical samples.
+- Highly professional, safety-first B2C user experience showing critical drug allergens and medical directions.
+- Prepared database schema for future intelligent generic drug matching using the "atc" code and "principioActivo" indexes.

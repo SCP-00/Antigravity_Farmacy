@@ -12,6 +12,7 @@ export const mockCategorias: CategoriaCatalogo[] = [
   { id: 'cat-3', nombre: 'Antibióticos', slug: 'antibioticos', margen_ganancia_porcentaje: 20 },
   { id: 'cat-4', nombre: 'Cuidado Personal', slug: 'cuidado-personal', margen_ganancia_porcentaje: 25 },
   { id: 'cat-5', nombre: 'Cardiovascular', slug: 'cardiovascular', margen_ganancia_porcentaje: 16 },
+  { id: 'cat-6', nombre: 'Antialérgicos', slug: 'antialergicos', margen_ganancia_porcentaje: 18 },
 ]
 
 export const mockSedes: SedeCatalogo[] = [
@@ -21,49 +22,67 @@ export const mockSedes: SedeCatalogo[] = [
 
 export const mockProductos: ProductoCatalogo[] = [
   {
-    id: 'prod-1', slug: 'acetaminofen-500mg-20-tabs', nombre: 'Acetaminofén', marca: 'Genfar', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
+    id: 'prod-1', cum: '199100-1', registroInvima: 'INVIMA 2020M-0001', principioActivo: 'ACETAMINOFEN',
+    slug: 'acetaminofen-500mg-20-tabs', nombre: 'Acetaminofén', marca: 'Genfar', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
     presentacion: 'Caja x 20 tabletas', concentracion: '500 mg', precioVenta: 6800, stockTotal: 28, stockMinimo: 10,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'Genfar', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Lactosa', advertencias: 'Evitar sobredosis, puede causar daño hepático.'
   },
   {
-    id: 'prod-2', slug: 'ibuprofeno-400mg-10-tabs', nombre: 'Ibuprofeno', marca: 'MK', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
+    id: 'prod-2', cum: '199200-1', registroInvima: 'INVIMA 2021M-0002', principioActivo: 'IBUPROFENO',
+    slug: 'ibuprofeno-400mg-10-tabs', nombre: 'Ibuprofeno', marca: 'MK', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
     presentacion: 'Caja x 10 tabletas', concentracion: '400 mg', precioVenta: 9200, stockTotal: 16, stockMinimo: 6,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'MK', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Lactosa', advertencias: 'No tomar con el estómago vacío. Precaución en pacientes hipertensos.'
   },
   {
-    id: 'prod-3', slug: 'vitamina-c-1000mg-30-tabs', nombre: 'Vitamina C', marca: 'Tecnoquímicas', categoriaSlug: 'vitaminas', categoriaNombre: 'Vitaminas',
+    id: 'prod-3', cum: '199300-1', registroInvima: 'INVIMA 2019M-0003', principioActivo: 'ACIDO ASCORBICO',
+    slug: 'vitamina-c-1000mg-30-tabs', nombre: 'Vitamina C', marca: 'Tecnoquímicas', categoriaSlug: 'vitaminas', categoriaNombre: 'Vitaminas',
     presentacion: 'Caja x 30 tabletas', concentracion: '1000 mg', precioVenta: 18200, stockTotal: 40, stockMinimo: 12,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'Tecnoquímicas', imagenUrl: '',
+    esMuestraMedica: false, alergenos: null, advertencias: 'No exceder la dosis sugerida.'
   },
   {
-    id: 'prod-4', slug: 'amoxicilina-500mg-12-caps', nombre: 'Amoxicilina', marca: 'La Santé', categoriaSlug: 'antibioticos', categoriaNombre: 'Antibióticos',
+    id: 'prod-4', cum: '199400-1', registroInvima: 'INVIMA 2018M-0004', principioActivo: 'AMOXICILINA',
+    slug: 'amoxicilina-500mg-12-caps', nombre: 'Amoxicilina', marca: 'La Santé', categoriaSlug: 'antibioticos', categoriaNombre: 'Antibióticos',
     presentacion: 'Caja x 12 cápsulas', concentracion: '500 mg', precioVenta: 24800, stockTotal: 9, stockMinimo: 8,
     disponibleEnvio: false, disponibleTienda: true, requiereRx: true, laboratorio: 'La Santé', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Penicilina (traza)', advertencias: 'No administrar en pacientes alérgicos a la penicilina.'
   },
   {
-    id: 'prod-5', slug: 'crema-hidratante-200ml', nombre: 'Crema hidratante', marca: 'Nivea', categoriaSlug: 'cuidado-personal', categoriaNombre: 'Cuidado Personal',
+    id: 'prod-5', cum: '199500-1', registroInvima: 'INVIMA 2022D-0005', principioActivo: 'EXCIPIENTES HIDRATANTES',
+    slug: 'crema-hidratante-200ml', nombre: 'Crema hidratante', marca: 'Nivea', categoriaSlug: 'cuidado-personal', categoriaNombre: 'Cuidado Personal',
     presentacion: 'Frasco x 200 mL', concentracion: '200 mL', precioVenta: 28900, stockTotal: 24, stockMinimo: 10,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'Nivea', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Parabenos', advertencias: 'Solo para uso externo. Si causa irritación suspenda su uso.'
   },
   {
-    id: 'prod-6', slug: 'losartan-50mg-30-tabs', nombre: 'Losartán', marca: 'Genfar', categoriaSlug: 'cardiovascular', categoriaNombre: 'Cardiovascular',
+    id: 'prod-6', cum: '199600-1', registroInvima: 'INVIMA 2017M-0006', principioActivo: 'LOSARTAN POTASICO',
+    slug: 'losartan-50mg-30-tabs', nombre: 'Losartán', marca: 'Genfar', categoriaSlug: 'cardiovascular', categoriaNombre: 'Cardiovascular',
     presentacion: 'Caja x 30 tabletas', concentracion: '50 mg', precioVenta: 34600, stockTotal: 6, stockMinimo: 8,
     disponibleEnvio: false, disponibleTienda: true, requiereRx: true, laboratorio: 'Genfar', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Lactosa', advertencias: 'Requiere monitoreo periódico de la presión arterial.'
   },
   {
-    id: 'prod-7', slug: 'loratadina-10mg-10-tabs', nombre: 'Loratadina', marca: 'MK', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
+    id: 'prod-7', cum: '199700-1', registroInvima: 'INVIMA 2021M-0007', principioActivo: 'LORATADINA',
+    slug: 'loratadina-10mg-10-tabs', nombre: 'Loratadina', marca: 'MK', categoriaSlug: 'analgesicos', categoriaNombre: 'Analgésicos',
     presentacion: 'Caja x 10 tabletas', concentracion: '10 mg', precioVenta: 7600, stockTotal: 12, stockMinimo: 5,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'MK', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Lactosa', advertencias: 'Puede producir sequedad bucal leve.'
   },
   {
-    id: 'prod-8', slug: 'multivitaminico-60-caps', nombre: 'Multivitamínico', marca: 'Bayer', categoriaSlug: 'vitaminas', categoriaNombre: 'Vitaminas',
+    id: 'prod-8', cum: '199800-1', registroInvima: 'INVIMA 2020M-0008', principioActivo: 'VITAMINAS Y MINERALES',
+    slug: 'multivitaminico-60-caps', nombre: 'Multivitamínico', marca: 'Bayer', categoriaSlug: 'vitaminas', categoriaNombre: 'Vitaminas',
     presentacion: 'Frasco x 60 cápsulas', concentracion: '60 cápsulas', precioVenta: 38900, stockTotal: 18, stockMinimo: 7,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: false, laboratorio: 'Bayer', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Soya (traza)', advertencias: 'No exceder la dosis recomendada por el fabricante.'
   },
   {
-    id: 'prod-9', slug: 'enalapril-20mg-30-tabs', nombre: 'Enalapril', marca: 'La Santé', categoriaSlug: 'cardiovascular', categoriaNombre: 'Cardiovascular',
+    id: 'prod-9', cum: '199900-1', registroInvima: 'INVIMA 2019M-0009', principioActivo: 'ENALAPRIL MALEATO',
+    slug: 'enalapril-20mg-30-tabs', nombre: 'Enalapril', marca: 'La Santé', categoriaSlug: 'cardiovascular', categoriaNombre: 'Cardiovascular',
     presentacion: 'Caja x 30 tabletas', concentracion: '20 mg', precioVenta: 22200, stockTotal: 14, stockMinimo: 6,
     disponibleEnvio: true, disponibleTienda: true, requiereRx: true, laboratorio: 'La Santé', imagenUrl: '',
+    esMuestraMedica: false, alergenos: 'Lactosa', advertencias: 'Consulte a su médico si presenta tos seca persistente.'
   },
 ]
 
@@ -96,6 +115,7 @@ export function filtrarCatalogo(filtros: FiltrosCatalogo = {}) {
         producto.presentacion,
         producto.concentracion,
         producto.categoriaNombre,
+        producto.principioActivo,
       ].join(' '))
       return texto.includes(q)
     })
