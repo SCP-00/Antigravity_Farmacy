@@ -231,6 +231,45 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - `AGENTS.md` — Documentación del bug y workarounds
 - `run.ps1` — Detección de `$env:MSYSTEM` y advertencia en paso [4/8]
 
+## 2026-05-26 — Validación inline en formularios admin — InputField, NuevaOrden, RecepcionMercancia, FormularioEmpleado
+
+**Objetivo:** Agregar validación en tiempo real con feedback visual (bordes rojos, mensajes de error), estados `touched`, y atributos ARIA en los formularios admin clave.
+
+### Cambios realizados
+
+#### 1. Componentes reutilizables (`frontend/src/components/shared/InputField.tsx` — **nuevo**)
+- `InputField` — input text/email/number/password con label, error, `aria-invalid`, `aria-describedby`, dark mode
+- `SelectField` — select con label, error, placeholder, ARIA
+- `TextAreaField` — textarea con label, error, ARIA
+- `InputError` — mensaje de error con icono `AlertCircle`, `role="alert"`, animación `animate-fade-in`
+- Todos los componentes muestran borde rojo (`border-red-400`) cuando hay error + touched, y borde teal en focus normal
+
+#### 2. FormularioEmpleado (`frontend/src/pages/admin/empleados/components/FormularioEmpleado.tsx`)
+- Migrado de raw inputs a `InputField`/`SelectField`
+- Mantiene `react-hook-form` + `zod` para la validación, ahora con estilos visuales consistentes
+- Password: helperText condicional (editar vs crear), toggle de visibilidad con `Eye`/`EyeOff`
+
+#### 3. NuevaOrden (`frontend/src/pages/admin/compras/NuevaOrden.tsx`)
+- Validación inline: `proveedorId` requerido, `fechaEntrega` no pasada, `notas` max 500 chars
+- Touch tracking (`tocados`) + errores en vivo al escribir si el campo ya fue tocado
+- Validación de items: al menos 1 producto, cantidades/precios válidos
+- Botón "Crear orden" valida todo antes de mutar, con `toast.error` si hay errores
+- Dark mode completo en toda la página
+
+#### 4. RecepcionMercancia (`frontend/src/pages/admin/compras/RecepcionMercancia.tsx`)
+- Validación inline **por lote**: `codigoLote` requerido (3-50 chars, alfanumérico), `fechaVencimiento` futura, `cantidad >= 1`, `precio >= 0`
+- Touch tracking individual por campo dentro de cada lote (`Record<string, Partial<Record<CampoLote, boolean>>>`)
+- Errores en vivo al cambiar si el campo ya fue tocado
+- Validación al enviar que marca **todos** los campos de todos los lotes como tocados
+- Dark mode completo
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ Vite build: exitoso (5.52s)
+- ✅ Code review: aprobado (3 detalles corregidos: helperText duplicado, límite cantidad inconsistente, IIFE simplificado)
+
+---
+
 ## 2026-05-26 — Fase 11: UX Core POS + Admin — shortcuts, skeletons, dark mode
 
 **Objetivo:** Mejorar la experiencia de usuario del POS y el panel admin con atajos de teclado, loaders esqueléticos, estados vacíos y cobertura de modo oscuro.

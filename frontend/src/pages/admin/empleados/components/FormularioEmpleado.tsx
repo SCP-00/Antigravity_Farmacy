@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { X, Save, Eye, EyeOff } from 'lucide-react'
 import { empleadosService, sucursalesService } from '@/services'
 import toast from 'react-hot-toast'
+import { InputField, SelectField, InputError } from '@/components/shared/InputField'
 
 // ── Esquema de validación con Zod ─────────────────────────
 const empleadoSchema = z.object({
@@ -91,87 +92,82 @@ export default function FormularioEmpleado({ empleadoActual, onClose, onSuccess 
           <form id="empleado-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                <input
-                  {...register('nombre')}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
-                  placeholder="Ej. Carlos"
-                />
-                {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre.message}</p>}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                <input
-                  {...register('apellido')}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
-                  placeholder="Ej. Pérez"
-                />
-                {errors.apellido && <p className="text-red-500 text-xs mt-1">{errors.apellido.message}</p>}
-              </div>
+              <InputField
+                label="Nombre"
+                {...register('nombre')}
+                error={errors.nombre?.message}
+                touched={true}
+                required
+                placeholder="Ej. Carlos"
+              />
+              <InputField
+                label="Apellido"
+                {...register('apellido')}
+                error={errors.apellido?.message}
+                touched={true}
+                required
+                placeholder="Ej. Pérez"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-              <input
-                {...register('email')}
-                type="email"
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
-                placeholder="correo@farmacy.co"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-            </div>
+            <InputField
+              label="Correo Electrónico"
+              type="email"
+              {...register('email')}
+              error={errors.email?.message}
+              touched={true}
+              required
+              placeholder="correo@farmacy.co"
+            />
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                <select
-                  {...register('rol')}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all bg-white"
-                >
-                  <option value="AUXILIAR">Auxiliar</option>
-                  <option value="FARMACEUTA">Farmaceuta</option>
-                  <option value="ADMINISTRADOR">Administrador</option>
-                </select>
-                {errors.rol && <p className="text-red-500 text-xs mt-1">{errors.rol.message}</p>}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sucursal</label>
-                <select
-                  {...register('sucursalId')}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all bg-white"
-                >
-                  <option value="">Seleccione...</option>
-                  {sucursales.map(s => (
-                    <option key={s.id} value={s.id}>{s.nombre}</option>
-                  ))}
-                </select>
-                {errors.sucursalId && <p className="text-red-500 text-xs mt-1">{errors.sucursalId.message}</p>}
-              </div>
+              <SelectField
+                label="Rol"
+                {...register('rol')}
+                error={errors.rol?.message}
+                touched={true}
+                required
+              >
+                <option value="AUXILIAR">Auxiliar</option>
+                <option value="FARMACEUTA">Farmaceuta</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+              </SelectField>
+
+              <SelectField
+                label="Sucursal"
+                {...register('sucursalId')}
+                error={errors.sucursalId?.message}
+                touched={true}
+                required
+                placeholder="Seleccione..."
+              >
+                {sucursales.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </SelectField>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña {isEditing && <span className="text-xs text-gray-400 font-normal">(Dejar en blanco para mantener la actual)</span>}
-              </label>
               <div className="relative">
-                <input
-                  {...register('password')}
+                <InputField
+                  label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
+                  {...register('password')}
+                  error={errors.password?.message}
+                  touched={true}
                   placeholder="******"
+                  helperText={isEditing ? 'Dejar en blanco para mantener la contraseña actual' : 'Mínimo 6 caracteres'}
+                  className="pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 bottom-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
           </form>
