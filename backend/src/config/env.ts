@@ -2,8 +2,9 @@ import { z } from 'zod'
 import dotenv from 'dotenv'
 import path from 'path'
 
-// Carga el .env desde la raíz del monorepo
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') })
+// Carga .env: primero backend/.env, luego raíz del monorepo (último tiene prioridad)
+dotenv.config({ path: path.resolve(__dirname, '../../.env') })                  // backend/.env
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') })               // raíz .env (sobrescribe)
 
 const envSchema = z.object({
   // Servidor
