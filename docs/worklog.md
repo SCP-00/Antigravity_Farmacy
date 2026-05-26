@@ -75,3 +75,32 @@ Se realizó una revisión completa del proyecto y se actualizó toda la document
 
 - POS con escáner de códigos, arqueo de caja, tirilla térmica
 - Tienda B2C con carrito, checkout FEFO, catálogo real
+
+## 2026-05-26 — Upgrade masivo de dependencias
+
+Se actualizaron las dependencias principales del proyecto en el branch `deps-upgrade-2026`.
+
+**Cambios realizados:**
+
+| Paquete | Antes → Después |
+|---|---|
+| Vite | 5.4.21 → **6.4.2** |
+| @vitejs/plugin-react | 4.7.0 → **5.2.0** |
+| TypeScript (backend) | 5.9.3 → **6.0.3** |
+| TypeScript (frontend) | 5.3.3 → **6.0.3** |
+| Vitest (frontend) | 1.6.1 → **3.2.4** |
+| nodemailer | 8.0.7 → 8.0.8 |
+| dotenv | 16.6.1 → 17.4.2 |
+
+**Archivos modificados:**
+- `run.bat`: Reescrito con verificación Docker, PowerShell port kill, healthcheck HTTP, HEADLESS mode, .env auto-creación
+- `backend/src/config/env.ts`: Carga dual de `.env` (backend/.env + raíz, raíz con prioridad)
+- `backend/tsconfig.json`: Agregado `ignoreDeprecations: "6.0"`
+- `backend/package.json` y `frontend/package.json`: Version bumps
+
+**Validaciones:**
+- ✅ Backend TypeScript: 0 errores
+- ✅ Frontend TypeScript: 0 errores
+- ✅ Tests: 462/462 pasan (27 archivos)
+- ✅ Vite build: exitoso (9.63s)
+- ✅ pnpm store: 156MB liberados

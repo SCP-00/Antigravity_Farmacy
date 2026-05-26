@@ -56,96 +56,32 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 - \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email.
 
 ## Testing
-- **Framework:** Vitest v3 + supertest para tests de integración
-- **27 archivos de test** (218 tests: 215 pasan, 3 fallos preexistentes en alertas)
-- **14 suites pasan completamente**, 12 fallan por resolución de módulo `.prisma/client/default`
+- **Framework:** Vitest v3 (sync backend/frontend) + supertest para tests de integración
+- **27 archivos de test** (462 tests — todos pasan ✅)
+- **Cobertura global: 83.7%** statements, 83.42% branches, 87.17% functions
+- **TypeScript 6.0:** 0 errores en backend y frontend
 
-### Tests que pasan (14 archivos, ~215 tests)
+### Cobertura por módulo
 
-| Archivo | Tests | Descripción |
-|---|---|---|
-| `env.test.ts` | 6 | Defaults, validación, env personalizados |
-| `database.test.ts` | 4 | connectDB, disconnectDB, error handling |
-| `redis.test.ts` | 14 | Instancia, cache.get/set/del/delPattern |
-| `mailer.test.ts` | 6 | Plantillas email, sendEmail |
-| `passport.test.ts` | 3 | Google OAuth config/omitido |
-| `jwt.utils.test.ts` | 10 | Generar/verificar tokens, refresh |
-| `respuesta.utils.test.ts` | 19 | ok, creado, error, noEncontrado, lista, pagina |
-| `logger.test.ts` | 5 | Logger config |
-| `middlewares.test.ts` | 19 | autenticar, autorizar, validarCuerpo, manejarErrores |
-| `schemas.test.ts` | 36 | Schemas inventario, productos, ventas |
-| `inventario.service.test.ts` | 10 | FEFO, costo promedio |
-| `ventas.service.test.ts` | 5 | Registro venta, puntos fidelidad |
-| `interacciones.service.test.ts` | 30 | Interacciones medicamentosas, alérgenos |
-| `chatbot.routes.test.ts` | 37 | Menú, keywords, flujo estados |
-| `alertas.job.test.ts` | 14 (3 fail) | Alertas vencimiento + stock mínimo |
-
-| Módulo / Archivo | % Statements | % Branches | % Funciones |
-|---------|:----------:|:---------:|:----------:|
-| **Core** | | | |
-| env.ts | 100% | 100% | 100% |
-| redis.ts | 100% | 100% | 100% |
-| mailer.ts | 100% | 100% | 100% |
-| database.ts | 96.15% | 80% | 100% |
-| passport.ts | 45.23% | 100% | 100% |
-| **Middleware** | | | |
-| middlewares/index.ts | 97.84% | 88% | 100% |
-| **Jobs** | | | |
-| alertas.ts | 98.59% | 90.69% | 100% |
-| **Services** | | | |
-| inventario.service.ts | 100% | 90.9% | 100% |
-| ventas.service.ts | 93.15% | 81.25% | 100% |
-| interacciones.service.ts | 95.32% | 87.5% | 100% |
-| **Utils** | | | |
-| jwt.utils.ts | 100% | 100% | 100% |
-| respuesta.utils.ts | 100% | 100% | 100% |
-| logger.ts | 100% | 0%* | 100% |
-| **Schemas** | | | |
-| inventario.schema.ts | 100% | 100% | 100% |
-| productos.schema.ts | 100% | 100% | 100% |
-| ventas.schema.ts | 100% | 100% | 100% |
-| **Rutas — Cobertura ≥90%** | | | |
-| app.ts | 100% | 100% | 100% |
-| caja.routes.ts | 100% | 60% | 100% |
-| clientes.admin.routes.ts | 100% | 100% | 100% |
-| inventario.routes.ts | 100% | 75% | 100% |
-| lotes.routes.ts | 100% | 50% | 100% |
-| reportes.routes.ts | 100% | 87.5% | 100% |
-| sucursales.routes.ts | 100% | 85.71% | 100% |
-| pagos.routes.ts | 98.84% | 90% | 100% |
-| empleados.routes.ts | 96.87% | 76.92% | 100% |
-| productos.routes.ts | 96.84% | 77.77% | 100% |
-| proveedores.routes.ts | 96.29% | 66.66% | 100% |
-| categorias.routes.ts | 95.83% | 90% | 100% |
-| **Rutas — Cobertura 80-89%** | | | |
-| auth-cliente.routes.ts | 86.34% | 80.95% | 100% |
-| compras.routes.ts | 81% | 75% | 100% |
-| auth.routes.ts | 79.45% | 75% | 100% |
-| **Rutas — Cobertura <80%** | | | |
-| ventas.routes.ts | 89.23% | 74.07% | 100% |
-| chatbot.routes.ts | 68.39% | 84.49% | 66.66% |
-| auth-cliente.perfil.routes.ts | 59.67% | 50% | 100% |
-| imagenes.routes.ts | 46.96% | 80% | 0% |
-
-\* logger.ts branches 0% porque usa delegates de winston sin bifurcaciones propias
-
-**Coverage general (última medición):** 71.03% statements, 83.14% branches, 82.71% functions
-(Solo se midió coverage de los tests que corren — 12 suites fallan por resolución de Prisma)
-
-### Archivos sin cobertura
-- `server.ts`: entrypoint (conexión DB + HTTP start)
-- `scripts/`: test-comprehensive.ts, test-e2e.ts
-- `schemas/index.ts`: solo re-exporta
-
-### Tests que fallan (12 archivos de ruta)
-- **Causa:** `Error: Cannot find module '.prisma/client/default'`
-- **Motivo:** Prisma Client se genera en directorio personalizado (`output = "../../backend/node_modules/.prisma/client"`) que Vitest no resuelve automáticamente
-- **Workaround:** `cd backend && pnpm run db:generate` antes de ejecutar tests
-- **Impacto:** Solo tests de integración — no afecta desarrollo ni producción
+| Módulo | Statements | Branches | Functions |
+|---|---|---|---|
+| `caja` | 100% | 60% | 100% |
+| `inventario` | 100% | 75% | 100% |
+| `lotes` | 100% | 50% | 100% |
+| `sucursales` | 100% | 85.71% | 100% |
+| `utils` | 100% | 95% | 100% |
+| `pagos` | 98.37% | 84.74% | 100% |
+| `jobs` | 98.59% | 87.5% | 100% |
+| `middlewares` | 97.84% | 88% | 100% |
+| `servicios` | 95.76% | 86.74% | 100% |
+| `schemas` | 94.93% | 0% | 0% |
+| `config` | 88% | 97.05% | 100% |
+| `reportes` | 44.58% | 91.66% | 100% |
+| `imagenes` | 46.96% | 80% | 0% |
 
 ### Para ejecutar
 ```bash
-cd backend && pnpm run test                  # Todos los tests
+cd backend && pnpm run test                  # 462 tests
 cd backend && pnpm run test -- --coverage    # Con cobertura
 ```
 

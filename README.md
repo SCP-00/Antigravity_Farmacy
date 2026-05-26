@@ -1,9 +1,10 @@
 # 🌿 Farmacy — Sistema de Gestión de Farmacias (SGF)
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18-green)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.7-purple)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-purple)](https://www.prisma.io/)
+[![Vite](https://img.shields.io/badge/Vite-6.4-646CFF)](https://vitejs.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 **Farmacy** es un sistema de gestión farmacéutica completo con tienda B2C integrada, panel administrativo POS, control de inventario FEFO (*First Expired, First Out*), y múltiples pasarelas de pago. Desarrollado como proyecto académico.
@@ -64,7 +65,7 @@ Farmacy/
 ### Frontend (`frontend/`)
 - **Entrypoint**: `src/main.tsx`
 - **Framework**: React 18 con TypeScript
-- **Build**: Vite
+- **Build**: Vite 6
 - **Estilos**: Tailwind CSS
 - **Estado**: Zustand (auth, carrito, UI)
 - **Routing**: React Router DOM v6
@@ -278,15 +279,15 @@ El proyecto sigue un plan estructurado en 10 fases. El estado actual es:
 ## 🧪 Tests
 
 Actualmente el proyecto tiene:
-- **27 archivos de test** (Vitest)
-- **218 tests** (215 pasan, 3 fallos preexistentes en alertas)
-- **14 suites pasan completamente** (core, services, utils, schemas, middlewares, chatbot)
-- **Coverage:** env (100%), redis (100%), mailer (100%), jwt.utils (100%), etc.
+- **27 archivos de test** (Vitest v3)
+- **462 tests — todos pasan** ✅
+- **Cobertura global: 83.7%** statements, 83.42% branches, 87.17% functions
+- Módulos con 100% coverage: caja, inventario, lotes, sucursales, jwt.utils, respuesta.utils, logger
 
 Para ejecutar los tests:
 ```bash
-cd backend && pnpm test
-cd frontend && pnpm test
+cd backend && pnpm test          # 462 tests
+cd backend && pnpm test -- --coverage  # Con coverage
 ```
 
 ---

@@ -16,14 +16,16 @@ This folder is the living documentation hub for Farmacy (SGF).
 - Phase tracking: [docs/phase-0-checklist.md](phase-0-checklist.md)
 - Work log: [docs/worklog.md](worklog.md)
 
-## Estado del proyecto (2026-05-25)
+## Estado del proyecto (2026-05-26)
 
 | Métrica | Valor |
 |---|---|
-| Backend TypeScript | ✅ 0 errores |
-| Frontend TypeScript | ✅ 0 errores |
-| Tests pasan | 215/218 |
+| Backend TypeScript 6.0 | ✅ 0 errores |
+| Frontend TypeScript 6.0 | ✅ 0 errores |
+| Tests | ✅ 462/462 pasan (27 archivos) |
+| Cobertura | 83.7% statements |
 | Módulos backend | 18 activos |
 | Páginas frontend | 40+ (tienda + admin + auth) |
 | Pasarelas de pago | Wompi, Stripe, MercadoPago, Efectivo |
 | Docker services | PostgreSQL 15, Redis 7, pgAdmin |
+| Vite | 6.4.2 |
