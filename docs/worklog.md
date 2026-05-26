@@ -105,6 +105,42 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - ✅ Vite build: exitoso (9.63s)
 - ✅ pnpm store: 156MB liberados
 
+## 2026-05-26 — Verificación del fix MSYS path translation (3 shells)
+
+**Prueba completa del bug MSYS path translation desde 3 shells + Git Bash.**
+
+### Pruebas realizadas
+
+| Shell | Endpoint | Resultado |
+|---|---|---|
+| **PowerShell nativo** | `/api/v1/health` | ✅ 200 |
+| | `/api/v1/categorias` | ✅ 200 (8 categorías) |
+| | `/api/v1/sucursales` | ✅ 200 (2 sucursales) |
+| **CMD** | `/api/v1/health` | ✅ 200 |
+| | `/api/v1/categorias` | ✅ 200 |
+| **Git Bash** (curl) | `/api/v1/health` | ✅ 200 |
+| | `/api/v1/categorias` | ✅ 200 |
+| | `/api/v1/sucursales` | ✅ 200 |
+| **Git Bash** (backend arrancado desde bash) | `/api/v1/health` | ✅ 200 |
+| | `/api/v1/categorias` | ✅ 200 |
+| | `/api/v1/sucursales` | ✅ 200 |
+
+### Fix MSYS — Unit test (6/6 casos)
+| Escenario | Resultado |
+|---|---|
+| Path normal `/api/v1` → `/api/v1` | ✅ |
+| Git Bash `C:/Program Files/Git/api/v1` → `/api/v1` | ✅ |
+| MSYS2 directo `C:/msys64/api/v1` → `/api/v1` | ✅ |
+| Diferente letra `D:/Git/api/v2` → `/api/v2` | ✅ |
+| Directorios extra `C:/Program Files/Git/usr/api/v1` → `/api/v1` | ✅ |
+| Prefix alternativo `/api/v2` → `/api/v2` | ✅ |
+
+**Archivos involucrados:**
+- `backend/src/config/env.ts` — Fix MSYS en `.transform()` de `API_PREFIX`
+- `backend/src/__tests__/env.test.ts` — Tests unitarios del fix
+- `AGENTS.md` — Documentación del bug y workarounds
+- `run.ps1` — Detección de `$env:MSYSTEM` y advertencia en paso [4/8]
+
 ## 2026-05-26 — Documentación: browser-use, kill safety, regla de git
 
 **Archivos modificados:**
