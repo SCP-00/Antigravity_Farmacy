@@ -265,10 +265,11 @@ try {
     # (La variable MSYSTEM solo existe en shells MSYS)
     if ($env:MSYSTEM) {
         Write-Warn "Estas ejecutando este script desde un shell MSYS ($($env:MSYSTEM))"
-        Write-Host "   MSYS traduce rutas ej: /api/v1 → C:/Program Files/Git/api/v1"
-        Write-Host "   Esto rompe las rutas de la API (solo el healthcheck funciona)."
-        Write-Host "   Se recomienda ejecutar .\run.ps1 desde PowerShell nativo."
-        Write-Host "   Si aun asi quieres continuar, el fix en env.ts corrige el API_PREFIX."
+        Write-Host "   run.ps1 inicia los servidores via PowerShell nativo, asi que no hay problema."
+        Write-Host "   Pero si ejecutas comandos directamente (pnpm run dev) desde esta terminal,"
+        Write-Host "   MSYS traduce /api/v1 → C:/Program Files/Git/api/v1 y rompe las rutas API."
+        Write-Host "   Para evitarlo:  MSYS2_ARG_CONV_EXCL='*' pnpm run dev"
+        Write-Host "   O mejor:  .\run.ps1 desde PowerShell nativo."
     }
 
     if (-not $port3000 -and -not $port5173) {
