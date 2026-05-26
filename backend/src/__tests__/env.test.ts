@@ -130,6 +130,29 @@ describe('env.ts', () => {
     expect(mockExit).toHaveBeenCalledWith(1)
   })
 
+  it('corrige MSYS path translation en API_PREFIX (Git Bash bug)', async () => {
+    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
+    process.env.JWT_SECRET = 'a'.repeat(32)
+    process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
+    process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
+    // Simula MSYS traduciendo /api/v1 a C:/Program Files/Git/api/v1
+    process.env.API_PREFIX = 'C:/Program Files/Git/api/v1'
+
+    const { env } = await import('../config/env')
+    expect(env.API_PREFIX).toBe('/api/v1')
+  })
+
+  it('no altera API_PREFIX normal', async () => {
+    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
+    process.env.JWT_SECRET = 'a'.repeat(32)
+    process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
+    process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
+    process.env.API_PREFIX = '/api/v2'
+
+    const { env } = await import('../config/env')
+    expect(env.API_PREFIX).toBe('/api/v2')
+  })
+
   it('tiene el tipo Env exportado', async () => {
     process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
     process.env.JWT_SECRET = 'a'.repeat(32)

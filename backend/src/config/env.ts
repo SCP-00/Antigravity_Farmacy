@@ -10,7 +10,25 @@ const envSchema = z.object({
   // Servidor
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.string().default('3000'),
-  API_PREFIX: z.string().default('/api/v1'),
+  API_PREFIX: z.string().default('/api/v1').transform(val => {
+    // Fix MSYS path translation (Git Bash on Windows)
+    // MSYS convierte /api/v1 → C:/Program Files/Git/api/v1 automáticamente
+    if (/^[a-zA-Z]:[/\\]/.test(val)) {
+      // Dividir por / o \ y quitar vacíos
+      const parts = val.split(/[/\\]+/).filter(Boolean)
+      // parts[0] es la letra de unidad (ej: "C:")
+      // Saltar directorios comunes de MSYS/Git
+      const skipDirs = new Set(['program files', 'git', 'msys64', 'msys', 'usr', 'etc'])
+      let start = 1
+      while (start < parts.length && skipDirs.has(parts[start].toLowerCase())) {
+        start++
+      }
+      if (start < parts.length) {
+        return '/' + parts.slice(start).join('/')
+      }
+    }
+    return val
+  }),
 
   // Base de datos
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es requerida'),
