@@ -22,6 +22,7 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 - **B2C Health Profiles:** Una sección en la cuenta del cliente para auto-bloquear o alertar la compra de medicamentos que contengan alérgenos definidos por el usuario (ej. Lactosa).
 
 > **📍 Mapa completo de rutas:** [docs/api-routes.md](api-routes.md) — 72 endpoints back + 40+ páginas front, con RBAC y métodos HTTP.
+> 🏗️ **Diagrama de arquitectura:** [docs/architecture-diagram.md](architecture-diagram.md) — Mermaid con frontend↔backend↔DB↔servicios externos
 
 ## Backend module catalog (verified)
 | Module | Route prefix | Endpoints | File | Auth |

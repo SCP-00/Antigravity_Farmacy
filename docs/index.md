@@ -8,6 +8,7 @@ This folder is the living documentation hub for Farmacy (SGF).
 - Reference real files and scripts, not aspirational behavior.
 
 ## Map
+- 🏗️ **Architecture Diagram:** [docs/architecture-diagram.md](architecture-diagram.md) — Mermaid diagrama completo frontend↔backend↔DB
 - Architecture overview: [docs/architecture.md](architecture.md)
 - 📍 **API Routes:** [docs/api-routes.md](api-routes.md) — 72 endpoints, 40+ frontend pages, RBAC matrix
 - Decisions (ADRs): [docs/adr/](adr/)
