@@ -4,9 +4,8 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 
 ## Quick start (Windows)
 1. `setup.bat` — Instala deps, genera Prisma Client, hace db push, corre seeds
-2. `run.bat` o `.\run.ps1` — Inicia Docker (Postgres + Redis), backend (nodemon :3000), frontend (Vite 6 :5173)
-   - `run.bat` detecta PowerShell automáticamente y ejecuta `run.ps1`
-   - Si estás en PowerShell, puedes ejecutar directamente: `.\run.ps1`
+2. `.\run.ps1` — Inicia Docker (Postgres + Redis), backend (nodemon :3000), frontend (Vite 6 :5173)
+   - Ejecutar directamente desde PowerShell
 3. Alternativa manual: `docker compose -f docker-compose.dev.yml up -d` + `cd backend && pnpm run dev` + `cd frontend && pnpm run dev`
 
 ## Services + ports

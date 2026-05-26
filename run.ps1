@@ -1,41 +1,41 @@
 <#
 .SYNOPSIS
-  FARMACY — Inicio de Aplicación (PowerShell)
+  FARMACY - Inicio de Aplicacion (PowerShell)
 .DESCRIPTION
   Script principal para iniciar el entorno de desarrollo de Farmacy.
   - Verifica Node.js, pnpm y Docker
   - Levanta PostgreSQL + Redis con docker compose
   - Inicia backend (Express :3000) y frontend (Vite :5173)
-  - Healthcheck automático hasta que el backend responda
+  - Healthcheck automatico hasta que el backend responda
   - Abre el navegador en la app
 
 .NOTES
   Ejecutar desde PowerShell:  .\run.ps1
-  O doble clic en run.bat (detecta PowerShell y ejecuta este script).
+  Recomendado: .\run.ps1 (PowerShell)
 #>
 
 #requires -Version 5.1
 
-# ══════════════════════════════════════════════════════════
-# CONFIGURACIÓN
-# ══════════════════════════════════════════════════════════
+# ============================================================
+# CONFIGURACION
+# ============================================================
 
 # Cambia a $true si ejecutas en SSH/WSL/Codespaces (sin GUI)
 $HEADLESS = $false
 
-# Duración máxima del healthcheck (segundos)
+# Duracion maxima del healthcheck (segundos)
 $HEALTHCHECK_TIMEOUT = 60
 # Intervalo entre intentos del healthcheck (segundos)
 $HEALTHCHECK_INTERVAL = 2
 
-# Ruta raíz del proyecto
+# Ruta raiz del proyecto
 $ROOT = $PSScriptRoot
 if (-not $ROOT) { $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path }
 Set-Location $ROOT
 
-# ══════════════════════════════════════════════════════════
+# ============================================================
 # FUNCIONES AUXILIARES
-# ══════════════════════════════════════════════════════════
+# ============================================================
 
 function Write-Step {
     param(
@@ -57,34 +57,34 @@ function Write-StepLabel {
 
 function Write-OK {
     param([string]$Message)
-    Write-Host "   ✔ " -ForegroundColor Green -NoNewline
+    Write-Host "   [v] " -ForegroundColor Green -NoNewline
     Write-Host $Message
 }
 
 function Write-Skip {
     param([string]$Message)
-    Write-Host "   ⚡ " -ForegroundColor Yellow -NoNewline
+    Write-Host "   [!!] " -ForegroundColor Yellow -NoNewline
     Write-Host $Message
 }
 
 function Write-Warn {
     param([string]$Message)
-    Write-Host "   ⚠ " -ForegroundColor Yellow -NoNewline
+    Write-Host "   [!] " -ForegroundColor Yellow -NoNewline
     Write-Host $Message
 }
 
 function Write-Err {
     param([string]$Message)
-    Write-Host "   ✖ " -ForegroundColor Red -NoNewline
+    Write-Host "   [x] " -ForegroundColor Red -NoNewline
     Write-Host $Message
 }
 
 function Write-Banner {
     Clear-Host
     Write-Host ""
-    Write-Host "  ╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "  ║     FARMACY — Inicio de Aplicacion           ║" -ForegroundColor Cyan
-    Write-Host "  ╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
+    Write-Host "  |     FARMACY - Inicio de Aplicacion           |" -ForegroundColor Cyan
+    Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -104,21 +104,6 @@ function Get-ProcessOnPort {
         # No admin rights or other issue
     }
     return $null
-}
-
-function Stop-ProcessOnPort {
-    param([int]$Port)
-    $pids = Get-ProcessOnPort -Port $Port
-    if ($pids) {
-        foreach ($pid in $pids) {
-            try {
-                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-                Write-Host "     Matado PID $pid en puerto $Port"
-            } catch {
-                # Process may already be dead
-            }
-        }
-    }
 }
 
 function Start-HealthcheckLoop {
@@ -149,9 +134,9 @@ function Start-HealthcheckLoop {
     return $false
 }
 
-# ══════════════════════════════════════════════════════════
+# ============================================================
 # MANEJO DE CIERRE (Ctrl+C)
-# ══════════════════════════════════════════════════════════
+# ============================================================
 
 $script:BackendPID = $null
 $script:FrontendPID = $null
@@ -160,31 +145,56 @@ function Cleanup {
     Write-Host ""
     Write-Host "  Cerrando servidores..." -ForegroundColor Yellow
     if ($script:BackendPID) {
-        try { Stop-Process -Id $script:BackendPID -Force -ErrorAction SilentlyContinue } catch {}
-        Write-Host "   ✖ Backend detenido"
+        if ($HEADLESS) {
+            Get-Job -Id $script:BackendPID -ErrorAction SilentlyContinue | Stop-Job -ErrorAction SilentlyContinue
+            Get-Job -Id $script:BackendPID -ErrorAction SilentlyContinue | Remove-Job -ErrorAction SilentlyContinue
+        } else {
+            Stop-Process -Id $script:BackendPID -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "   [x] Backend detenido"
     }
     if ($script:FrontendPID) {
-        try { Stop-Process -Id $script:FrontendPID -Force -ErrorAction SilentlyContinue } catch {}
-        Write-Host "   ✖ Frontend detenido"
+        if ($HEADLESS) {
+            Get-Job -Id $script:FrontendPID -ErrorAction SilentlyContinue | Stop-Job -ErrorAction SilentlyContinue
+            Get-Job -Id $script:FrontendPID -ErrorAction SilentlyContinue | Remove-Job -ErrorAction SilentlyContinue
+        } else {
+            Stop-Process -Id $script:FrontendPID -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "   [x] Frontend detenido"
     }
     Write-Host "  Procesos limpiados." -ForegroundColor Green
 }
 
-# Registrar el cleanup para Ctrl+C (redundante con try/finally, pero captura algunos casos)
+# Registrar el cleanup para Ctrl+C
 $null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
-    # En caso de que Cleanup ya no esté en scope, matar procesos directamente
-    if ($script:BackendPID) { try { Stop-Process -Id $script:BackendPID -Force -ErrorAction SilentlyContinue } catch {} }
-    if ($script:FrontendPID) { try { Stop-Process -Id $script:FrontendPID -Force -ErrorAction SilentlyContinue } catch {} }
+    $isHeadless = $false
+    try { $isHeadless = [bool](Get-Variable -Name HEADLESS -Scope Script -ValueOnly -ErrorAction Stop) } catch {}
+    if ($script:BackendPID) {
+        if ($isHeadless) {
+            Get-Job -Id $script:BackendPID -ErrorAction SilentlyContinue | Stop-Job -ErrorAction SilentlyContinue
+            Get-Job -Id $script:BackendPID -ErrorAction SilentlyContinue | Remove-Job -ErrorAction SilentlyContinue
+        } else {
+            Stop-Process -Id $script:BackendPID -Force -ErrorAction SilentlyContinue
+        }
+    }
+    if ($script:FrontendPID) {
+        if ($isHeadless) {
+            Get-Job -Id $script:FrontendPID -ErrorAction SilentlyContinue | Stop-Job -ErrorAction SilentlyContinue
+            Get-Job -Id $script:FrontendPID -ErrorAction SilentlyContinue | Remove-Job -ErrorAction SilentlyContinue
+        } else {
+            Stop-Process -Id $script:FrontendPID -Force -ErrorAction SilentlyContinue
+        }
+    }
 }
 
-# ══════════════════════════════════════════════════════════
-# EJECUCIÓN PRINCIPAL
-# ══════════════════════════════════════════════════════════
+# ============================================================
+# EJECUCION PRINCIPAL
+# ============================================================
 
 try {
     Write-Banner
 
-    # ── [1/8] Verificar Node.js ────────────────────────────
+    # -- [1/8] Verificar Node.js -------------------------------
     Write-Step 1 8 "Verificando Node.js..."
     if (-not (Test-CommandAvailable "node")) {
         Write-Err "Node.js no esta instalado."
@@ -196,16 +206,16 @@ try {
     $nodeVer = node --version
     Write-OK "Node.js detectado: $nodeVer"
 
-    # ── [2/8] Verificar / Instalar pnpm ────────────────────
+    # -- [2/8] Verificar / Instalar pnpm -----------------------
     Write-Step 2 8 "Verificando pnpm..."
     if (-not (Test-CommandAvailable "pnpm")) {
-        Write-Warn "pnpm no encontrado. Instalando con npm..."
+        Write-Warn "pnpm no encontrado. Activando corepack para pnpm..."
         try {
-            npm install -g pnpm
-            if ($LASTEXITCODE -ne 0) { throw "npm install -g pnpm falló" }
-            Write-OK "pnpm instalado globalmente"
+            corepack enable pnpm
+            if ($LASTEXITCODE -ne 0) { throw "corepack enable pnpm fallo" }
+            Write-OK "pnpm activado via corepack"
         } catch {
-            Write-Err "No se pudo instalar pnpm. Instalalo manualmente: npm install -g pnpm"
+            Write-Err "No se pudo activar pnpm. Ejecuta manualmente: corepack enable pnpm"
             pause
             exit 1
         }
@@ -213,7 +223,7 @@ try {
     $pnpmVer = pnpm --version
     Write-OK "pnpm detectado: v$pnpmVer"
 
-    # ── [3/8] Verificar Docker ─────────────────────────────
+    # -- [3/8] Verificar Docker ---------------------------------
     Write-Step 3 8 "Verificando Docker..."
     if (-not (Test-CommandAvailable "docker")) {
         Write-Err "Docker no esta instalado o no esta en el PATH."
@@ -232,13 +242,23 @@ try {
         exit 1
     }
 
-    # ── [4/8] Limpiar procesos en puertos ──────────────────
-    Write-Step 4 8 "Limpiando procesos en puertos 3000 y 5173..."
-    Stop-ProcessOnPort -Port 3000
-    Stop-ProcessOnPort -Port 5173
-    Write-OK "Puertos liberados"
+    # -- [4/8] Verificar puertos disponibles -------------------
+    Write-Step 4 8 "Verificando puertos 3000 y 5173..."
+    $port3000 = Get-ProcessOnPort -Port 3000
+    $port5173 = Get-ProcessOnPort -Port 5173
+    if ($port3000) {
+        Write-Warn "Puerto 3000 en uso por PID $port3000 - el backend podria fallar si no se libera"
+        Write-Host "   Para liberarlo manualmente:  Stop-Process -Id $port3000 -Force"
+    }
+    if ($port5173) {
+        Write-Warn "Puerto 5173 en uso por PID $port5173 - el frontend podria fallar si no se libera"
+        Write-Host "   Para liberarlo manualmente:  Stop-Process -Id $port5173 -Force"
+    }
+    if (-not $port3000 -and -not $port5173) {
+        Write-OK "Puertos disponibles"
+    }
 
-    # ── [5/8] Verificar .env ───────────────────────────────
+    # -- [5/8] Verificar .env -----------------------------------
     Write-Step 5 8 "Verificando archivo .env..."
     $envPath = Join-Path $ROOT ".env"
     $envExamplePath = Join-Path $ROOT ".env.example"
@@ -249,7 +269,7 @@ try {
             Copy-Item $envExamplePath $envPath
             Write-OK ".env creado desde .env.example"
             Write-Host ""
-            Write-Host "  ⚠ [AVISO] Se creo .env desde .env.example." -ForegroundColor Yellow
+            Write-Host "  [!] [AVISO] Se creo .env desde .env.example." -ForegroundColor Yellow
             Write-Host "  Revisa y ajusta los valores antes de continuar." -ForegroundColor Yellow
             Write-Host "  (especialmente JWT_SECRET, JWT_CLIENTE_SECRET, etc.)" -ForegroundColor Yellow
             Write-Host ""
@@ -263,20 +283,18 @@ try {
         Write-OK ".env encontrado"
     }
 
-    # ── [6/8] Instalar dependencias si faltan ──────────────
+    # -- [6/8] Instalar dependencias si faltan -----------------
     Write-Step 6 8 "Verificando dependencias..."
     $rootModules = Join-Path $ROOT "node_modules"
-    $backendModules = Join-Path $ROOT "backend" "node_modules"
-    $frontendModules = Join-Path $ROOT "frontend" "node_modules"
 
-    # En pnpm workspaces, si existe node_modules raíz, las dependencias
-    # de backend/frontend están resueltas por el monorepo.
+    # En pnpm workspaces, si existe node_modules raiz, las dependencias
+    # de backend/frontend estan resueltas por el monorepo.
     if (-not (Test-Path $rootModules)) {
         Write-Skip "node_modules no encontrado. Instalando dependencias..."
         try {
             Push-Location $ROOT
             pnpm install
-            if ($LASTEXITCODE -ne 0) { throw "pnpm install falló" }
+            if ($LASTEXITCODE -ne 0) { throw "pnpm install fallo" }
             Write-OK "Dependencias instaladas"
         } catch {
             Write-Err "Fallo pnpm install: $_"
@@ -289,13 +307,13 @@ try {
         Write-OK "Dependencias listas"
     }
 
-    # ── Generar Prisma Client ─────────────────────────────
+    # -- Generar Prisma Client ---------------------------------
     Write-StepLabel "6a" "Generando Prisma Client..."
     try {
         Push-Location (Join-Path $ROOT "backend")
-        $prismaSchema = Join-Path $ROOT "database" "prisma" "schema.prisma"
+        $prismaSchema = Join-Path (Join-Path (Join-Path $ROOT "database") "prisma") "schema.prisma"
         npx prisma generate --schema=$prismaSchema 2>&1 | Out-Null
-        if (-not $?) { throw "prisma generate falló" }
+        if (-not $?) { throw "prisma generate fallo" }
         Write-OK "Prisma Client generado"
     } catch {
         Write-Err "Fallo prisma generate: $_"
@@ -304,13 +322,13 @@ try {
         Pop-Location
     }
 
-    # ── [7/8] Levantar Docker (PostgreSQL + Redis) ─────────
+    # -- [7/8] Levantar Docker (PostgreSQL + Redis) ------------
     Write-Step 7 8 "Levantando contenedores Docker..."
     $composeFile = Join-Path $ROOT "docker-compose.dev.yml"
     try {
         Push-Location $ROOT
         docker compose -f $composeFile up -d
-        if ($LASTEXITCODE -ne 0) { throw "docker compose falló" }
+        if ($LASTEXITCODE -ne 0) { throw "docker compose fallo" }
         Write-OK "Contenedores iniciados"
     } catch {
         Write-Err "Fallo al levantar contenedores Docker: $_"
@@ -320,7 +338,7 @@ try {
         Pop-Location
     }
 
-    # ── [8/8] Iniciar servidores ───────────────────────────
+    # -- [8/8] Iniciar servidores -------------------------------
     Write-Step 8 8 "Iniciando servidores..."
     Write-Host ""
 
@@ -329,9 +347,7 @@ try {
     $frontendDir = Join-Path $ROOT "frontend"
 
     if ($HEADLESS) {
-        # Modo headless: procesos ocultos, logs a archivos
-        $backendLog = Join-Path $ROOT "backend.log"
-        $frontendLog = Join-Path $ROOT "frontend.log"
+        # Modo headless: procesos ocultos
         $backendJob = Start-Job -ScriptBlock {
             param($dir) Set-Location $dir; pnpm run dev
         } -ArgumentList $backendDir
@@ -340,8 +356,8 @@ try {
         } -ArgumentList $frontendDir
         $script:BackendPID = $backendJob.Id
         $script:FrontendPID = $frontendJob.Id
-        Write-OK "  [Headless] Backend Job ID: $($backendJob.Id)  (log: backend.log)"
-        Write-OK "  [Headless] Frontend Job ID: $($frontendJob.Id) (log: frontend.log)"
+        Write-OK "  [Headless] Backend Job ID: $($backendJob.Id)"
+        Write-OK "  [Headless] Frontend Job ID: $($frontendJob.Id)"
     } else {
         # Modo normal: ventanas separadas
         # Intentar con pwsh.exe primero, fallback a powershell.exe
@@ -360,12 +376,12 @@ try {
             -WindowStyle Normal -PassThru
         $script:FrontendPID = $frontendProcess.Id
 
-        Write-Host "   Backend  → PID: $($backendProcess.Id)" -ForegroundColor Green
-        Write-Host "   Frontend → PID: $($frontendProcess.Id)" -ForegroundColor Green
+        Write-Host "   Backend  -> PID: $($backendProcess.Id)" -ForegroundColor Green
+        Write-Host "   Frontend -> PID: $($frontendProcess.Id)" -ForegroundColor Green
         Write-Host "   (Shell: $shellExe)" -ForegroundColor DarkGray
     }
 
-    # ── Healthcheck ─────────────────────────────────────────
+    # -- Healthcheck --------------------------------------------
     Write-Host ""
     Write-StepLabel "--" "Verificando salud del backend..."
     $healthOK = Start-HealthcheckLoop
@@ -379,33 +395,60 @@ try {
         exit 1
     }
 
-    # ── Abrir navegador ────────────────────────────────────
+    # -- Abrir navegador ----------------------------------------
     Write-StepLabel "--" "Abriendo navegador..."
     Start-Sleep -Seconds 1
     try {
-        Start-Process "http://localhost:5173"
-        Write-OK "Navegador abierto en http://localhost:5173"
+        Start-Process "msedge" -ArgumentList "http://localhost:5173"
+        Write-OK "Microsoft Edge abierto en http://localhost:5173"
     } catch {
-        Write-Warn "No se pudo abrir el navegador automaticamente"
-        Write-Host "   Abrelo manualmente: http://localhost:5173"
+        try {
+            # Fallback al navegador predeterminado si Edge no esta disponible
+            Start-Process "http://localhost:5173"
+            Write-OK "Navegador predeterminado abierto en http://localhost:5173"
+        } catch {
+            Write-Warn "No se pudo abrir el navegador automaticamente"
+            Write-Host "   Abrelo manualmente: http://localhost:5173"
+        }
     }
 
-    # ── Éxito ──────────────────────────────────────────────
+    # -- Exito --------------------------------------------------
     Write-Host ""
-    Write-Host "  ╔══════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "  ║  Farmacy iniciado correctamente!             ║" -ForegroundColor Cyan
-    Write-Host "  ║                                              ║" -ForegroundColor Cyan
-    Write-Host "  ║  Frontend: http://localhost:5173              ║" -ForegroundColor Green
-    Write-Host "  ║  Backend:  http://localhost:3000/api/v1      ║" -ForegroundColor Green
-    Write-Host "  ║  pgAdmin:  http://localhost:5050              ║" -ForegroundColor Green
-    Write-Host "  ║                                              ║" -ForegroundColor Cyan
-    Write-Host "  ║  Presiona Ctrl+C en esta ventana             ║" -ForegroundColor Yellow
-    Write-Host "  ║  para detener todo limpiamente.              ║" -ForegroundColor Yellow
-    Write-Host "  ╚══════════════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
+    Write-Host "  |  Farmacy iniciado correctamente!             |" -ForegroundColor Cyan
+    Write-Host "  |                                              |" -ForegroundColor Cyan
+    Write-Host "  |  Frontend: http://localhost:5173              |" -ForegroundColor Green
+    Write-Host "  |  Backend:  http://localhost:3000/api/v1      |" -ForegroundColor Green
+    Write-Host "  |  pgAdmin:  http://localhost:5050              |" -ForegroundColor Green
+    Write-Host "  |                                              |" -ForegroundColor Cyan
+    Write-Host "  |  Presiona Ctrl+C en esta ventana             |" -ForegroundColor Yellow
+    Write-Host "  |  para detener todo limpiamente.              |" -ForegroundColor Yellow
+    Write-Host "  +----------------------------------------------+" -ForegroundColor Cyan
     Write-Host ""
 
-    # Mantener la ventana abierta (no headless)
-    if (-not $HEADLESS) {
+    # Mantener la ventana abierta
+    if ($HEADLESS) {
+        # Modo headless: esperar a que los jobs terminen o reciban senal
+        Write-Host "  [Headless] Monitoreando servidores (Ctrl+C para detener)..."
+        Write-Host ""
+        while ($true) {
+            Start-Sleep -Seconds 5
+            $backendAlive = Get-Job -Id $script:BackendPID -ErrorAction SilentlyContinue
+            $frontendAlive = Get-Job -Id $script:FrontendPID -ErrorAction SilentlyContinue
+            if (-not $backendAlive -and -not $frontendAlive) {
+                Write-Host "  Ambos servidores se detuvieron. Saliendo..." -ForegroundColor Yellow
+                break
+            }
+            $backendState = "running"
+            $frontendState = "running"
+            if ($backendAlive) { $backendState = $backendAlive.State }
+            if ($frontendAlive) { $frontendState = $frontendAlive.State }
+            if ($backendState -ne "Running" -and $frontendState -ne "Running") {
+                Write-Host "  Ambos jobs finalizaron ($backendState / $frontendState). Saliendo..." -ForegroundColor Yellow
+                break
+            }
+        }
+    } else {
         Write-Host "  Esta ventana muestra logs del proceso principal."
         Write-Host "  Puedes cerrarla con Ctrl+C cuando termines."
         Write-Host ""

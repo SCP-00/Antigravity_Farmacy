@@ -49,7 +49,6 @@ Farmacy/
 ├── docker-compose.dev.yml  # Postgres + Redis + pgAdmin
 ├── docker-compose.yml      # Producción
 ├── run.ps1           # Inicio rápido — PowerShell (recomendado)
-├── run.bat           # Wrapper que ejecuta run.ps1 automáticamente
 ├── setup.bat         # Setup inicial (Windows)
 └── .env.example      # Template de variables de entorno
 ```
@@ -103,8 +102,6 @@ docker compose -f docker-compose.dev.yml up -d
 setup.bat
 
 # 5. Iniciar backend y frontend
-run.bat          # Windows: detecta PowerShell y ejecuta run.ps1
-# O directamente:
 .\run.ps1        # PowerShell (recomendado)
 
 # 6. Abrir en el navegador

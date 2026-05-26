@@ -4,7 +4,7 @@
 - \backend/: Express + TypeScript API, Prisma ORM, auth, POS, inventory, payments. Capas separadas de schemas y services.
 - \frontend/: React + Vite + Tailwind UI for B2C store and admin console.
 - database/: Prisma schema and seeds.
-- Root scripts: setup.bat, \run.bat, docker-compose.dev.yml.
+- Root scripts: setup.bat, \run.ps1, docker-compose.dev.yml.
 
 ## Entry points
 - Backend: \backend/src/server.ts

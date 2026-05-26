@@ -23,6 +23,7 @@ backend/coverage.json
 
 # ── Temp ──────────────────────────────────────────────────
 frontend/outdated.json
+nul
 
 # ── Tools ──────────────────────────────────────────────────
 .agents/

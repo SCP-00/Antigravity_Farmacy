@@ -26,7 +26,7 @@ graph TB
     %% ═══════════════════════════════════════════════════
     DevScripts["🛠️ Dev Tooling
     ─────────────
-    run.ps1 / run.bat — Script de inicio
+    run.ps1 — Script de inicio
     setup.bat — Instalación inicial
     pnpm workspace — Monorepo"]
     
@@ -206,7 +206,7 @@ graph TB
 | 🟢 Verde | **Base de Datos** | PostgreSQL 15, Redis 7, Prisma ORM |
 | 🟣 Morado | **Externos** | Wompi, Stripe, MercadoPago, Google OAuth, Cloudinary, SMTP |
 | ⚪ Gris | **Infraestructura** | Docker Compose (dev): PostgreSQL, Redis, pgAdmin |
-| 🔴 Rosa | **Dev Tooling** | run.ps1, run.bat, setup.bat, pnpm workspace |
+| 🔴 Rosa | **Dev Tooling** | run.ps1, setup.bat, pnpm workspace |
 
 ---
 

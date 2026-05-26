@@ -42,14 +42,14 @@ echo    Node.js detectado: %NODE_VER%
 where pnpm >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo  [INFO] pnpm no encontrado. Instalandolo globalmente con npm...
-    call npm install -g pnpm
+    echo  [INFO] pnpm no encontrado. Activando corepack para pnpm...
+    call corepack enable pnpm
     if !ERRORLEVEL! neq 0 (
-        echo  [ERROR] No se pudo instalar pnpm. Instalalo manualmente: npm install -g pnpm
+        echo  [ERROR] No se pudo activar pnpm. Activalo manualmente: corepack enable pnpm
         pause
         exit /b 1
     )
-    echo    pnpm instalado globalmente.
+    echo    pnpm activado via corepack.
 )
 for /f "tokens=*" %%v in ('pnpm -v') do set PNPM_VER=%%v
 echo    pnpm detectado:     v%PNPM_VER%

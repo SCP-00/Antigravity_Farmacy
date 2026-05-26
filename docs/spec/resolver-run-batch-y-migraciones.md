@@ -73,8 +73,8 @@ El proyecto `Antigravity_Farmacy` sufrió migraciones mayores (React 18→19, Ta
 ## 3. Plan de Acción Propuesto
 
 ### Fase 1: Diagnóstico y limpieza
-1. Verificar `node --version` y `npm --version`
-2. Instalar pnpm globalmente si no existe: `npm install -g pnpm`
+1. Verificar `node --version`
+2. Instalar pnpm globalmente si no existe: `corepack enable pnpm`
 3. Eliminar archivo `backend/nul`
 4. Matar procesos huérfanos en puertos 3000 y 5173
 5. Hacer `prisma generate` manualmente para verificar que funciona
@@ -114,7 +114,7 @@ El proyecto `Antigravity_Farmacy` sufrió migraciones mayores (React 18→19, Ta
 |---|---|
 | Gestor de paquetes | **pnpm** (el proyecto lo usa) |
 | Script de inicio | **PowerShell (.ps1)**, actualizar run.bat a un wrapper |
-| Si pnpm no existe | **Instalarlo automáticamente** con `npm install -g pnpm` |
+| Si pnpm no existe | **Instalarlo automáticamente** con `corepack enable pnpm` |
 | Flujo de inicio | Script automatizado, no manual |
 | Modo de ejecución | Ventanas separadas (no headless) |
 
@@ -139,9 +139,9 @@ Cada paso del flujo puede fallar de maneras distintas. A continuación se detall
 |---|---|
 | **Dónde ocurre** | Paso [2/8] — `Get-Command "pnpm"` falla |
 | **Síntoma** | `pnpm --version` lanza error "not recognized" |
-| **Acción del script** | Ejecuta `npm install -g pnpm` automáticamente. Si falla: error → pausa → `exit 1` |
-| **Causas de fallo de instalación** | Sin permisos de administrador, npm no en PATH, sin conexión a internet, proxy corporativo bloqueando npm registry |
-| **Recuperación manual** | `npm install -g pnpm` (como Admin), o descargar desde https://pnpm.io/installation |
+| **Acción del script** | Ejecuta `corepack enable pnpm` automáticamente. Si falla: error → pausa → `exit 1` |
+| **Causas de fallo de instalación** | Sin permisos de administrador, corepack no disponible, sin conexión a internet, proxy corporativo bloqueando npm registry |
+| **Recuperación manual** | `corepack enable pnpm` (como Admin), o descargar desde https://pnpm.io/installation |
 | **Tiempo estimado de resolución** | 30s automático, 2min manual |
 
 ### 5.3 Docker no instalado
@@ -438,8 +438,8 @@ docker compose -f docker-compose.dev.yml up -d
 | # | Criterio | Cómo se verifica | Prioridad |
 |---|---|---|---|
 | CA-05 | Si Node.js no está instalado, el script muestra error claro con instrucciones | Desinstalar Node.js temporalmente (o renombrar `node.exe`), ejecutar `run.ps1`. Debe mostrar "Node.js no esta instalado. Descargalo en: https://nodejs.org" y hacer pausa. | 🟡 Alta |
-| CA-06 | Si pnpm no está instalado, el script lo instala automáticamente | Desinstalar pnpm temporalmente (`npm uninstall -g pnpm`). Ejecutar `run.ps1`. Debe instalar pnpm y continuar. El mensaje debe decir "pnpm no encontrado. Instalando con npm..." | 🟡 Alta |
-| CA-07 | Si pnpm no se puede instalar automáticamente, el script muestra error y se detiene | Simular fallo de npm: `npm config set registry https://registry.invalid`. Ejecutar `run.ps1`. Debe mostrar "No se pudo instalar pnpm" y hacer pausa. Restaurar registry después. | 🟡 Alta |
+| CA-06 | Si pnpm no está instalado, el script lo activa automáticamente | Desinstalar pnpm temporalmente (`pnpm uninstall -g pnpm`). Ejecutar `run.ps1`. Debe activar pnpm y continuar. El mensaje debe decir "pnpm no encontrado. Activando corepack para pnpm..." | 🟡 Alta |
+| CA-07 | Si pnpm no se puede activar automáticamente, el script muestra error y se detiene | Simular fallo de corepack: `npm config set registry https://registry.invalid`. Ejecutar `run.ps1`. Debe mostrar "No se pudo activar pnpm" y hacer pausa. Restaurar registry después. | 🟡 Alta |
 | CA-08 | Si Docker no está instalado, el script muestra error claro | Desinstalar Docker temporalmente. Ejecutar `run.ps1`. Debe mostrar "Docker no esta instalado o no esta en el PATH." | 🟡 Alta |
 | CA-09 | Si Docker está instalado pero no corriendo, el script muestra mensaje específico | Detener Docker Desktop. Ejecutar `run.ps1`. Debe mostrar "Docker esta instalado pero no esta corriendo." (diferente del mensaje de "no instalado") | 🟡 Alta |
 | CA-10 | Si `.env` no existe, se crea desde `.env.example` automáticamente | Renombrar `.env` a `.env.bak`. Ejecutar `run.ps1`. Debe crear `.env` copiando `.env.example`. Mostrar "Revisa y ajusta los valores antes de continuar." | 🟡 Alta |
