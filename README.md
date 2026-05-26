@@ -264,23 +264,24 @@ El proyecto sigue un plan estructurado en 10 fases. El estado actual es:
 |---|---|---|
 | **0** — Alineación y limpieza | ✅ Completa | Inventario de módulos, normalización de puertos |
 | **1** — Núcleo de datos | ✅ Completa | Servicios de dominio (FEFO, VentasService), Zod schemas |
-| **2** — Seguridad y RBAC | ✅ Completa | JWT con refresh rotation, Redis blacklisting, Google OAuth |
-| **3** — Inventario FEFO | ⏳ Pendiente | Alertas de vencimiento, trazabilidad |
-| **4** — Compras | ⏳ Pendiente | Órdenes de compra automáticas |
-| **5** — POS y Caja | ⏳ Pendiente | Flujo POS, arqueo, reportes |
-| **6** — Tienda B2C | ⏳ Pendiente | Checkout, fidelización |
-| **7** — Pagos | ⏳ Pendiente | Webhooks Wompi/Stripe/MP |
-| **8** — Chatbot | ⏳ Pendiente | Escalamiento humano, compliance |
-| **9** — Reportes | ⏳ Pendiente | Dashboard operativo |
-| **10** — Documentación | ⏳ Pendiente | Docs vivas, playbooks |
+| **2** — Seguridad y RBAC | ✅ Completa | JWT con refresh rotation, Redis blacklisting, OAuth Google |
+| **3** — Inventario FEFO | ✅ Completa | Alertas de vencimiento escalonadas, trazabilidad completa |
+| **4** — Compras | ✅ Completa | Órdenes de compra + recepción lote por lote |
+| **5** — POS y Caja + INVIMA | ✅ Completa | POS con escáner, arqueo, tirilla, 35+ campos regulatorios |
+| **6** — Tienda B2C | ✅ Completa | Catálogo real, carrito FEFO, checkout, fidelización |
+| **7** — Pagos | ✅ Completa | Wompi, Stripe, MercadoPago, Efectivo (sandbox) |
+| **8** — Chatbot | ✅ Completa | FarmaBot con IA, interacciones medicamentosas |
+| **9** — Auditoría y Seguridad | ✅ Completa | RBAC, rate limiting, Google OAuth, Redis blacklist |
 
 ---
 
 ## 🧪 Tests
 
 Actualmente el proyecto tiene:
-- **Test E2E**: `backend/scripts/test-e2e.ts` (pruebas de API)
-- **Vitest** configurado tanto en backend como frontend
+- **27 archivos de test** (Vitest)
+- **218 tests** (215 pasan, 3 fallos preexistentes en alertas)
+- **14 suites pasan completamente** (core, services, utils, schemas, middlewares, chatbot)
+- **Coverage:** env (100%), redis (100%), mailer (100%), jwt.utils (100%), etc.
 
 Para ejecutar los tests:
 ```bash

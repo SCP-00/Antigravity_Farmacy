@@ -24,6 +24,9 @@ vi.hoisted(() => {
   process.env.WOMPI_PUBLIC_KEY = 'pub_test_wompi'
   process.env.WOMPI_PRIVATE_KEY = 'priv_test_wompi'
   process.env.WOMPI_EVENTS_SECRET = 'evt_test_wompi_secret'
+  // MercadoPago explicitly unset → test checks for 503
+  process.env.MERCADOPAGO_ACCESS_TOKEN = ''
+  process.env.MERCADOPAGO_PUBLIC_KEY = ''
 })
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() }, config: vi.fn() }))

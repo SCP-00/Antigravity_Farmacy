@@ -40,3 +40,45 @@ Align the core "Producto" database model strictly with INVIMA standards:
 - Zero risk of illegal, accidental commercialization of medical samples.
 - Highly professional, safety-first B2C user experience showing critical drug allergens and medical directions.
 - Prepared database schema for future intelligent generic drug matching using the "atc" code and "principioActivo" indexes.
+
+---
+
+# ADR 0003: Payment Gateways — Wompi, Stripe, MercadoPago
+
+## Context
+The project requires multiple payment gateways for the B2C store. Colombian regulations and market preferences dictate Wompi as the primary gateway, while international users benefit from Stripe and MercadoPago.
+
+## Decision
+Support three gateway integrations plus cash-on-delivery:
+
+1. **Wompi** (Colombia — PSE, Nequi, credit cards):
+   - Uses HMAC-SHA256 integrity signature for checkout widget
+   - Integrity key format: `HMAC-SHA256(integrityKey, reference + amountInCents + currency + integrityKey)`
+   - Events secret for webhook verification
+   - Base URL configurable between sandbox (`sandbox.wompi.co/v1`) and production (`api.wompi.co/v1`)
+
+2. **Stripe** (International):
+   - PaymentIntents API with webhook HMAC verification
+   - Raw body parsing for Stripe webhook (before express.json)
+
+3. **MercadoPago** (Latin America):
+   - Preference creation API for checkout redirect
+   - Webhook notifications processed via fetch to MP API
+   - Flexible integration: supports both `pedidoOnlineId` and direct `ventaId`
+
+4. **Efectivo** (In-store):
+   - Simple cash payment registration without gateway
+
+## Database Design
+- **PagoTransaccion** model stores all payment attempts across gateways
+- `pedidoOnlineId` (unique) for e-commerce orders
+- `ventaId` (one-to-many) for POS/counter sales — formal FK relation to Venta
+- `pasarela` field discriminates gateway (WOMPI, STRIPE, MERCADOPAGO, EFECTIVO)
+- `respuestaPasarela` (JSON) stores full gateway response
+
+## Consequences
+- Each gateway is independently configurable (keys in .env)
+- Works in sandbox mode for development/testing
+- Production keys can be swapped without code changes
+- Initial implementation uses redirect flow (user leaves the site to pay)
+- Future: implement iframe/embedded checkout for better UX

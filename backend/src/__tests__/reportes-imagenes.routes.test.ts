@@ -50,6 +50,7 @@ const mockPrisma = vi.hoisted(() => ({
   alertaInventario: { findMany: vi.fn(), create: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), count: vi.fn() },
   loteVenta: { create: vi.fn(), createMany: vi.fn() },
   detalleVenta: { create: vi.fn(), createMany: vi.fn() },
+  $queryRawUnsafe: vi.fn().mockResolvedValue([]),
   $transaction: vi.fn(),
   movimientoInventario: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
   ordenCompra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },

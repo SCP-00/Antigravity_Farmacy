@@ -24,24 +24,24 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 ## Backend module catalog (verified)
 | Module | Route prefix | File | Status |
 |---|---|---|---|
-| auth | /api/v1/auth | \backend/src/modules/auth/auth.routes.ts | active |
-| auth-cliente | /api/v1/clientes/auth | \backend/src/modules/auth-cliente/authCliente.routes.ts | active |
-| auth-cliente perfil | /api/v1/clientes/auth | \backend/src/modules/auth-cliente/authCliente.perfil.routes.ts | active |
-| categorias | /api/v1/categorias | \backend/src/modules/categorias/categorias.routes.ts | active |
-| sucursales | /api/v1/sucursales | \backend/src/modules/sucursales/sucursales.routes.ts | active |
-| productos | /api/v1/productos | \backend/src/modules/productos/productos.routes.ts | active |
-| lotes | /api/v1/lotes | \backend/src/modules/lotes/lotes.routes.ts | active |
-| inventario | /api/v1/inventario | \backend/src/modules/inventario/inventario.routes.ts | active |
-| ventas | /api/v1/ventas | \backend/src/modules/ventas/ventas.routes.ts | active |
-| caja | /api/v1/caja | \backend/src/modules/caja/caja.routes.ts | active |
-| clientes (admin) | /api/v1/clientes | \backend/src/modules/clientes/clientes.admin.routes.ts | active |
-| empleados | /api/v1/empleados | \backend/src/modules/empleados/empleados.routes.ts | active |
-| proveedores | /api/v1/proveedores | \backend/src/modules/proveedores/proveedores.routes.ts | active |
-| compras | /api/v1/compras | \backend/src/modules/compras/compras.routes.ts | active |
-| reportes | /api/v1/reportes | \backend/src/modules/reportes/reportes.routes.ts | active |
-| chatbot | /api/v1/chatbot | \backend/src/modules/chatbot/chatbot.routes.ts | active |
-| pagos | /api/v1/pagos | \backend/src/modules/pagos/pagos.routes.ts | active |
-| imagenes | /api/v1/imagenes | \backend/src/modules/imagenes/imagenes.routes.ts | active |
+| auth | /api/v1/auth | `backend/src/modules/auth/auth.routes.ts` | active |
+| auth-cliente | /api/v1/clientes/auth | `backend/src/modules/auth-cliente/authCliente.routes.ts` | active |
+| auth-cliente perfil | /api/v1/clientes/auth | `backend/src/modules/auth-cliente/authCliente.perfil.routes.ts` | active |
+| categorias | /api/v1/categorias | `backend/src/modules/categorias/categorias.routes.ts` | active |
+| sucursales | /api/v1/sucursales | `backend/src/modules/sucursales/sucursales.routes.ts` | active |
+| productos | /api/v1/productos | `backend/src/modules/productos/productos.routes.ts` | active |
+| lotes | /api/v1/lotes | `backend/src/modules/lotes/lotes.routes.ts` | active |
+| inventario | /api/v1/inventario | `backend/src/modules/inventario/inventario.routes.ts` | active |
+| ventas | /api/v1/ventas | `backend/src/modules/ventas/ventas.routes.ts` | active |
+| caja | /api/v1/caja | `backend/src/modules/caja/caja.routes.ts` | active |
+| clientes (admin) | /api/v1/clientes | `backend/src/modules/clientes/clientes.admin.routes.ts` | active |
+| empleados | /api/v1/empleados | `backend/src/modules/empleados/empleados.routes.ts` | active |
+| proveedores | /api/v1/proveedores | `backend/src/modules/proveedores/proveedores.routes.ts` | active |
+| compras | /api/v1/compras | `backend/src/modules/compras/compras.routes.ts` | active |
+| reportes | /api/v1/reportes | `backend/src/modules/reportes/reportes.routes.ts` | active |
+| chatbot | /api/v1/chatbot | `backend/src/modules/chatbot/chatbot.routes.ts` | active |
+| pagos | /api/v1/pagos | `backend/src/modules/pagos/pagos.routes.ts` | active |
+| imagenes | /api/v1/imagenes | `backend/src/modules/imagenes/imagenes.routes.ts` | active |
 
 ## Services (dominio)
 - \backend/src/services/inventario.service.ts: Lógica FEFO (First Expired, First Out) y cálculo de costo promedio.
@@ -57,10 +57,29 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 
 ## Testing
 - **Framework:** Vitest v3 + supertest para tests de integración
-- **27 archivos de test** (462 tests, todos pasando)
-- **Coverage general:** 71.03% statements, 83.14% branches, 82.71% functions
+- **27 archivos de test** (218 tests: 215 pasan, 3 fallos preexistentes en alertas)
+- **14 suites pasan completamente**, 12 fallan por resolución de módulo `.prisma/client/default`
 
-### Coverage por módulo
+### Tests que pasan (14 archivos, ~215 tests)
+
+| Archivo | Tests | Descripción |
+|---|---|---|
+| `env.test.ts` | 6 | Defaults, validación, env personalizados |
+| `database.test.ts` | 4 | connectDB, disconnectDB, error handling |
+| `redis.test.ts` | 14 | Instancia, cache.get/set/del/delPattern |
+| `mailer.test.ts` | 6 | Plantillas email, sendEmail |
+| `passport.test.ts` | 3 | Google OAuth config/omitido |
+| `jwt.utils.test.ts` | 10 | Generar/verificar tokens, refresh |
+| `respuesta.utils.test.ts` | 19 | ok, creado, error, noEncontrado, lista, pagina |
+| `logger.test.ts` | 5 | Logger config |
+| `middlewares.test.ts` | 19 | autenticar, autorizar, validarCuerpo, manejarErrores |
+| `schemas.test.ts` | 36 | Schemas inventario, productos, ventas |
+| `inventario.service.test.ts` | 10 | FEFO, costo promedio |
+| `ventas.service.test.ts` | 5 | Registro venta, puntos fidelidad |
+| `interacciones.service.test.ts` | 30 | Interacciones medicamentosas, alérgenos |
+| `chatbot.routes.test.ts` | 37 | Menú, keywords, flujo estados |
+| `alertas.job.test.ts` | 14 (3 fail) | Alertas vencimiento + stock mínimo |
+
 | Módulo / Archivo | % Statements | % Branches | % Funciones |
 |---------|:----------:|:---------:|:----------:|
 | **Core** | | | |
@@ -110,13 +129,54 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 
 \* logger.ts branches 0% porque usa delegates de winston sin bifurcaciones propias
 
-### Archivos sin cobertura (scripts)
-- server.ts: entrypoint (conexión DB + HTTP start)
-- scripts/: test-comprehensive.ts, test-e2e.ts, scripts-completo.ts
-- schemas/index.ts: solo re-exporta
+**Coverage general (última medición):** 71.03% statements, 83.14% branches, 82.71% functions
+(Solo se midió coverage de los tests que corren — 12 suites fallan por resolución de Prisma)
 
-- **Para ejecutar:** `cd backend && pnpm run test`
-- **Para coverage:** `cd backend && pnpm run test -- --coverage`
+### Archivos sin cobertura
+- `server.ts`: entrypoint (conexión DB + HTTP start)
+- `scripts/`: test-comprehensive.ts, test-e2e.ts
+- `schemas/index.ts`: solo re-exporta
+
+### Tests que fallan (12 archivos de ruta)
+- **Causa:** `Error: Cannot find module '.prisma/client/default'`
+- **Motivo:** Prisma Client se genera en directorio personalizado (`output = "../../backend/node_modules/.prisma/client"`) que Vitest no resuelve automáticamente
+- **Workaround:** `cd backend && pnpm run db:generate` antes de ejecutar tests
+- **Impacto:** Solo tests de integración — no afecta desarrollo ni producción
+
+### Para ejecutar
+```bash
+cd backend && pnpm run test                  # Todos los tests
+cd backend && pnpm run test -- --coverage    # Con cobertura
+```
+
+## Pasarelas de Pago
+
+### Wompi (Colombia)
+- **Estado:** Configurado con sandbox
+- **Endpoints:**
+  - `POST /pagos/wompi/crear` — Crea transacción Wompi (redirect al checkout)
+  - `POST /pagos/wompi/webhook` — Recibe eventos de Wompi
+- **Firma HMAC:** Usa `WOMPI_INTEGRITY_SECRET` con formato `referencia + monto + moneda + integrityKey`
+- **Configuración:** `WOMPI_PUBLIC_KEY`, `WOMPI_PRIVATE_KEY`, `WOMPI_EVENTS_SECRET`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_BASE_URL`
+
+### Stripe
+- **Estado:** Configurado con test keys
+- **Endpoints:**
+  - `POST /pagos/stripe/crear-intent` — Crea PaymentIntent
+  - `POST /pagos/stripe/webhook` — Raw body con verificación HMAC
+- **Configuración:** `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+
+### MercadoPago
+- **Estado:** Configurado con sandbox
+- **Endpoints:**
+  - `POST /pagos/mercadopago/crear` — Crea preferencia (acepta `ventaId` o `pedidoId`)
+  - `POST /pagos/mercadopago/webhook` — Recibe notificaciones de MP
+- **Flujo frontend:** Crear venta → API MP → redirect a initPoint → webhook → actualizar estado
+- **Configuración:** `MERCADOPAGO_ACCESS_TOKEN`, `MERCADOPAGO_PUBLIC_KEY`
+
+### Efectivo
+- **Estado:** Implementado (registra venta sin pasarela)
+- **Endpoints:** `POST /pagos/efectivo/confirmar`
 
 ## Scripts de Base de Datos
 - `database/scripts/importar-y-generar.cjs`: Script consolidado (CommonJS) que importa productos desde `INVIMA-MINI.csv` y genera lotes de inventario con fechas de vencimiento. Batch upsert por CUM + recálculo de costos promedios.

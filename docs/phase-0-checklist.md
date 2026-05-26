@@ -2,6 +2,8 @@
 
 Goal: establish an accurate, minimal module map, remove dead paths, and normalize local config.
 
+**Estado: ✅ Completada** — Todos los items fueron ejecutados y verificados.
+
 ## Inventory
 - [x] List backend modules under `backend/src/modules/` and mark status (active, stub, duplicate).
 - [x] List frontend pages under `frontend/src/pages/` and mark status.
@@ -24,3 +26,8 @@ Notes:
 ## Deliverables
 - [x] Update `docs/architecture.md` with verified module map.
 - [x] Record decisions in `docs/adr/` if any refactors are approved.
+
+---
+
+**Post-Phase-0:** El proyecto completó 9 fases adicionales (ver `plan.md`).
+Ver `docs/worklog.md` para el historial completo de cambios.

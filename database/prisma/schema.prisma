@@ -301,6 +301,7 @@ model Venta {
   empleado   Empleado     @relation(fields: [empleadoId], references: [id])
   cliente    Cliente?     @relation(fields: [clienteId], references: [id])
   detalles   DetalleVenta[]
+  pagos      PagoTransaccion[]
   devolucion Devolucion?
   @@map("ventas")
 }
@@ -357,6 +358,7 @@ model PagoTransaccion {
   respuestaPasarela Json?        @map("respuesta_pasarela")
   creadoEn          DateTime     @default(now()) @map("creado_en")
   pedidoOnline      PedidoOnline? @relation(fields: [pedidoOnlineId], references: [id])
+  venta             Venta?        @relation(fields: [ventaId], references: [id])
   @@map("pagos_transacciones")
 }
 

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.39% </span>
+                <span class="strong">68.93% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>422/617</span>
+                <span class='fraction'>426/618</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.49% </span>
+                <span class="strong">85.48% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>158/187</span>
+                <span class='fraction'>159/186</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.39% </span>
+                <span class="strong">68.93% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>422/617</span>
+                <span class='fraction'>426/618</span>
             </div>
         
             
@@ -1073,7 +1073,8 @@
 <a name='L1008'></a><a href='#L1008'>1008</a>
 <a name='L1009'></a><a href='#L1009'>1009</a>
 <a name='L1010'></a><a href='#L1010'>1010</a>
-<a name='L1011'></a><a href='#L1011'>1011</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L1011'></a><a href='#L1011'>1011</a>
+<a name='L1012'></a><a href='#L1012'>1012</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1326,6 +1327,7 @@
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1354,9 +1356,9 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2329,13 +2331,14 @@ async function buscarProductos(query: string) {
     orderBy: { nombre: 'asc' },
   })
 &nbsp;
-  return productos.map(p =&gt; ({
+  return productos.map((p: any) =&gt; ({
     id: p.id, nombre: p.nombre, concentracion: p.concentracion,
     presentacion: p.presentacion, laboratorio: p.laboratorio,
     precioVenta: Number(p.precioVenta), requiereRx: p.requiereRx,
     principioActivo: p.principioActivo, slug: p.slug,
-    stockTotal: p.lotes.reduce((s, l) =&gt; s + l.cantidadActual, 0),
-    tieneStock: p.lotes.some(l =&gt; l.cantidadActual &gt; 0),
+    indicaciones: p.indicaciones,
+    stockTotal: p.lotes.reduce((s: number, l: any) =&gt; s + l.cantidadActual, 0),
+    tieneStock: p.lotes.some((l: any) =&gt; l.cantidadActual &gt; 0),
   }))
 }
 &nbsp;
@@ -2363,10 +2366,10 @@ function formatearResultadosBusqueda(productos: Awaited&lt;ReturnType&lt;typeof 
     respuesta +=
       `**${p.nombre}${p.concentracion ? ' ' + p.<span class="branch-0 cbranch-no" title="branch not covered" >concentracion : ''}</span>**\n` +
       `   ${stockIcono} ${formatearPesos(p.precioVenta)} · ${p.<span class="branch-0 cbranch-no" title="branch not covered" >laboratorio ?? 'G.L. S.A.S.'}</span> · ${rxIcono}\n`
-    if (p.indicaciones) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >      const indicacion = p.indicaciones.length &gt; 100 ? p.indicaciones.substring(0, 100) + '...' : p.indicaciones</span>
-<span class="cstat-no" title="statement not covered" >      respuesta += `   📋 ${indicacion}\n`</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+    if (p.indicaciones) {
+      const indicacion = p.indicaciones.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >100 ? p.indicaciones.substring(0, 100) + '...' : p</span>.indicaciones
+      respuesta += `   📋 ${indicacion}\n`
+    }
     respuesta += '\n'
   }
 &nbsp;
@@ -2400,7 +2403,7 @@ function responderConMenu(
 ) {
   return responder.ok(res, {
     respuesta: texto,
-    productos: productos.map(p =&gt; ({
+    productos: productos.map((p: any) =&gt; ({
       id: p.id, nombre: p.nombre, concentracion: p.concentracion,
       presentacion: p.presentacion, laboratorio: p.laboratorio,
       precioVenta: p.precioVenta, requiereRx: p.requiereRx,
@@ -2523,7 +2526,7 @@ Ejemplos: "alternativas para ibuprofeno", "genéricos de omeprazol"
 &nbsp;
   // Si encontró varios, pedir especificar uno
 <span class="cstat-no" title="statement not covered" >  if (productos.length &gt; 1) {</span>
-<span class="cstat-no" title="statement not covered" >    const lista = productos.map((p, i) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >    const lista = productos.map((p: any, i: number) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >      `[${i + 1}] ${p.nombre}${p.concentracion ? ' ' + p.concentracion : ''}`</span>
 <span class="cstat-no" title="statement not covered" >    ).join('\n')</span>
 &nbsp;
@@ -2581,7 +2584,7 @@ Puedo mostrarte:
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (productos.length &gt; 1) {</span>
-<span class="cstat-no" title="statement not covered" >    const lista = productos.map((p, i) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >    const lista = productos.map((p: any, i: number) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >      `[${i + 1}] ${p.nombre}${p.concentracion ? ' ' + p.concentracion : ''}`</span>
 <span class="cstat-no" title="statement not covered" >    ).join('\n')</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
@@ -3002,12 +3005,12 @@ chatbotRouter.get('/horario', (_req: Request, res: Response) =&gt; {
 &nbsp;
   const ahora = new Date()
   const enBogota = new Date(ahora.toLocaleString('en-US', { timeZone: tz }))
-  const diaSemana = enBogota.getDay() === 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >7 : enBogota.getDay()</span>
+  const diaSemana = enBogota.getDay() === <span class="branch-0 cbranch-no" title="branch not covered" >0 ? 7 : e</span>nBogota.getDay()
   const minutosDia = enBogota.getHours() * 60 + enBogota.getMinutes()
   const minInicio = hIni * 60 + mIni
   const minFin = hFin * 60 + mFin
 &nbsp;
-  const disponible = diasConf.includes(diaSemana<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp; minutosDia &gt;= <span class="branch-0 cbranch-no" title="branch not covered" >minInicio &amp;&amp; m</span>inutosDia &lt; minFin</span>
+  const disponible = diasConf.includes(diaSemana) &amp;&amp; minutosDia &gt;= minInicio &amp;&amp; minutosDia &lt; minFin
 &nbsp;
   return responder.ok(res, {
     disponible,
@@ -3100,7 +3103,7 @@ chatbotRouter.post('/', async (req: Request, res: Response) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-24T20:11:08.974Z
+                at 2026-05-26T01:06:02.918Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

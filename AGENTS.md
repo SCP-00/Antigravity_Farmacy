@@ -1,20 +1,54 @@
-# AGENTS.md
+# FARMACY — AGENTS.md
+
+Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 
 ## Quick start (Windows)
-- Preferred local dev flow is "setup.bat" (installs deps + prisma generate/db push/seed) then "run.bat" (starts Docker dev services + frontend/backend).
-- "run.bat" copies root ".env" into "backend/.env" if missing; keep edits in the root ".env" or "backend/.env" consistently.
+1. `setup.bat` — Instala deps, genera Prisma Client, hace db push, corre seeds
+2. `run.bat` — Inicia Docker (Postgres + Redis), backend (nodemon :3000), frontend (Vite :5173)
+3. Alternativa manual: `docker compose -f docker-compose.dev.yml up -d` + `cd backend && pnpm run dev` + `cd frontend && pnpm run dev`
 
 ## Services + ports
-- Dev Docker stack is only Postgres/Redis/pgAdmin via "docker compose -f docker-compose.dev.yml up -d" (backend/frontend run on host).
-- Backend dev server listens on "PORT" from "backend/.env" (default 3000); frontend Vite proxy points to "http://127.0.0.1:3000".
-- Frontend dev server is Vite on "http://localhost:5173".
+| Service | Port | Container |
+|---|---|---|
+| PostgreSQL 15 | 5432 | `farmacy_postgres_dev` |
+| Redis 7 | 6379 | `farmacy_redis_dev` |
+| pgAdmin | 5050 | `farmacy_pgadmin` (admin@farmacy.co / admin) |
+| Backend (Express) | 3000 | Corre en host via nodemon |
+| Frontend (Vite) | 5173 | Proxy `/api` → 127.0.0.1:3000 |
 
 ## Prisma + database (Colombian INVIMA/CUM Integration)
-- Prisma schema lives at "database/prisma/schema.prisma"; all prisma scripts in "backend/package.json" use "--schema=../database/prisma/schema.prisma".
-- The product table enforces strict regulatory properties: "cum" (unique SKU identifier), "registroInvima", "principioActivo", "atc" code, and safety warning fields "alergenos" and "advertencias".
-- Medical samples ("esMuestraMedica: true") are systematically blocked in public-facing B2C API routing "/buscar".
-- Seed command is "pnpm run db:seed" from "backend/" and runs "database/seeds/seed.ts" via ts-node, populating real datasets including Procaps Alercet syrup commercial and sample units.
+- Schema: `database/prisma/schema.prisma`
+- Todos los scripts usan `--schema=../database/prisma/schema.prisma`
+- **17 modelos:** Sucursal, Empleado, Categoria, Producto (35+ campos INVIMA), Lote, Proveedor, OrdenCompra, Venta, PagoTransaccion, etc.
+- Producto tiene `cum` (unique), `registroInvima`, `principioActivo`, `atc`, `esMuestraMedica`, `alergenos`, `advertencias`
+- Muestras médicas (`esMuestraMedica: true`) bloqueadas en ruta `/buscar`
+- Seed: `pnpm run db:seed` desde `backend/`
+
+## Pasarelas de pago
+| Pasarela | Sandbox Keys | Estado |
+|---|---|---|
+| Wompi | `pub_test_*`, `prv_test_*`, `test_integrity_*` | ✅ Sandbox configurado |
+| Stripe | `pk_test_*`, `sk_test_*`, `whsec_*` | ✅ Test keys |
+| MercadoPago | `TEST-*` access token + public key | ✅ Sandbox configurado |
+| Efectivo | — | ✅ Sin pasarela |
+
+## Credenciales de desarrollo (seeds)
+| Rol | Email | Contraseña |
+|---|---|---|
+| Administrador | admin@farmacy.co | Admin@1234 |
+| Farmacéuta | farmaceuta@farmacy.co | Farm@1234 |
+| Auxiliar | auxiliar@farmacy.co | Aux@1234 |
+| Cliente demo | cliente@ejemplo.co | Cliente@1234 |
+
+## Variables de entorno esenciales
+- `DATABASE_URL` — PostgreSQL (requerida)
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_CLIENTE_SECRET` — mínimo 32 caracteres cada una
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — OAuth social (opcional)
+- `WOMPI_*` — Wompi (opcional para sandbox)
+- `STRIPE_*` — Stripe (opcional)
+- `MERCADOPAGO_*` — MercadoPago (opcional)
 
 ## Script entrypoints
-- Backend entrypoint is "backend/src/server.ts" (connects DB before HTTP).
-- Frontend entrypoint is "frontend/src/main.tsx".
+- Backend: `backend/src/server.ts` (conecta DB antes de HTTP)
+- Frontend: `frontend/src/main.tsx` (React 18 + QueryClient)
+- Tests: Vitest v3 en `backend/` (27 suites, 218 tests)

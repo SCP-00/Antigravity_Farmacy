@@ -248,6 +248,8 @@ describe('verificarVencimientos (a través del CRON)', () => {
 describe('verificarStockMinimo (a través del CRON)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Evitar que verificarVencimientos (ejecutado antes en el CRON) dispare alertas
+    mockLoteFindMany.mockResolvedValue([])
   })
 
   function ejecutarCron() {

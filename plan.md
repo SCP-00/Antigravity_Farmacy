@@ -26,74 +26,49 @@
 
 ### ⚡ Fase 5 — Alineación Regulatoria INVIMA + POS ✅
 
-#### Modelo de Datos (Prisma)
-- [x] Schema con **35+ campos regulatorios** INVIMA: cum (único), registroInvima, principioActivo, atc, descripcionAtc, titular, expediente, formaFarmaceutica, viaAdministracion, estadoCum, estadoRegistro, fechaExpedicion, fechaVencimientoRegistro, fechaActivoCum, fechaInactivoCum, esMuestraMedica, alergenos, advertencias, indicaciones, contraindicaciones, reaccionesAdversas, interacciones, modoUso, unidadReferencia, cantidad, unidadMedida, modalidad, ium
+- Schema Prisma con 35+ campos regulatorios INVIMA
+- Ruta `/buscar` filtra `esMuestraMedica: false`
+- Validación CUM único con manejo Prisma P2002
+- Cache Redis para búsquedas públicas (5 min)
+- Ficha técnica INVIMA en ProductoDetalle (B2C) con tabs interactivos
+- Formulario admin con 7 bloques organizados
+- POS con escáner CUM, arqueo de caja, tirilla térmica 80mm
+- Reportes de ventas e inventario
 
-#### Backend (Express + Prisma)
-- [x] Ruta `/buscar` filtra `esMuestraMedica: false` — bloqueo legal de muestras médicas
-- [x] Validación CUM único con manejo de error Prisma P2002
-- [x] Cache en Redis para búsquedas públicas (5 min)
-- [x] Búsqueda por principioActivo, laboratorio, nombre, concentracion (mode insensitive)
-- [x] Todos los campos INVIMA expuestos en endpoints públicos y admin
-- [x] Zod schemas actualizados con validación completa
+### ⚡ Fase 6 — Tienda B2C ✅
+- Catálogo público con filtros conectado a PostgreSQL
+- Carrito con validación FEFO
+- Ficha técnica INVIMA interactiva (3 tabs)
+- Área personal: perfil, favoritos, historial
 
-#### Frontend - ProductoDetalle (B2C)
-- [x] Ficha técnica INVIMA con tabs: Registro Sanitario | Seguridad | Clínica
-- [x] Visualización de: CUM, Registro INVIMA, ATC, Forma Farmacéutica, Vía, Concentración
-- [x] Alertas visuales semánticas: 🟥 RX (rojo), 🟨 Alérgenos (ámbar), 🟦 Precauciones (azul), 🟪 Interacciones (púrpura)
-- [x] Sección clínica expandible: Indicaciones, Modo de Uso, Contraindicaciones, Reacciones Adversas, Interacciones
-- [x] Badges de estado: CUM Activo/Inactivo, Muestra Médica, RX
-
-#### Frontend - ListaProductos (Admin)
-- [x] Formulario completo con 7 bloques organizados: Registro Sanitario → ATC → Comerciales → Estado Regulatorio → Forma Farmacéutica → Clínica → Farmacovigilancia
-- [x] Checkbox de Muestra Médica con bloqueo comercial
-- [x] Fechas con input type="date"
-- [x] Validación Zod completa para todos los campos INVIMA
-
-#### Frontend - DetalleProductoAdmin
-- [x] Vista detallada tipo ficha técnica completa
-- [x] Sidebar con precios, stock, farmacovigilancia, lotes y metadatos
-
-#### POS (Punto de Venta)
-- [x] Flujo POS con búsqueda interactiva y soporte para escáner de códigos de barras (CUM)
-- [x] Apertura y cierre de turnos de caja con arqueo físico
-- [x] Tirilla de venta térmica para impresoras 80mm
-- [ ] **Mejora UX Planificada:** Atajos de teclado (F2 Cobrar, F4 Limpiar), alerta de interacciones en tiempo real, optimización nocturna
-
-#### Otras páginas admin
-- [x] Devoluciones, Clientes, DetalleCliente, ProgramaFidelidad, ListaEmpleados
-- [x] Reportes: ReporteVentas, ReporteInventario (lotes próximos a vencer)
-
-### ⚡ Fase 6 — Tienda B2C (Catálogo INVIMA) ✅
-- [x] Catálogo público con filtros avanzados conectado a PostgreSQL
-- [x] Carrito con validación de existencias FEFO
-- [x] Ficha técnica INVIMA interactiva (3 tabs)
-- [x] Área personal: perfil, favoritos, historial, devoluciones
-- [ ] **Mejora UX Planificada:** Buscador predictivo con autocompletado, selector de alérgenos del cliente, accesibilidad WCAG AA
-
-### 🗄️ Fase INVIMA-CSV — Mini-CSV + Lotes de Inventario ✅
-- [x] Mini-CSV generado: 56 productos representativos de 14 grupos ATC (26 KB)
-- [x] Script `backend/scripts/generar-mini-csv.mjs`: Filtra solo activos + comerciales, 4 por ATC
-- [x] Script `database/scripts/importar-y-generar.cjs`: Importa productos + genera lotes (todo en uno)
-- [x] Lotes generados: 121 lotes con fechas de vencimiento variadas
-- [x] Precios de compra/venta realistas: $368,490 compra / $817,937 venta total
-- [x] Recálculo de costos promedios automático
+### 🗄️ Fase INVIMA-CSV ✅
+- Mini-CSV (56 productos, 14 ATC, 26 KB)
+- Scripts de importación y generación de lotes
+- 121 lotes generados, costos promedios recalculados
 
 ### Fase 7 — Pasarelas de Pago ✅
-- [x] Selector visual de método de pago (Wompi, Stripe, MercadoPago, Efectivo) con cards informativas
-- [x] Simulación de flujo de pasarela con animación progresiva (3 pasos por método)
-- [x] Página de confirmación standalone con query params (estado/pedido)
-- [x] Flujo completo: selección → simulación → registro de venta → confirmación con puntos
-- [x] Modo Sandbox/Demo — conectado al backend real para registro de ventas
+- **Wompi (sandbox)**: Firma HMAC-SHA256 con integrity key, endpoints crear/webhook
+- **Stripe**: PaymentIntents + webhook con verificación HMAC
+- **MercadoPago**: Preferencia + webhook, integración con ventaId directo
+- **Efectivo**: Registro de venta sin pasarela
+- Frontend: Checkout con selector visual, redirect real a cada pasarela
+- `PagoTransaccion` con FK formal a `Venta`
+- Keys sandbox configuradas para las 3 pasarelas
 
 ### Fase 8 — Chatbot Asistente ✅
-- [x] Enlace del FarmaBot con LLM/OpenAI para recomendaciones cruzadas inteligentes
-- [x] Servicio de detección de interacciones medicamentosas y excipientes alérgenos
-- [x] Product cards con precio y stock en respuestas del chatbot
-- [x] Alertas visuales de seguridad con severidad (ALTA/MEDIA/INFO) expandibles
-- [x] LLM indicator y badge de alertas en FAB
-- [x] Tipo de respuesta “✨ Respuesta inteligente” cuando usa LLM
+- FarmaBot con detección de interacciones medicamentosas
+- Alertas de seguridad con severidad (ALTA/MEDIA/INFO)
+- LLM indicator, respuestas inteligentes
 
-### Fase 9 — Auditoría y Seguridad Final ⏳
-- [ ] Visor de auditoría de logs de acceso en el panel admin
+### Fase 9 — Auditoría y Seguridad Final ✅ (con mejoras pendientes)
+
+**Completado:**
+- [x] JWT con refresh token rotation + Redis blacklisting
+- [x] RBAC (ADMINISTRADOR, FARMACEUTA, AUXILIAR)
+- [x] Rate limiting por endpoint
+- [x] Auditoría de accesos denegados (logs en DB)
+- [x] Google OAuth implementado en código
+
+**Mejoras futuras (post-MVP):**
+- [ ] Visor de auditoría de logs en el panel admin
 - [ ] Historial de cambios en precios y productos
