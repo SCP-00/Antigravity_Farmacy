@@ -49,6 +49,7 @@ const envSchema = z.object({
   WOMPI_PUBLIC_KEY: z.string().optional(),
   WOMPI_PRIVATE_KEY: z.string().optional(),
   WOMPI_EVENTS_SECRET: z.string().optional(),
+  WOMPI_INTEGRITY_SECRET: z.string().optional(),
   WOMPI_BASE_URL: z.string().default('https://sandbox.wompi.co/v1'),
 
   // Stripe
@@ -59,6 +60,9 @@ const envSchema = z.object({
   // MercadoPago
   MERCADOPAGO_ACCESS_TOKEN: z.string().optional(),
   MERCADOPAGO_PUBLIC_KEY: z.string().optional(),
+
+  // Email de soporte (devoluciones, contacto)
+  SOPORTE_EMAIL: z.string().default('soporte@farmacy.co'),
 
   // Frontend
   FRONTEND_URL: z.string().default('http://localhost:5173'),

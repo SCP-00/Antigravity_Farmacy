@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.14% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>9/28</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>6/7</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.14% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/28</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -105,32 +105,32 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span></td><td class="text"><pre class="prettyprint lang-js">import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
@@ -139,32 +139,32 @@ import { autenticar, autorizar } from '../../middlewares/index'
 export const sucursalesRouter: Router = Router()
 &nbsp;
 sucursalesRouter.get('/', async (_req: Request, res: Response) =&gt; {
-<span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    const sedes = await prisma.sucursal.findMany({</span>
-<span class="cstat-no" title="statement not covered" >      where: { activa: true }, orderBy: { nombre: 'asc' },</span>
-<span class="cstat-no" title="statement not covered" >    })</span>
-<span class="cstat-no" title="statement not covered" >    return responder.ok(res, sedes)</span>
-<span class="cstat-no" title="statement not covered" >  } catch (err) { return responder.serverError(res, err) }</span>
-<span class="cstat-no" title="statement not covered" >})</span>
+  try {
+    const sedes = await prisma.sucursal.findMany({
+      where: { activa: true }, orderBy: { nombre: 'asc' },
+    })
+    return responder.ok(res, sedes)
+  } catch (err) { return responder.serverError(res, err) }
+})
 &nbsp;
 sucursalesRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
   async (req: Request, res: Response) =&gt; {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const sede = await prisma.sucursal.create({ data: req.body })</span>
-<span class="cstat-no" title="statement not covered" >      return responder.creado(res, sede)</span>
-<span class="cstat-no" title="statement not covered" >    } catch (err) { return responder.serverError(res, err) }</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    try {
+      const sede = await prisma.sucursal.create({ data: req.body })
+      return responder.creado(res, sede)
+    } catch (err) { return responder.serverError(res, err) }
+  }
 )
 &nbsp;
 sucursalesRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'),
   async (req: Request, res: Response) =&gt; {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const sede = await prisma.sucursal.update({</span>
-<span class="cstat-no" title="statement not covered" >        where: { id: parseInt(req.params.id) }, data: req.body,</span>
-<span class="cstat-no" title="statement not covered" >      })</span>
-<span class="cstat-no" title="statement not covered" >      return responder.ok(res, sede)</span>
-<span class="cstat-no" title="statement not covered" >    } catch (err) { return responder.serverError(res, err) }</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    try {
+      const sede = await prisma.sucursal.update({
+        where: { id: parseInt(req.params.id) }, data: req.body,
+      })
+      return responder.ok(res, sede)
+<span class="branch-0 cbranch-no" title="branch not covered" >    } catch (err) { return responder.serverError(res, err) }</span>
+  }
 )</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -172,7 +172,7 @@ sucursalesRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'),
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-24T19:31:14.150Z
+                at 2026-05-24T20:11:08.974Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

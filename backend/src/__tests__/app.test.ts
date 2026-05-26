@@ -54,7 +54,7 @@ const mockPrisma = vi.hoisted(() => ({
     findUnique: vi.fn(),
     count: vi.fn(),
   },
-  sucursale: {
+  sucursal: {
     findMany: vi.fn().mockResolvedValue([]),
     findUnique: vi.fn(),
     count: vi.fn(),
@@ -90,7 +90,7 @@ const mockPrisma = vi.hoisted(() => ({
     create: vi.fn(),
     count: vi.fn(),
   },
-  proveedore: {
+  proveedor: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
     create: vi.fn(),

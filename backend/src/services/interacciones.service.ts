@@ -212,7 +212,7 @@ export async function recomendarSimilares(
       orderBy: { nombre: 'asc' },
     })
 
-    return similares.map(p => ({
+    return similares.map((p: any) => ({
       ...p,
       precioVenta: Number(p.precioVenta),
     }))

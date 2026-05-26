@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.81% </span>
+                <span class="strong">46.96% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>21/66</span>
+                <span class='fraction'>31/66</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>4/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">31.81% </span>
+                <span class="strong">46.96% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>21/66</span>
+                <span class='fraction'>31/66</span>
             </div>
         
             
@@ -167,12 +167,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -191,9 +191,9 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -224,7 +224,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -255,13 +255,13 @@ import { env } from '../../config/env'
 export const imagenesRouter: Router = Router()
 &nbsp;
 // Configurar Cloudinary si las credenciales están disponibles
-if (env.<span class="branch-0 cbranch-no" title="branch not covered" >CLOUDINARY_CLOUD_NAME &amp;&amp; env.<span class="branch-0 cbranch-no" title="branch not covered" >CLOUDINARY_API_KEY &amp;&amp; e</span>nv.CLOUDINARY_API_SECRET) <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
-<span class="cstat-no" title="statement not covered" >  cloudinary.v2.config({</span>
-<span class="cstat-no" title="statement not covered" >    cloud_name: env.CLOUDINARY_CLOUD_NAME,</span>
-<span class="cstat-no" title="statement not covered" >    api_key:    env.CLOUDINARY_API_KEY,</span>
-<span class="cstat-no" title="statement not covered" >    api_secret: env.CLOUDINARY_API_SECRET,</span>
-<span class="cstat-no" title="statement not covered" >  })</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+if (env.CLOUDINARY_CLOUD_NAME &amp;&amp; env.CLOUDINARY_API_KEY &amp;&amp; env.CLOUDINARY_API_SECRET) {
+  cloudinary.v2.config({
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key:    env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+  })
+}
 &nbsp;
 // Multer en memoria (el buffer se sube directo a Cloudinary)
 const upload = multer({
@@ -280,9 +280,9 @@ imagenesRouter.post(
   autorizar('ADMINISTRADOR', 'AUXILIAR'),
   upload.single('imagen'),
   async (req: Request, res: Response) =&gt; {
-<span class="cstat-no" title="statement not covered" >    if (!req.file) {</span>
-<span class="cstat-no" title="statement not covered" >      return responder.error(res, 'No se proporcionó ninguna imagen')</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+    if (!req.file) {
+      return responder.error(res, 'No se proporcionó ninguna imagen')
+<span class="branch-0 cbranch-no" title="branch not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (!env.CLOUDINARY_CLOUD_NAME) {</span>
 <span class="cstat-no" title="statement not covered" >      return responder.error(res, 'Cloudinary no está configurado en este entorno', 503)</span>
@@ -290,7 +290,7 @@ imagenesRouter.post(
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Subir buffer a Cloudinary
-<span class="cstat-no" title="statement not covered" >      const resultado = await new Promise&lt;cloudinary.UploadApiResponse&gt;((resolve, reject) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      const resultado = await new Promise&lt;cloudinary.UploadApiResponse&gt;(<span class="fstat-no" title="function not covered" >(resolve, reject) =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >        const stream = cloudinary.v2.uploader.upload_stream(</span>
 <span class="cstat-no" title="statement not covered" >          { folder: 'farmacy/productos', resource_type: 'image' },</span>
 <span class="cstat-no" title="statement not covered" >          (error, result) =&gt; {</span>
@@ -313,7 +313,7 @@ imagenesRouter.post(
 <span class="cstat-no" title="statement not covered" >    } catch (err) {</span>
 <span class="cstat-no" title="statement not covered" >      return responder.serverError(res, err)</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  }
 )
 &nbsp;
 // DELETE /imagenes/:publicId
@@ -337,7 +337,7 @@ imagenesRouter.delete(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-24T19:31:14.150Z
+                at 2026-05-24T20:11:08.974Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

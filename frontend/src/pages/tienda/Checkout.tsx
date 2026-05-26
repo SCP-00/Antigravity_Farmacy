@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { ventasService } from '@/services'
+import { ventasService, pagosService } from '@/services'
 import { useAuthCliente } from '@/hooks'
 import toast from 'react-hot-toast'
 import { METODO_PAGO_LABEL } from '@/config/constants'
@@ -144,7 +144,7 @@ function SimulacionPasarela({ metodo, onComplete, onCancel }: { metodo: MetodoPa
   const steps: Record<MetodoPago, string[]> = {
     WOMPI: ['Conectando con Wompi...', 'Generando transaccion segura...', 'Redirigiendo a PSE / Nequi...'],
     STRIPE: ['Inicializando Stripe Elements...', 'Validando tarjeta 3D Secure...', 'Procesando pago...'],
-    MERCADOPAGO: ['Conectando con Mercado Pago...', 'Generando preferencia de pago...', 'Redirigiendo a checkout...'],
+    MERCADOPAGO: ['Redirigiendo a Mercado Pago...', 'Abrindo checkout seguro...', 'Completando pago...'],
     EFECTIVO: ['Verificando disponibilidad...', 'Preparando orden contra entrega...', 'Confirmando datos de envio...'],
   }
   const icons: Record<MetodoPago, React.ReactNode> = {
@@ -300,7 +300,10 @@ function Checkout() {
     }),
     onSuccess: (data: any) => {
       setPedidoInfo({ numero: data?.ventaNum ?? data?.numero ?? 0, total: data?.total ?? total, puntosGanados: ptsGanados, metodoPago: metodoPago ?? 'EFECTIVO' })
-      limpiar(); qc.invalidateQueries({ queryKey: ['productos'] }); qc.invalidateQueries({ queryKey: ['cliente'] }); setPaso('confirmacion')
+      // Para MERCADOPAGO: no mostrar confirmación aún — el mutate() maneja el redirect
+      if (metodoPago !== 'MERCADOPAGO') {
+        limpiar(); qc.invalidateQueries({ queryKey: ['productos'] }); qc.invalidateQueries({ queryKey: ['cliente'] }); setPaso('confirmacion')
+      }
     },
     onError: (err: any) => {
       setErrorPago(err?.response?.data?.error ?? 'Error al procesar el pedido. Verifica tu conexion e intenta de nuevo.')
@@ -327,6 +330,39 @@ function Checkout() {
       return
     }
     if (metodoPago === 'EFECTIVO') { ventaMut.mutate(); return }
+    if (metodoPago === 'MERCADOPAGO') {
+      // Crear la venta y luego redirigir a MercadoPago
+      ventaMut.mutate(undefined, {
+        onSuccess: async (data: any) => {
+          try {
+            const mpRes = await pagosService.crearMercadoPago({
+              ventaId: data?.id,
+              items: items.map(i => ({
+                nombre: i.nombre,
+                cantidad: i.cantidad,
+                precioUnitario: i.precioUnitario,
+              })),
+              monto: total,
+              clienteEmail: datos.email,
+            })
+            if (mpRes?.initPoint) {
+              window.location.href = mpRes.initPoint
+              return
+            }
+          } catch (e) {
+            console.error('[MercadoPago] Error al crear preferencia:', e)
+          }
+          // Fallback: mostrar confirmación local
+          limpiar(); qc.invalidateQueries({ queryKey: ['productos'] }); qc.invalidateQueries({ queryKey: ['cliente'] })
+          setPaso('confirmacion')
+        },
+        onError: (err: any) => {
+          setErrorPago(err?.response?.data?.error ?? 'Error al procesar el pedido.')
+          setPaso('error')
+        },
+      })
+      return
+    }
     setPaso('simulando')
   }
 

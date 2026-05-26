@@ -16,7 +16,7 @@ vi.hoisted(() => {
   delete process.env.API_PREFIX
 })
 
-const mockExit = vi.hoisted(() => vi.fn())
+const mockExit = vi.hoisted(() => vi.fn() as unknown as (...args: any[]) => never)
 
 describe('env.ts', () => {
   beforeEach(() => {
@@ -35,6 +35,7 @@ describe('env.ts', () => {
     delete process.env.FRONTEND_URL
     delete process.env.FARMACIA_NOMBRE
     delete process.env.LOG_LEVEL
+    delete process.env.WOMPI_BASE_URL
   })
 
   it('exporta env con valores por defecto cuando faltan opcionales', async () => {

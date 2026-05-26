@@ -244,13 +244,14 @@ async function buscarProductos(query: string) {
     orderBy: { nombre: 'asc' },
   })
 
-  return productos.map(p => ({
+  return productos.map((p: any) => ({
     id: p.id, nombre: p.nombre, concentracion: p.concentracion,
     presentacion: p.presentacion, laboratorio: p.laboratorio,
     precioVenta: Number(p.precioVenta), requiereRx: p.requiereRx,
     principioActivo: p.principioActivo, slug: p.slug,
-    stockTotal: p.lotes.reduce((s, l) => s + l.cantidadActual, 0),
-    tieneStock: p.lotes.some(l => l.cantidadActual > 0),
+    indicaciones: p.indicaciones,
+    stockTotal: p.lotes.reduce((s: number, l: any) => s + l.cantidadActual, 0),
+    tieneStock: p.lotes.some((l: any) => l.cantidadActual > 0),
   }))
 }
 
@@ -315,7 +316,7 @@ function responderConMenu(
 ) {
   return responder.ok(res, {
     respuesta: texto,
-    productos: productos.map(p => ({
+    productos: productos.map((p: any) => ({
       id: p.id, nombre: p.nombre, concentracion: p.concentracion,
       presentacion: p.presentacion, laboratorio: p.laboratorio,
       precioVenta: p.precioVenta, requiereRx: p.requiereRx,
@@ -438,7 +439,7 @@ Ejemplos: "alternativas para ibuprofeno", "genéricos de omeprazol"
 
   // Si encontró varios, pedir especificar uno
   if (productos.length > 1) {
-    const lista = productos.map((p, i) =>
+    const lista = productos.map((p: any, i: number) =>
       `[${i + 1}] ${p.nombre}${p.concentracion ? ' ' + p.concentracion : ''}`
     ).join('\n')
 
@@ -496,7 +497,7 @@ Puedo mostrarte:
   }
 
   if (productos.length > 1) {
-    const lista = productos.map((p, i) =>
+    const lista = productos.map((p: any, i: number) =>
       `[${i + 1}] ${p.nombre}${p.concentracion ? ' ' + p.concentracion : ''}`
     ).join('\n')
     return {

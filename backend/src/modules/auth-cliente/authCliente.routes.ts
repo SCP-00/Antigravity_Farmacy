@@ -270,7 +270,7 @@ authClienteRouter.post('/pedidos/:id/devolucion-request', autenticarCliente, asy
     if (diasDesdeVenta > 15) return responder.error(res, 'Han pasado más de 15 días desde la compra', 400)
 
     // Enviar correo al equipo de soporte con los detalles de la solicitud
-    const soporteEmail = process.env.SOPORTE_EMAIL || 'soporte@farmacy.co'
+    const soporteEmail = env.SOPORTE_EMAIL || 'soporte@farmacy.co'
     const html = `<p>Cliente ${venta.cliente?.nombre} ${venta.cliente?.apellido} solicita devolución para la venta #${venta.numero}</p>
       <p>Motivo: ${motivo}</p>
       <p>Venta ID: ${venta.id} · Total: ${venta.total}</p>`

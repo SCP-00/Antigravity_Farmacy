@@ -1,9 +1,16 @@
 import { Router, Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar } from '../../middlewares/index'
 
 export const clientesAdminRouter: Router = Router()
+
+// ── Insensitive mode helper ───────────────────────────────
+const iLike = (value: string) => ({
+  contains: value,
+  mode: Prisma.QueryMode.insensitive,
+})
 
 clientesAdminRouter.get('/', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA'),
   async (req: Request, res: Response) => {
@@ -11,8 +18,8 @@ clientesAdminRouter.get('/', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA')
     const { q } = req.query as any
     const where = q
       ? { OR: [
-          { nombre:    { contains: q, mode: 'insensitive' as any } },
-          { email:     { contains: q, mode: 'insensitive' as any } },
+          { nombre:    iLike(q) },
+          { email:     iLike(q) },
           { documento: { contains: q } },
         ]} : {}
     try {
@@ -46,6 +53,36 @@ clientesAdminRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','FARMACEUT
       })
       if (!c) return responder.noEncontrado(res, 'Cliente')
       return responder.ok(res, c)
+    } catch (err) { return responder.serverError(res, err) }
+  }
+)
+
+// ── GET /:id/compras — Historial de compras del cliente ───
+clientesAdminRouter.get('/:id/compras', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA'),
+  async (req: Request, res: Response) => {
+    try {
+      const cliente = await prisma.cliente.findUnique({
+        where: { id: req.params.id },
+        select: { id: true },
+      })
+      if (!cliente) return responder.noEncontrado(res, 'Cliente')
+
+      const ventas = await prisma.venta.findMany({
+        where: { clienteId: req.params.id },
+        orderBy: { creadoEn: 'desc' },
+        select: {
+          id: true, numero: true, total: true, estado: true,
+          metodoPago: true, creadoEn: true,
+          detalles: {
+            select: {
+              cantidad: true, precioUnitario: true,
+              producto: { select: { nombre: true, presentacion: true } },
+            },
+          },
+        },
+      })
+
+      return responder.ok(res, ventas)
     } catch (err) { return responder.serverError(res, err) }
   }
 )

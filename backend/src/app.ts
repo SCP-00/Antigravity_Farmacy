@@ -2,7 +2,7 @@
 //  FARMACY Backend — app.ts
 //  Conecta todos los módulos reales, separados por dominio
 // ══════════════════════════════════════════════════════════
-import express, { Express } from 'express'
+import express, { Express, raw } from 'express'
 import { Request, Response } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
@@ -47,6 +47,10 @@ export function createApp(): Express {
     origin: [env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
   }))
+
+  // Stripe webhook necesita raw body ANTES de express.json() para verificación HMAC
+  app.use(`${prefix}/pagos/stripe/webhook`, raw({ type: 'application/json' }))
+
   app.use(express.json({ limit: '10mb' }))
   app.use(express.urlencoded({ extended: true }))
   app.use(loggerHttp)

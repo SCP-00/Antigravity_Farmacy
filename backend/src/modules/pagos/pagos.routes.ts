@@ -43,10 +43,14 @@ pagosRouter.post('/wompi/crear', autenticarCliente, async (req: Request, res: Re
 
     const referencia       = `FARMACY-${pedido.numero}-${Date.now()}`
     const montoEnCentavos  = Math.round(monto * 100)
-    const firma            = crypto
-      .createHmac('sha256', env.WOMPI_EVENTS_SECRET!)
-      .update(`${referencia}${montoEnCentavos}${moneda}${env.WOMPI_PUBLIC_KEY}`)
-      .digest('hex')
+    // La firma se genera con la llave de integridad (integrity_key) de Wompi
+    const integrityKey     = env.WOMPI_INTEGRITY_SECRET || ''
+    const firma            = integrityKey
+      ? crypto
+          .createHmac('sha256', integrityKey)
+          .update(`${referencia}${montoEnCentavos}${moneda}${integrityKey}`)
+          .digest('hex')
+      : undefined
 
     await prisma.pagoTransaccion.upsert({
       where:  { pedidoOnlineId: pedidoId },
@@ -128,7 +132,7 @@ pagosRouter.post('/stripe/crear-intent', autenticarCliente, async (req: Request,
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/stripe/webhook', raw({ type: 'application/json' }), async (req: Request, res: Response) => {
+pagosRouter.post('/stripe/webhook', async (req: Request, res: Response) => {
   if (!stripe || !env.STRIPE_WEBHOOK_SECRET) return res.sendStatus(200)
 
   let evento: Stripe.Event
@@ -155,32 +159,44 @@ pagosRouter.post('/stripe/webhook', raw({ type: 'application/json' }), async (re
 // ── MERCADO PAGO ──────────────────────────────────────────
 pagosRouter.post('/mercadopago/crear', autenticarCliente, async (req: Request, res: Response) => {
   if (!mpClient) return responder.error(res, 'MercadoPago no configurado', 503)
-  const { pedidoId, items } = req.body
+  const { pedidoId, ventaId, items, monto, clienteEmail } = req.body
 
   try {
-    const pedido = await prisma.pedidoOnline.findUnique({ where: { id: pedidoId }, include: { cliente: { select: { email: true } } } })
-    if (!pedido) return responder.noEncontrado(res, 'Pedido')
+    // Soporta tanto pedidoOnline como venta directa desde checkout
+    let email = clienteEmail
+    let total = monto ? Number(monto) : 0
+    let referenciaExterna = ventaId || pedidoId || `FARMACY-CHECKOUT-${Date.now()}`
+
+    if (pedidoId) {
+      const pedido = await prisma.pedidoOnline.findUnique({ where: { id: pedidoId }, include: { cliente: { select: { email: true } } } })
+      if (!pedido) return responder.noEncontrado(res, 'Pedido')
+      email = pedido.cliente.email
+      total = Number(pedido.total)
+    }
 
     const preference = new Preference(mpClient)
     const response = await preference.create({
       body: {
         items:              items.map((i: any) => ({ title: i.nombre, quantity: i.cantidad, unit_price: i.precioUnitario, currency_id: 'COP' })),
-        payer:              { email: pedido.cliente.email },
-        external_reference: pedidoId,
+        payer:              { email },
+        external_reference: referenciaExterna,
         back_urls: {
-          success: `${env.FRONTEND_URL}/pago/confirmacion?pedido=${pedidoId}&estado=aprobado`,
-          failure: `${env.FRONTEND_URL}/pago/confirmacion?pedido=${pedidoId}&estado=rechazado`,
-          pending: `${env.FRONTEND_URL}/pago/confirmacion?pedido=${pedidoId}&estado=pendiente`,
+          success: `${env.FRONTEND_URL}/pago/confirmacion?ref=${referenciaExterna}&estado=aprobado`,
+          failure: `${env.FRONTEND_URL}/pago/confirmacion?ref=${referenciaExterna}&estado=rechazado`,
+          pending: `${env.FRONTEND_URL}/pago/confirmacion?ref=${referenciaExterna}&estado=pendiente`,
         },
         auto_return: 'approved',
       },
     })
 
-    await prisma.pagoTransaccion.upsert({
-      where:  { pedidoOnlineId: pedidoId },
-      update: { referenciaExterna: response.id!, estado: 'PENDIENTE' },
-      create: { pedidoOnlineId: pedidoId, pasarela: 'MERCADOPAGO', referenciaExterna: response.id!, monto: pedido.total, moneda: 'COP', estado: 'PENDIENTE' },
-    })
+    // Guardar transacción si tenemos pedidoId o ventaId
+    if (pedidoId) {
+      await prisma.pagoTransaccion.upsert({
+        where:  { pedidoOnlineId: pedidoId },
+        update: { referenciaExterna: response.id!, estado: 'PENDIENTE' },
+        create: { pedidoOnlineId: pedidoId, pasarela: 'MERCADOPAGO', referenciaExterna: response.id!, monto: total, moneda: 'COP', estado: 'PENDIENTE' },
+      })
+    }
 
     return responder.ok(res, { preferenceId: response.id, initPoint: response.init_point })
   } catch (err) { return responder.serverError(res, err) }

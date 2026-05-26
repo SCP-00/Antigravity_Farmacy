@@ -274,8 +274,8 @@ export const pagosService = {
   crearStripeIntent: (pedidoId: string) =>
     apiCliente.post('/pagos/stripe/crear-intent', { pedidoId }).then(r => r.data.data),
 
-  crearMercadoPago: (pedidoId: string, items: unknown[]) =>
-    apiCliente.post('/pagos/mercadopago/crear', { pedidoId, items }).then(r => r.data.data),
+  crearMercadoPago: (data: { pedidoId?: string; ventaId?: string; items: unknown[]; monto?: number; clienteEmail?: string }) =>
+    apiCliente.post('/pagos/mercadopago/crear', data).then(r => r.data.data),
 
   registrarEfectivo: (ventaId: string, monto: number) =>
     api.post('/pagos/efectivo/registrar', { ventaId, monto }).then(r => r.data),

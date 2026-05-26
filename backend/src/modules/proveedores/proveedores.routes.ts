@@ -1,16 +1,23 @@
 import { Router, Request, Response } from 'express'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar } from '../../middlewares/index'
 
 export const proveedoresRouter: Router = Router()
 
+// ── Insensitive mode helper ───────────────────────────────
+const iLike = (value: string) => ({
+  contains: value,
+  mode: Prisma.QueryMode.insensitive,
+})
+
 proveedoresRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   async (req: Request, res: Response) => {
     const { skip, limite, pagina } = parsePaginacion(req.query as any)
     const { q } = req.query as any
     const where = q
-      ? { OR: [{ nombre: { contains: q, mode: 'insensitive' as any } }, { nit: { contains: q } }] }
+      ? { OR: [{ nombre: iLike(q) }, { nit: { contains: q } }] }
       : {}
     try {
       const [total, proveedores] = await Promise.all([

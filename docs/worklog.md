@@ -135,3 +135,22 @@ Use this log to record completed milestones and the files changed for each phase
 - **Coverage core:** env (100%), redis (100%), mailer (100%), schemas (94.93%), middlewares (97.84%), jwt.utils (100%), respuesta.utils (100%), inventario.service (100%), interacciones.service (95.32%), alertas (98.59%)
 - **Fix preexistente:** ventas.service.test.ts — puntos de fidelidad calculados a $100 COP, no $1000
 - **Documentación actualizada:** `docs/architecture.md` — tabla de coverage añadida
+
+## 2026-05-24 (Rutas restantes + Coverage full)
+- **Nuevos tests de rutas (11 archivos, +228 tests, total 462/462):**
+  - `auth.routes.test.ts` — login, refresh, logout, me
+  - `categorias-sucursales.routes.test.ts` — CRUD categorías y sucursales
+  - `caja-clientes.routes.test.ts` — apertura/cierre caja, historial, clientes admin
+  - `productos.routes.test.ts` — buscar público, CRUD admin, filtros
+  - `ventas.routes.test.ts` — dashboard, listado, crear venta, devolución
+  - `auth-cliente.routes.test.ts` — registro, login, google, email, perfil
+  - `empleados-compras.routes.test.ts` — CRUD empleados, órdenes de compra
+  - `lotes-inventario-proveedores.routes.test.ts` — lotes, ajustes inventario, CRUD proveedores
+  - `reportes-imagenes.routes.test.ts` — reportes ventas/inventario, subir/eliminar imágenes
+  - `pagos.routes.test.ts` (18 tests) — Wompi, Stripe (503 no config), MercadoPago (503 no config), Efectivo
+  - `pagos-pasarelas.routes.test.ts` (12 tests) — Stripe configurado (crear-intent, webhook succeeded/failed, firma inválida), MercadoPago configurado (crear preferencia, webhook aprobado/rechazado/fetch mock)
+- **Coverage full:** 71.03% statements, 83.14% branches, 82.71% functions
+  - 8 módulos con 100% statements (app, caja, clientes, inventario, lotes, reportes, sucursales)
+  - Módulos con ≥95%: pagos (98.84%), empleados (96.87%), productos (96.84%), proveedores (96.29%), categorías (95.83%)
+  - Todos los servicios, schemas y utils con ≥93%
+- **Documentación actualizada:** `docs/architecture.md` — tabla de coverage expandida con todos los módulos

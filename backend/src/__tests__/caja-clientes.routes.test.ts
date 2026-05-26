@@ -1,56 +1,120 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import express from 'express'
 
 vi.hoisted(() => {
   process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
-  process.env.JWT_SECRET = 'test-secret-for-jwt'
-  process.env.JWT_REFRESH_SECRET = 'test-refresh-secret'
-  process.env.NODE_ENV = 'test'
-  process.env.API_PREFIX = '/api/v1'
+  process.env.JWT_SECRET = 'a'.repeat(32)
+  process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
+  process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
   process.env.FRONTEND_URL = 'http://localhost:5173'
+  process.env.API_PREFIX = '/api/v1'
+  process.env.RATE_LIMIT_WINDOW_MS = '900000'
+  process.env.RATE_LIMIT_MAX = '1000'
+  process.env.RATE_LIMIT_AUTH_MAX = '100'
+  process.env.NODE_ENV = 'test'
+  process.env.PORT = '0'
+  process.env.FARMACIA_NOMBRE = 'Farmacy Test'
+  process.env.HORARIO_DIAS = '1,2,3,4,5'
+  process.env.HORARIO_INICIO = '08:00'
+  process.env.HORARIO_FIN = '18:00'
   process.env.REDIS_URL = 'redis://localhost:6379'
+  process.env.GOOGLE_CLIENT_ID = ''
+  process.env.GOOGLE_CLIENT_SECRET = ''
 })
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() }, config: vi.fn() }))
 
 const mockPrisma = vi.hoisted(() => ({
-  caja: {
-    findFirst: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    findMany: vi.fn(),
-  },
-  venta: {
-    count: vi.fn(),
-    aggregate: vi.fn(),
-  },
-  cliente: {
-    count: vi.fn(),
-    findMany: vi.fn(),
-    findUnique: vi.fn(),
-  },
+  $connect: vi.fn(),
+  $disconnect: vi.fn(),
+  cliente: { findUnique: vi.fn(), create: vi.fn(), findMany: vi.fn(), update: vi.fn(), count: vi.fn() },
+  empleado: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
+  producto: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  categoria: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  sucursal: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  venta: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
+  lote: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), create: vi.fn(), count: vi.fn() },
+  inventario: { findMany: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
+  caja: { findMany: vi.fn(), findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  cajaMovimiento: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+  proveedor: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  compra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), count: vi.fn() },
+  detalleCompra: { create: vi.fn(), createMany: vi.fn() },
+  pago: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+  reporte: { findMany: vi.fn() },
+  logActividad: { create: vi.fn().mockResolvedValue({}) },
+  chatbotSesion: { findUnique: vi.fn().mockResolvedValue(null), upsert: vi.fn().mockResolvedValue({}) },
+  alertaInventario: { findMany: vi.fn(), create: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), count: vi.fn() },
+  loteVenta: { create: vi.fn(), createMany: vi.fn() },
+  detalleVenta: { create: vi.fn(), createMany: vi.fn() },
+  $transaction: vi.fn(),
+  favorito: { findFirst: vi.fn(), create: vi.fn(), delete: vi.fn(), findMany: vi.fn() },
+  movimientoInventario: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+  ordenCompra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+}))
+
+const mockCache = vi.hoisted(() => ({
+  get: vi.fn().mockResolvedValue(null),
+  set: vi.fn(),
+  del: vi.fn(),
+  delPattern: vi.fn(),
 }))
 
 vi.mock('../config/database', () => ({ prisma: mockPrisma }))
-vi.mock('../config/redis', () => ({ cache: { get: vi.fn(), set: vi.fn(), del: vi.fn() } }))
+vi.mock('../config/redis', () => ({
+  redis: { on: vi.fn(), connect: vi.fn() },
+  cache: mockCache,
+  connectRedis: vi.fn(),
+}))
+vi.mock('../utils/logger', () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}))
 vi.mock('../config/mailer', () => ({ sendEmail: vi.fn(), emailTemplates: {} }))
+vi.mock('node-cron', () => ({ default: { schedule: vi.fn() }, schedule: vi.fn() }))
+
+vi.mock('../utils/jwt.utils', () => ({
+  jwtEmpleado: {
+    verificar: vi.fn((token: string) => {
+      if (token === 'valid-admin-token') return { id: 'emp-1', nombre: 'Admin', email: 'admin@test.com', rol: 'ADMINISTRADOR', sucursalId: 1 }
+      if (token === 'valid-farmaceuta-token') return { id: 'emp-2', nombre: 'Farmaceuta', email: 'farm@test.com', rol: 'FARMACEUTA', sucursalId: 1 }
+      if (token === 'valid-auxiliar-token') return { id: 'emp-3', nombre: 'Auxiliar', email: 'aux@test.com', rol: 'AUXILIAR', sucursalId: 1 }
+      throw new Error('Token inválido')
+    }),
+    firmar: vi.fn(() => 'fake-token'),
+    firmarRefresh: vi.fn(() => 'fake-refresh-token'),
+    verificarRefresh: vi.fn(() => ({ id: 'emp-1' })),
+  },
+  jwtCliente: {
+    verificar: vi.fn((token: string) => {
+      if (token === 'valid-client-token') return { id: 'cli-1', nombre: 'Cliente', email: 'cliente@test.com', tipo: 'cliente' }
+      throw new Error('Token inválido')
+    }),
+    firmar: vi.fn(() => 'fake-client-token'),
+  },
+  jwtTemp: {
+    firmar: vi.fn(() => 'fake-temp-token'),
+    verificar: vi.fn(() => ({})),
+  },
+}))
 
 import supertest from 'supertest'
-import { app } from '../app'
+import { createApp } from '../app'
 
-const request = supertest(app)
 const apiPrefix = '/api/v1'
 
 // ── CAJA ──────────────────────────────────────────────────
 describe('Caja Routes - GET /caja/actual', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('rechaza sin autenticación', async () => {
-    const res = await request.get(`${apiPrefix}/caja/actual`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
     expect(res.status).toBe(401)
   })
 
   it('rechaza con rol no autorizado', async () => {
-    const res = await request.get(`${apiPrefix}/caja/actual`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
       .set('Authorization', 'Bearer valid-auxiliar-token')
     expect(res.status).toBe(403)
   })
@@ -60,7 +124,7 @@ describe('Caja Routes - GET /caja/actual', () => {
       id: 'caja-1', empleadoId: '1', montoApertura: 500000, cerradaEn: null,
       sucursal: { nombre: 'Principal' },
     })
-    const res = await request.get(`${apiPrefix}/caja/actual`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data.id).toBe('caja-1')
@@ -68,7 +132,7 @@ describe('Caja Routes - GET /caja/actual', () => {
 
   it('retorna null cuando no hay caja abierta', async () => {
     mockPrisma.caja.findFirst.mockResolvedValue(null)
-    const res = await request.get(`${apiPrefix}/caja/actual`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data).toBeNull()
@@ -76,23 +140,25 @@ describe('Caja Routes - GET /caja/actual', () => {
 
   it('maneja error interno', async () => {
     mockPrisma.caja.findFirst.mockRejectedValue(new Error('DB error'))
-    const res = await request.get(`${apiPrefix}/caja/actual`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(500)
   })
 })
 
 describe('Caja Routes - POST /caja/abrir', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('rechaza sin autenticación', async () => {
-    const res = await request.post(`${apiPrefix}/caja/abrir`).send({ sucursalId: 1, montoApertura: 500000 })
+    const res = await supertest(app).post(`${apiPrefix}/caja/abrir`).send({ sucursalId: 1, montoApertura: 500000 })
     expect(res.status).toBe(401)
   })
 
   it('rechaza si ya hay caja abierta', async () => {
     mockPrisma.caja.findFirst.mockResolvedValue({ id: 'caja-1', cerradaEn: null })
-    const res = await request.post(`${apiPrefix}/caja/abrir`)
+    const res = await supertest(app).post(`${apiPrefix}/caja/abrir`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ sucursalId: 1, montoApertura: 500000 })
     expect(res.status).toBe(409)
@@ -101,7 +167,7 @@ describe('Caja Routes - POST /caja/abrir', () => {
   it('abre caja exitosamente', async () => {
     mockPrisma.caja.findFirst.mockResolvedValue(null)
     mockPrisma.caja.create.mockResolvedValue({ id: 'caja-nueva', montoApertura: 500000 })
-    const res = await request.post(`${apiPrefix}/caja/abrir`)
+    const res = await supertest(app).post(`${apiPrefix}/caja/abrir`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ sucursalId: 1, montoApertura: 500000 })
     expect(res.status).toBe(201)
@@ -109,22 +175,24 @@ describe('Caja Routes - POST /caja/abrir', () => {
 })
 
 describe('Caja Routes - POST /caja/:id/cerrar', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('rechaza si hay ventas pendientes', async () => {
     mockPrisma.venta.count.mockResolvedValue(2)
-    const res = await request.post(`${apiPrefix}/caja/caja-1/cerrar`)
+    const res = await supertest(app).post(`${apiPrefix}/caja/caja-1/cerrar`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ montoCierre: 1000000 })
     expect(res.status).toBe(400)
-    expect(res.body.mensaje).toContain('pendientes')
+    expect(res.body.error).toContain('pendientes')
   })
 
   it('cierra caja exitosamente con diferencia', async () => {
     mockPrisma.venta.count.mockResolvedValue(0)
     mockPrisma.venta.aggregate.mockResolvedValue({ _sum: { total: 900000 } })
     mockPrisma.caja.update.mockResolvedValue({ id: 'caja-1', cerradaEn: new Date() })
-    const res = await request.post(`${apiPrefix}/caja/caja-1/cerrar`)
+    const res = await supertest(app).post(`${apiPrefix}/caja/caja-1/cerrar`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ montoCierre: 1000000, totalEfectivo: 500000, totalTarjeta: 400000, totalOnline: 100000 })
     expect(res.status).toBe(200)
@@ -132,28 +200,32 @@ describe('Caja Routes - POST /caja/:id/cerrar', () => {
 })
 
 describe('Caja Routes - GET /caja/historial', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('retorna historial para admin (todas las cajas)', async () => {
     mockPrisma.caja.findMany.mockResolvedValue([{ id: 'caja-1', empleado: { nombre: 'A', apellido: 'B' }, sucursal: { nombre: 'P' }, _count: { ventas: 5 } }])
-    const res = await request.get(`${apiPrefix}/caja/historial`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/historial`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
   })
 
   it('rechaza sin autenticación', async () => {
-    const res = await request.get(`${apiPrefix}/caja/historial`)
+    const res = await supertest(app).get(`${apiPrefix}/caja/historial`)
     expect(res.status).toBe(401)
   })
 })
 
 // ── CLIENTES ADMIN ────────────────────────────────────────
 describe('Clientes Admin Routes - GET /clientes', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('rechaza sin autenticación', async () => {
-    const res = await request.get(`${apiPrefix}/clientes`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes`)
     expect(res.status).toBe(401)
   })
 
@@ -165,7 +237,7 @@ describe('Clientes Admin Routes - GET /clientes', () => {
       puntosAcumulados: 100, creadoEn: new Date(),
       _count: { ventas: 3 },
     }])
-    const res = await request.get(`${apiPrefix}/clientes`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
@@ -175,7 +247,7 @@ describe('Clientes Admin Routes - GET /clientes', () => {
   it('filtra por query q', async () => {
     mockPrisma.cliente.count.mockResolvedValue(1)
     mockPrisma.cliente.findMany.mockResolvedValue([{ id: 'cli-1', nombre: 'Juan', _count: { ventas: 0 } }])
-    const res = await request.get(`${apiPrefix}/clientes?q=Juan`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes?q=Juan`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
   })
@@ -183,7 +255,7 @@ describe('Clientes Admin Routes - GET /clientes', () => {
   it('retorna array vacío si no hay clientes', async () => {
     mockPrisma.cliente.count.mockResolvedValue(0)
     mockPrisma.cliente.findMany.mockResolvedValue([])
-    const res = await request.get(`${apiPrefix}/clientes`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data).toEqual([])
@@ -191,23 +263,25 @@ describe('Clientes Admin Routes - GET /clientes', () => {
 
   it('maneja error interno', async () => {
     mockPrisma.cliente.count.mockRejectedValue(new Error('DB error'))
-    const res = await request.get(`${apiPrefix}/clientes`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(500)
   })
 })
 
 describe('Clientes Admin Routes - GET /clientes/:id', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
   beforeEach(() => { vi.clearAllMocks() })
 
   it('rechaza sin autenticación', async () => {
-    const res = await request.get(`${apiPrefix}/clientes/cli-1`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1`)
     expect(res.status).toBe(401)
   })
 
   it('retorna 404 si cliente no existe', async () => {
     mockPrisma.cliente.findUnique.mockResolvedValue(null)
-    const res = await request.get(`${apiPrefix}/clientes/cli-999`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-999`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(404)
   })
@@ -217,7 +291,7 @@ describe('Clientes Admin Routes - GET /clientes/:id', () => {
       id: 'cli-1', nombre: 'Juan', apellido: 'Pérez', email: 'juan@test.com',
       ventas: [{ numero: 'V-001', total: 50000, creadoEn: new Date(), estado: 'PAGADO' }],
     })
-    const res = await request.get(`${apiPrefix}/clientes/cli-1`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(200)
     expect(res.body.data.nombre).toBe('Juan')
@@ -226,7 +300,7 @@ describe('Clientes Admin Routes - GET /clientes/:id', () => {
 
   it('maneja error interno', async () => {
     mockPrisma.cliente.findUnique.mockRejectedValue(new Error('DB error'))
-    const res = await request.get(`${apiPrefix}/clientes/cli-1`)
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(500)
   })
