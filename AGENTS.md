@@ -60,3 +60,107 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)
 - Frontend: `frontend/src/main.tsx` (React 18 + QueryClient)
 - Tests: Vitest v3 en `backend/` + `frontend/` (27 archivos, 462 tests, 83.7% cobertura)
+
+## Uso de browser-use (Playwright) — solo pnpm
+
+Este proyecto **NO usa npm**. Solo `pnpm` está instalado y disponible.
+
+### Instalación de Playwright (solo una vez)
+```bash
+# Desde la raíz del proyecto
+pnpm add -D playwright
+pnpm exec playwright install chromium
+```
+
+Playwright instala Chromium en:
+```
+C:\Users\<usuario>\AppData\Local\ms-playwright\chromium-XXXX\chrome-win64\chrome.exe
+```
+
+### Ejecutar browser-use desde Codebuff
+```bash
+# El agente browser-use necesita Chrome/Chromium en el PATH del sistema.
+# Si ya se ejecutó la instalación de Playwright, agregar al PATH:
+$env:Path += ";C:\Users\andyh\AppData\Local\ms-playwright\chromium-1223\chrome-win64"
+```
+
+> **⚠️ Importante:** El agente `browser-use` depende del System Info cacheado al inicio de la conversación. Si al inicio reporta `Chrome: not found`, no podrá usarse aunque Chromium esté en PATH. Como alternativa, se puede usar un script Playwright directo o `tmux-cli`.
+
+### Script de prueba alternativo (cuando browser-use no funciona)
+Crear `test-app.mjs` temporal:
+```js
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+// ... test pages
+await browser.close();
+```
+Ejecutar con: `node test-app.mjs` (no necesita npm, solo Node.js + Playwright instalado vía pnpm)
+
+---
+
+## ⚠️ Cuidado con procesos (kill safety)
+
+**NUNCA** uses estos comandos, porque pueden matar `freebuff.cmd` y otros procesos del entorno:
+
+| ❌ Comando peligroso | Riesgo |
+|---|---|
+| `taskkill /F /IM node.exe` | Mata **todos** los procesos Node.js, incluyendo freebuff.cmd u otros asistentes |
+| `Get-Process node \| Stop-Process` | Igual que arriba — mata todo proceso Node.js |
+| `Stop-Process -Name "node"` | Mata TODOS los Node.js sin filtrar |
+| `taskkill /F /FI "IMAGENAME eq node*"` | Igual — filtro demasiado amplio |
+
+### ✅ Forma segura de detener servidores
+
+Solo matar por **PID específico** capturado al iniciar el proceso:
+
+```powershell
+# Capturar PID al iniciar
+$backendPID = (Start-Process ... -PassThru).Id
+
+# Matar solo ese PID específico
+Stop-Process -Id $backendPID -Force
+```
+
+O liberar solo el puerto conocido (sin matar procesos no relacionados):
+
+```powershell
+$pidOnPort = (Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue).OwningProcess
+if ($pidOnPort) { Stop-Process -Id $pidOnPort -Force }
+```
+
+### Referencia rápida de comandos seguros
+
+| Acción | Comando seguro |
+|---|---|
+| Detener backend por PID | `Stop-Process -Id $BACKEND_PID -Force` |
+| Detener frontend por PID | `Stop-Process -Id $FRONTEND_PID -Force` |
+| Liberar puerto 3000 | `Get-NetTCPConnection -LocalPort 3000 \| Stop-Process` |
+| Verificar qué ocupa un puerto | `netstat -ano \| findstr :3000` |
+| Dejar Docker intacto | **No tocar** `docker` ni contenedores |
+
+> **Regla de oro:** Nunca uses `taskkill /F /IM` ni filtres por nombre de proceso. Siempre usa el PID específico.
+
+---
+
+## 📝 Regla: documentar cambios + git commit/push siempre
+
+Cada vez que se modifique el código o la configuración del proyecto, se debe:
+
+### 1. Documentar en AGENTS.md y/o docs/
+- Si el cambio afecta el flujo de trabajo de IA → actualizar `AGENTS.md`
+- Si el cambio es funcional (rutas, DB, features) → actualizar `docs/` correspondiente
+- Si es un milestone → registrar en `docs/worklog.md`
+
+### 2. Hacer git commit con mensaje descriptivo
+```bash
+git add .
+git commit -m "tipo: descripción clara del cambio"
+```
+Tipos de commit recomendados: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`
+
+### 3. Hacer git push
+```bash
+git push
+```
+
+> **⚠️ Importante:** No dejar cambios sin commitear ni documentación desactualizada. El commit y push son parte obligatoria de cada tarea completada.

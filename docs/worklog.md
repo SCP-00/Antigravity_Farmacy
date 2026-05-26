@@ -105,6 +105,16 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - ✅ Vite build: exitoso (9.63s)
 - ✅ pnpm store: 156MB liberados
 
+## 2026-05-26 — Documentación: browser-use, kill safety, regla de git
+
+**Archivos modificados:**
+- `AGENTS.md`: Agregadas 3 secciones:
+  - `Uso de browser-use (Playwright) — solo pnpm`: Instrucciones para usar Playwright con pnpm (no npm), cómo Chromium queda instalado y cómo usarlo desde Codebuff
+  - `⚠️ Cuidado con procesos (kill safety)`: Tabla de comandos peligrosos (taskkill /F /IM, Stop-Process sin filtro) vs comandos seguros por PID específico. Advertencia explícita sobre no matar `freebuff.cmd`
+  - `📝 Regla: documentar cambios + git commit/push siempre`: Proceso obligatorio de documentar en AGENTS.md/docs/, commit descriptivo, y push
+
+**Contexto:** El usuario reportó que solo tiene `pnpm` instalado (no npm), y que `freebuff.cmd` no debe ser cerrado accidentalmente por comandos kill agresivos.
+
 ## 2026-05-26 — Migración React 19 + Tailwind 4 + Coverage 95%+
 
 **React 18→19:**
