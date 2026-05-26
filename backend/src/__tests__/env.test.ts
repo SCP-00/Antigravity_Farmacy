@@ -130,27 +130,94 @@ describe('env.ts', () => {
     expect(mockExit).toHaveBeenCalledWith(1)
   })
 
-  it('corrige MSYS path translation en API_PREFIX (Git Bash bug)', async () => {
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
-    process.env.JWT_SECRET = 'a'.repeat(32)
-    process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
-    process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
-    // Simula MSYS traduciendo /api/v1 a C:/Program Files/Git/api/v1
-    process.env.API_PREFIX = 'C:/Program Files/Git/api/v1'
+  describe('API_PREFIX — MSYS path translation fix', () => {
+    const baseVars = () => {
+      process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
+      process.env.JWT_SECRET = 'a'.repeat(32)
+      process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
+      process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
+    }
 
-    const { env } = await import('../config/env')
-    expect(env.API_PREFIX).toBe('/api/v1')
-  })
+    it('default es /api/v1 cuando no se define API_PREFIX', async () => {
+      baseVars()
+      delete process.env.API_PREFIX
 
-  it('no altera API_PREFIX normal', async () => {
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'
-    process.env.JWT_SECRET = 'a'.repeat(32)
-    process.env.JWT_REFRESH_SECRET = 'b'.repeat(32)
-    process.env.JWT_CLIENTE_SECRET = 'c'.repeat(32)
-    process.env.API_PREFIX = '/api/v2'
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
 
-    const { env } = await import('../config/env')
-    expect(env.API_PREFIX).toBe('/api/v2')
+    it('corrige corrupción MSYS de Git Bash (C:/Program Files/Git/api/v1 → /api/v1)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'C:/Program Files/Git/api/v1'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
+
+    it('corrige corrupción MSYS2 directa (C:/msys64/api/v1 → /api/v1)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'C:/msys64/api/v1'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
+
+    it('corrige corrupción con distinta letra de unidad (D:/Git/api/v1 → /api/v1)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'D:/Git/api/v1'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
+
+    it('corrige corrupción con directorios MSYS extra (C:/Program Files/Git/usr/api/v1 → /api/v1)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'C:/Program Files/Git/usr/api/v1'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
+
+    it('corrige con backslashes (C:\\Program Files\\Git\\api/v1 → /api/v1)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'C:\\Program Files\\Git\\api/v1'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1')
+    })
+
+    it('no altera API_PREFIX normal sin corrupción MSYS', async () => {
+      baseVars()
+      process.env.API_PREFIX = '/api/v2'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v2')
+    })
+
+    it('no altera API_PREFIX con ruta profunda normal', async () => {
+      baseVars()
+      process.env.API_PREFIX = '/api/v1/admin'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/api/v1/admin')
+    })
+
+    it('quita la letra de unidad incluso para rutas no-MSYS (X:/some/path → /some/path)', async () => {
+      baseVars()
+      process.env.API_PREFIX = 'X:/some/unknown/path'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('/some/unknown/path')
+    })
+
+    it('fallback: devuelve el valor original si todos los segmentos son directorios MSYS', async () => {
+      baseVars()
+      // Todos los segmentos después de la unidad están en skipDirs
+      process.env.API_PREFIX = 'X:/Program Files/Git/usr/etc'
+
+      const { env } = await import('../config/env')
+      expect(env.API_PREFIX).toBe('X:/Program Files/Git/usr/etc')
+    })
   })
 
   it('tiene el tipo Env exportado', async () => {
