@@ -113,6 +113,59 @@ Ejecutar con: `node test-app.mjs` (no necesita npm, solo Node.js + Playwright in
 
 ---
 
+## 🐛 MSYS Path Translation (Git Bash en Windows)
+
+Cuando el backend se ejecuta desde **Git Bash** (o cualquier shell basado en MSYS/Cygwin), las rutas que empiezan con `/` son **traducidas automáticamente** a rutas de Windows. Por ejemplo:
+
+```
+/api/v1  →  C:/Program Files/Git/api/v1
+```
+
+Esto rompe todas las rutas de la API porque `API_PREFIX` termina siendo `C:/Program Files/Git/api/v1` en lugar de `/api/v1`.
+
+### Síntomas
+- El healthcheck (`/api/v1/health`) responde 200 porque Express lo registra como ruta literal corrupta
+- **Todas las demás rutas** (`/categorias`, `/productos`, etc.) devuelven **404**
+- En las pruebas de Playwright/browser-use se ven decenas de errores 404 en consola
+
+### ✅ Solución implementada
+
+El schema de `API_PREFIX` en `backend/src/config/env.ts` tiene un `.transform()` que detecta el patrón de unidad Windows (`C:/...`) y extrae la ruta original:
+
+```typescript
+API_PREFIX: z.string().default('/api/v1').transform(val => {
+  if (/^[a-zA-Z]:[/\\]/.test(val)) {
+    const parts = val.split(/[/\\]+/).filter(Boolean)
+    const skipDirs = new Set(['program files', 'git', 'msys64', 'msys', 'usr', 'etc'])
+    let start = 1
+    while (start < parts.length && skipDirs.has(parts[start].toLowerCase())) {
+      start++
+    }
+    if (start < parts.length) {
+      return '/' + parts.slice(start).join('/')
+    }
+  }
+  return val
+}),
+```
+
+### ⚠️ Si ejecutas comandos manualmente desde Git Bash
+
+```bash
+# ❌ Esto rompe API_PREFIX (MSYS traduce /api/v1):
+pnpm run dev
+
+# ✅ Usa MSYS2_ARG_CONV_EXCL para deshabilitar la traducción:
+MSYS2_ARG_CONV_EXCL="*" pnpm run dev
+
+# ✅ O mejor, usa PowerShell directamente:
+powershell -NoProfile -File run.ps1
+```
+
+> **Nota:** El script `run.ps1` usa PowerShell, por lo que **no sufre** de este bug. El problema solo ocurre al ejecutar el backend desde Git Bash u otras shells MSYS.
+
+---
+
 ## ⚠️ Cuidado con procesos (kill safety)
 
 **NUNCA** uses estos comandos, porque pueden matar `freebuff.cmd` y otros procesos del entorno:

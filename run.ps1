@@ -12,6 +12,11 @@
 .NOTES
   Ejecutar desde PowerShell:  .\run.ps1
   Recomendado: .\run.ps1 (PowerShell)
+
+  ⚠️  NO ejecutes este script desde Git Bash ni otras shells MSYS/Cygwin.
+      MSYS traduce rutas que empiezan con / (como /api/v1) a rutas
+      de Windows (C:/Program Files/Git/api/v1), lo que rompe todas
+      las rutas de la API. Usa PowerShell nativo.
 #>
 
 #requires -Version 5.1
@@ -215,7 +220,9 @@ try {
             if ($LASTEXITCODE -ne 0) { throw "corepack enable pnpm fallo" }
             Write-OK "pnpm activado via corepack"
         } catch {
-            Write-Err "No se pudo activar pnpm. Ejecuta manualmente: corepack enable pnpm"
+            Write-Err "No se pudo activar pnpm. Instalalo manualmente:"
+            Write-Host "   PowerShell: iwr https://get.pnpm.io/install.ps1 -useb | iex"
+            Write-Host "   Web: https://pnpm.io/installation"
             pause
             exit 1
         }
@@ -254,6 +261,16 @@ try {
         Write-Warn "Puerto 5173 en uso por PID $port5173 - el frontend podria fallar si no se libera"
         Write-Host "   Para liberarlo manualmente:  Stop-Process -Id $port5173 -Force"
     }
+    # Advertencia MSYS: verificar si el backend se ejecutó desde Git Bash
+    # (La variable MSYSTEM solo existe en shells MSYS)
+    if ($env:MSYSTEM) {
+        Write-Warn "Estas ejecutando este script desde un shell MSYS ($($env:MSYSTEM))"
+        Write-Host "   MSYS traduce rutas ej: /api/v1 → C:/Program Files/Git/api/v1"
+        Write-Host "   Esto rompe las rutas de la API (solo el healthcheck funciona)."
+        Write-Host "   Se recomienda ejecutar .\run.ps1 desde PowerShell nativo."
+        Write-Host "   Si aun asi quieres continuar, el fix en env.ts corrige el API_PREFIX."
+    }
+
     if (-not $port3000 -and -not $port5173) {
         Write-OK "Puertos disponibles"
     }
