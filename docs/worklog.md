@@ -2,6 +2,55 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-26 — Fix MSYS path translation + tests + documentación
+
+**Bug:** Al ejecutar el backend desde Git Bash (o cualquier shell MSYS/Cygwin), las rutas
+que empiezan con `/` son traducidas automáticamente a rutas Windows.
+Ej: `/api/v1` → `C:/Program Files/Git/api/v1`, rompiendo TODAS las rutas de la API.
+
+### Fix implementado
+
+- `backend/src/config/env.ts` — Zod schema de `API_PREFIX` ahora tiene un `.transform()`
+  que detecta el patrón de unidad Windows (`C:/...`) y extrae la ruta original saltando
+  directorios MSYS conocidos (`Program Files`, `Git`, `msys64`, `msys`, `usr`, `etc`).
+  Soporta tanto `/` como `\` como separadores.
+
+### Tests (10 casos, 16 total en env.test.ts)
+
+| Escenario | Resultado |
+|---|---|
+| Default (sin `API_PREFIX`) → `/api/v1` | ✅ |
+| `C:/Program Files/Git/api/v1` (Git Bash) → `/api/v1` | ✅ |
+| `C:/msys64/api/v1` (MSYS2 directo) → `/api/v1` | ✅ |
+| `D:/Git/api/v1` (distinta letra de unidad) → `/api/v1` | ✅ |
+| `C:/Program Files/Git/usr/api/v1` (directorios extra) → `/api/v1` | ✅ |
+| `C:\\Program Files\\Git\\api/v1` (backslashes Windows) → `/api/v1` | ✅ |
+| `/api/v2` (prefix normal, sin MSYS) → `/api/v2` (preservado) | ✅ |
+| `/api/v1/admin` (ruta profunda normal) → `/api/v1/admin` | ✅ |
+| `X:/some/unknown/path` (ruta no-MSYS) → `/some/unknown/path` (drive stripped) | ✅ |
+| `X:/Program Files/Git/usr/etc` (todos skipDirs) → valor original preservado | ✅ |
+
+### Documentación asociada
+
+- `AGENTS.md` — Nueva sección `🐛 MSYS Path Translation (Git Bash en Windows)` con:
+  - Explicación del bug y síntomas
+  - Código del fix en env.ts
+  - Workarounds: `MSYS2_ARG_CONV_EXCL="*"`, usar PowerShell nativo
+- `run.ps1` — Detección de `$env:MSYSTEM` en paso [4/8] con advertencia clara
+  (run.ps1 usa PowerShell nativo para los child processes, así que no sufre el bug)
+- `docs/worklog.md` — Esta entrada
+
+### Commits
+
+| Hash | Mensaje |
+|---|---|
+| `27f23a5` | `docs: bug MSYS path translation en AGENTS.md y warning en run.ps1` |
+| `410b4fb` | `docs: refinar warning MSYS en run.ps1 - clarificar que no afecta al script` |
+| `e559265` | `docs: resultados test MSYS fix en 3 shells + worklog` |
+| `10a83be` | `test: cobertura completa MSYS path translation (9 escenarios)` |
+
+---
+
 ## 2026-05-25 — Auditoría general y actualización documentación
 
 Se realizó una revisión completa del proyecto y se actualizó toda la documentación.
