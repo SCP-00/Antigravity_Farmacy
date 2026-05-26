@@ -21,27 +21,29 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 - **Drug-Interaction Alerts:** Un motor de advertencia visual en el POS que compare los principios activos agregados al carrito, alertando al farmacéuta si existe una interacción riesgosa antes de facturar.
 - **B2C Health Profiles:** Una sección en la cuenta del cliente para auto-bloquear o alertar la compra de medicamentos que contengan alérgenos definidos por el usuario (ej. Lactosa).
 
+> **📍 Mapa completo de rutas:** [docs/api-routes.md](api-routes.md) — 72 endpoints back + 40+ páginas front, con RBAC y métodos HTTP.
+
 ## Backend module catalog (verified)
-| Module | Route prefix | File | Status |
-|---|---|---|---|
-| auth | /api/v1/auth | `backend/src/modules/auth/auth.routes.ts` | active |
-| auth-cliente | /api/v1/clientes/auth | `backend/src/modules/auth-cliente/authCliente.routes.ts` | active |
-| auth-cliente perfil | /api/v1/clientes/auth | `backend/src/modules/auth-cliente/authCliente.perfil.routes.ts` | active |
-| categorias | /api/v1/categorias | `backend/src/modules/categorias/categorias.routes.ts` | active |
-| sucursales | /api/v1/sucursales | `backend/src/modules/sucursales/sucursales.routes.ts` | active |
-| productos | /api/v1/productos | `backend/src/modules/productos/productos.routes.ts` | active |
-| lotes | /api/v1/lotes | `backend/src/modules/lotes/lotes.routes.ts` | active |
-| inventario | /api/v1/inventario | `backend/src/modules/inventario/inventario.routes.ts` | active |
-| ventas | /api/v1/ventas | `backend/src/modules/ventas/ventas.routes.ts` | active |
-| caja | /api/v1/caja | `backend/src/modules/caja/caja.routes.ts` | active |
-| clientes (admin) | /api/v1/clientes | `backend/src/modules/clientes/clientes.admin.routes.ts` | active |
-| empleados | /api/v1/empleados | `backend/src/modules/empleados/empleados.routes.ts` | active |
-| proveedores | /api/v1/proveedores | `backend/src/modules/proveedores/proveedores.routes.ts` | active |
-| compras | /api/v1/compras | `backend/src/modules/compras/compras.routes.ts` | active |
-| reportes | /api/v1/reportes | `backend/src/modules/reportes/reportes.routes.ts` | active |
-| chatbot | /api/v1/chatbot | `backend/src/modules/chatbot/chatbot.routes.ts` | active |
-| pagos | /api/v1/pagos | `backend/src/modules/pagos/pagos.routes.ts` | active |
-| imagenes | /api/v1/imagenes | `backend/src/modules/imagenes/imagenes.routes.ts` | active |
+| Module | Route prefix | Endpoints | File | Auth |
+|---|---|---|---|---|
+| auth | /api/v1/auth | 4 | `auth.routes.ts` | 3 token, 1 public |
+| auth-cliente | /api/v1/clientes/auth | 12 | `authCliente.routes.ts` | 6 token, 6 public |
+| auth-cliente perfil | /api/v1/clientes/auth | 2 | `authCliente.perfil.routes.ts` | token cliente |
+| categorias | /api/v1/categorias | 3 | `categorias.routes.ts` | 1 public |
+| sucursales | /api/v1/sucursales | 3 | `sucursales.routes.ts` | 1 public |
+| productos | /api/v1/productos | 5 | `productos.routes.ts` | 2 public |
+| lotes | /api/v1/lotes | 2 | `lotes.routes.ts` | token |
+| inventario | /api/v1/inventario | 4 | `inventario.routes.ts` | token |
+| ventas | /api/v1/ventas | 4 | `ventas.routes.ts` | token |
+| caja | /api/v1/caja | 4 | `caja.routes.ts` | token |
+| clientes (admin) | /api/v1/clientes | 3 | `clientes.admin.routes.ts` | token |
+| empleados | /api/v1/empleados | 4 | `empleados.routes.ts` | token ADMIN |
+| proveedores | /api/v1/proveedores | 4 | `proveedores.routes.ts` | token |
+| compras | /api/v1/compras | 4 | `compras.routes.ts` | token |
+| reportes | /api/v1/reportes | 5 (1 CSV) | `reportes.routes.ts` | token ADMIN |
+| chatbot | /api/v1/chatbot | 4 | `chatbot.routes.ts` | public |
+| pagos | /api/v1/pagos | 7 | `pagos.routes.ts` | 3 public webhook |
+| imagenes | /api/v1/imagenes | 2 | `imagenes.routes.ts` | token |
 
 ## Services (dominio)
 - \backend/src/services/inventario.service.ts: Lógica FEFO (First Expired, First Out) y cálculo de costo promedio.

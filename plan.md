@@ -1,5 +1,8 @@
 ﻿# Roadmap plan
 
+> **📍 Mapa de rutas completo:** [docs/api-routes.md](docs/api-routes.md)
+> Incluye los 72 endpoints REST, 40+ páginas frontend y la matriz RBAC.
+
 ## 🏗️ Roadmap — Antigravity Farmacy (Estándar INVIMA Colombia)
 
 ### Fase 0 — Alineación y limpieza ✅
@@ -72,3 +75,10 @@
 **Mejoras futuras (post-MVP):**
 - [ ] Visor de auditoría de logs en el panel admin
 - [ ] Historial de cambios en precios y productos
+
+## 📐 Documentación de Rutas
+
+Ver [docs/api-routes.md](docs/api-routes.md) para el mapa completo:
+- **Backend:** 72 endpoints REST en 19 módulos
+- **Frontend:** 40+ páginas en 12 secciones
+- **RBAC:** Matriz completa de roles por módulo

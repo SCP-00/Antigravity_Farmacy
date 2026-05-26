@@ -9,6 +9,7 @@ This folder is the living documentation hub for Farmacy (SGF).
 
 ## Map
 - Architecture overview: [docs/architecture.md](architecture.md)
+- 📍 **API Routes:** [docs/api-routes.md](api-routes.md) — 72 endpoints, 40+ frontend pages, RBAC matrix
 - Decisions (ADRs): [docs/adr/](adr/)
   - [ADR-0001](adr/0001-env-source-of-truth-and-ports.md): Standardized ports and environmental variables.
   - [ADR-0002](adr/0001-env-source-of-truth-and-ports.md#adr-0002-colombian-regulatory-invima-cum-data-model): Colombian INVIMA/CUM regulatory compliance.
