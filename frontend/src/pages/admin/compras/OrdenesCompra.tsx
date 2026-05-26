@@ -42,8 +42,8 @@ export default function OrdenesCompra() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Órdenes de compra</h1>
-          <p className="text-sm text-gray-500 mt-1">{meta.total} orden(es)</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Órdenes de compra</h1>
+          <p className="text-sm text-gray-500 dark:text-dark-text/60 mt-1">{meta.total} orden(es)</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => navigate('/admin/compras/recepcion')}
@@ -78,12 +78,15 @@ export default function OrdenesCompra() {
       {/* Lista */}
       <div className="surface overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-400">Cargando órdenes...</div>
+          <div className="p-8 text-center text-gray-400 dark:text-dark-text/60">
+            <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            Cargando órdenes...
+          </div>
         ) : isError ? (
           <div className="p-8 text-center text-red-500">Error al cargar órdenes</div>
         ) : ordenes.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            <FileText size={40} className="mx-auto mb-3 text-gray-300" />
+          <div className="p-8 text-center text-gray-400 dark:text-dark-text/60">
+            <FileText size={40} className="mx-auto mb-3 text-gray-300 dark:text-dark-border" />
             <p>No hay órdenes de compra {filtroEstado ? `en estado "${filtroEstado.toLowerCase()}"` : ''}</p>
             <button onClick={() => navigate('/admin/compras/nueva')}
               className="text-teal-700 font-medium text-sm mt-3 inline-flex items-center gap-1 hover:underline">
@@ -92,8 +95,8 @@ export default function OrdenesCompra() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] tracking-[0.18em]">
+            <table className="min-w-full divide-y divide-slate-200 dark:divide-dark-border text-sm">
+              <thead className="bg-slate-50 dark:bg-dark-surface text-slate-500 dark:text-dark-text/60 uppercase text-[11px] tracking-[0.18em]">
                 <tr>
                   <th className="px-5 py-3 text-left">N°</th>
                   <th className="px-5 py-3 text-left">Proveedor</th>
@@ -105,25 +108,25 @@ export default function OrdenesCompra() {
                   <th className="px-5 py-3 text-right">Recibida</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-dark-border bg-white dark:bg-dark-surface">
                 {ordenes.map((o: any) => (
-                  <tr key={o.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="px-5 py-4 font-mono text-xs text-gray-600">
+                  <tr key={o.id} className="hover:bg-slate-50/70 dark:hover:bg-dark-surface/80 transition-colors">
+                    <td className="px-5 py-4 font-mono text-xs text-gray-600 dark:text-dark-text/70">
                       OC-{String(o.numero ?? o.id).slice(0, 8)}
                     </td>
-                    <td className="px-5 py-4 font-medium text-gray-900">{o.proveedor?.nombre ?? '—'}</td>
-                    <td className="px-5 py-4 text-gray-600">
+                    <td className="px-5 py-4 font-medium text-gray-900 dark:text-dark-text">{o.proveedor?.nombre ?? '—'}</td>
+                    <td className="px-5 py-4 text-gray-600 dark:text-dark-text/80">
                       {o.empleado ? `${o.empleado.nombre} ${o.empleado.apellido ?? ''}` : '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-600">{fechaCorta(o.creadoEn)}</td>
-                    <td className="px-5 py-4 font-medium text-gray-900">{cop(Number(o.total))}</td>
+                    <td className="px-5 py-4 text-gray-600 dark:text-dark-text/80">{fechaCorta(o.creadoEn)}</td>
+                    <td className="px-5 py-4 font-medium text-gray-900 dark:text-dark-text">{cop(Number(o.total))}</td>
                     <td className="px-5 py-4">
                       <span className={`badge border ${estadoColores[o.estado] ?? 'bg-gray-50 text-gray-600'}`}>
                         {o.estado}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-center text-gray-600">{o._count?.detalles ?? 0}</td>
-                    <td className="px-5 py-4 text-right text-gray-400 text-xs">
+                    <td className="px-5 py-4 text-center text-gray-600 dark:text-dark-text/80">{o._count?.detalles ?? 0}</td>
+                    <td className="px-5 py-4 text-right text-gray-400 dark:text-dark-text/60 text-xs">
                       {o.recibidaEn ? fechaCorta(o.recibidaEn) : '—'}
                     </td>
                   </tr>
@@ -135,8 +138,8 @@ export default function OrdenesCompra() {
 
         {/* Pagination */}
         {totalPaginas > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 bg-slate-50">
-            <p className="text-xs text-gray-500">Página {pagina} de {totalPaginas}</p>
+          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-dark-border bg-slate-50 dark:bg-dark-surface">
+            <p className="text-xs text-gray-500 dark:text-dark-text/60">Página {pagina} de {totalPaginas}</p>
             <div className="flex gap-2">
               <button onClick={() => setPagina(p => Math.max(1, p - 1))}
                 disabled={pagina <= 1}

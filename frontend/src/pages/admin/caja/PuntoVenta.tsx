@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Scan, Plus, Minus, Trash2, Receipt, X } from 'lucide-react'
+import { Search, Scan, Plus, Minus, Trash2, Receipt, X, Keyboard } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { productosService, ventasService, cajaService } from '@/services'
 import { useFormateo, useDebounce, useScanner } from '@/hooks'
@@ -33,6 +33,7 @@ export default function PuntoVenta() {
   const [facturaVisible, setFacturaVisible] = useState<any>(null)
 
   const searchRef = useRef<HTMLInputElement>(null)
+  const cobrarRef = useRef<HTMLButtonElement>(null)
   const debouncedQ = useDebounce(busqueda, 300)
 
   const { data: cajaActual } = useQuery({
@@ -123,6 +124,50 @@ export default function PuntoVenta() {
     },
   })
 
+  // ── Keyboard Shortcuts ──────────────────────────────────
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Ignorar si hay un modal activo
+    if (facturaVisible) return
+
+    switch (e.key) {
+      case 'F2':
+        e.preventDefault()
+        // Cobrar — usa click() para respetar disabled del botón
+        if (!ventaMutation.isPending) {
+          cobrarRef.current?.click()
+        }
+        break
+      case 'F4':
+        e.preventDefault()
+        // Reset carrito
+        if (carrito.length > 0) {
+          setCarrito([])
+          setDescuento(0)
+          setClienteId('')
+          toast.success('Carrito limpiado')
+        }
+        break
+      case 'F5':
+        e.preventDefault()
+        // Abrir caja
+        if (!cajaActual && !abrirCajaMutation.isPending) {
+          abrirCajaMutation.mutate()
+        }
+        break
+      case 'F8':
+        e.preventDefault()
+        // Focus búsqueda
+        searchRef.current?.focus()
+        searchRef.current?.select()
+        break
+    }
+  }, [carrito.length, cajaActual, facturaVisible, ventaMutation.isPending])
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
   const handleCerrarTirilla = () => {
     setFacturaVisible(null)
     setCarrito([])
@@ -136,9 +181,18 @@ export default function PuntoVenta() {
         <InvoicePreview venta={facturaVisible} onClose={handleCerrarTirilla} />
       )}
 
-      <div className="flex h-[calc(100vh-8rem)] gap-4 -m-6 p-0 overflow-hidden">
+      {/* Shortcuts hint (solo desktop) */}
+      <div className="hidden md:flex items-center gap-2 mb-2 text-[10px] text-gray-400 dark:text-dark-text/40 px-1">
+        <Keyboard size={10} />
+        <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F2</kbd> Cobrar
+        <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F4</kbd> Limpiar
+        <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F5</kbd> Abrir caja
+        <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F8</kbd> Buscar
+      </div>
+
+      <div className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-10rem)] gap-4 -m-6 p-0 overflow-hidden">
         {/* Panel izquierdo: productos */}
-        <div className="flex-1 flex flex-col bg-[#F5F8F6] p-4 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-[#F5F8F6] dark:bg-dark-surface/50 p-4 overflow-hidden min-h-[50vh] lg:min-h-0">
           {!cajaActual && (
             <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
               <span className="text-sm text-amber-700 font-medium">⚠️ Tu caja se encuentra cerrada</span>
@@ -150,11 +204,11 @@ export default function PuntoVenta() {
 
           <div className="relative mb-3">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
-            <input ref={searchRef} value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre o código de barras (Enter)..." className="input-base pl-10 pr-10" autoFocus />
+            <input ref={searchRef} value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre o código de barras (Enter)..." aria-keyshortcuts="F8" className="input-base pl-10 pr-10" autoFocus />
             <button className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-700 transition-colors" title="Escáner listo"><Scan size={16}/></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overscroll-contain" role="listbox">
             {busqueda.length > 0 ? (
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {isFetching
@@ -185,14 +239,14 @@ export default function PuntoVenta() {
         </div>
 
         {/* Panel derecho: carrito y cobro */}
-        <div className="w-80 flex-shrink-0 bg-white border-l border-[#D8EBE4] flex flex-col">
+        <div className="w-full lg:w-80 flex-shrink-0 bg-white dark:bg-dark-surface border-l border-[#D8EBE4] dark:border-dark-border flex flex-col">
           <div className="px-4 py-3 border-b border-[#D8EBE4] flex items-center justify-between">
             <div>
               <p className="font-semibold text-sm text-gray-900">Venta actual</p>
               <p className="text-xs text-gray-400">{cajaActual ? `Caja abierta · ${fechaCorta(cajaActual.abiertaEn)}` : 'Sin caja abierta'}</p>
             </div>
             {carrito.length > 0 && (
-              <button onClick={() => setCarrito([])} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"><X size={12}/> Limpiar</button>
+              <button onClick={() => setCarrito([])} aria-keyshortcuts="F4" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"><X size={12}/> Limpiar</button>
             )}
           </div>
 
@@ -239,7 +293,7 @@ export default function PuntoVenta() {
               {Object.entries(METODO_PAGO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
 
-            <button onClick={() => ventaMutation.mutate()} disabled={carrito.length === 0 || !cajaActual || ventaMutation.isPending} className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-600 disabled:opacity-40 transition-all flex items-center justify-center gap-2 shadow-md">
+            <button ref={cobrarRef} onClick={() => ventaMutation.mutate()} disabled={carrito.length === 0 || !cajaActual || ventaMutation.isPending} aria-keyshortcuts="F2" className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-600 disabled:opacity-40 transition-all flex items-center justify-center gap-2 shadow-md">
               <Receipt size={16}/> {ventaMutation.isPending ? 'Procesando...' : `Cobrar ${cop(total)}`}
             </button>
           </div>

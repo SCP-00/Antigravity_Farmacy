@@ -79,16 +79,16 @@ export default function HistorialCaja() {
 
       {/* KPIs */}
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="surface p-5">
-          <div className="flex items-center gap-3 text-teal-700"><Landmark className="w-5 h-5" /><span className="text-sm font-semibold">Cajas registradas</span></div>
-          <p className="mt-3 text-3xl font-bold text-slate-900">{totalCajas}</p>
+        <div className="surface p-5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-border">
+          <div className="flex items-center gap-3 text-teal-700 dark:text-teal-400"><Landmark className="w-5 h-5" /><span className="text-sm font-semibold">Cajas registradas</span></div>
+          <p className="mt-3 text-3xl font-bold text-slate-900 dark:text-dark-text">{totalCajas}</p>
         </div>
-        <div className="surface p-5">
-          <div className="flex items-center gap-3 text-teal-700"><Receipt className="w-5 h-5" /><span className="text-sm font-semibold">Ventas en historial</span></div>
-          <p className="mt-3 text-3xl font-bold text-slate-900">{cop(totalVentas)}</p>
+        <div className="surface p-5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-border">
+          <div className="flex items-center gap-3 text-teal-700 dark:text-teal-400"><Receipt className="w-5 h-5" /><span className="text-sm font-semibold">Ventas en historial</span></div>
+          <p className="mt-3 text-3xl font-bold text-slate-900 dark:text-dark-text">{cop(totalVentas)}</p>
         </div>
-        <div className="surface p-5">
-          <div className="flex items-center gap-3 text-teal-700"><WalletCards className="w-5 h-5" /><span className="text-sm font-semibold">Descuadre acumulado</span></div>
+        <div className="surface p-5 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-border">
+          <div className="flex items-center gap-3 text-teal-700 dark:text-teal-400"><WalletCards className="w-5 h-5" /><span className="text-sm font-semibold">Descuadre acumulado</span></div>
           <p className={`mt-3 text-3xl font-bold ${totalDiferencia < 0 ? 'text-red-600' : 'text-emerald-600'}`}>{cop(totalDiferencia)}</p>
         </div>
       </section>
@@ -98,16 +98,17 @@ export default function HistorialCaja() {
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
           <div><h2 className="text-lg font-semibold text-slate-900">Movimientos de caja</h2><p className="text-sm text-slate-500">Ordenado por apertura más reciente</p></div>
           <Clock3 className="w-5 h-5 text-teal-700" />
-        </div>
-
-        {isLoading ? (
-          <div className="p-8 text-center text-gray-500">Cargando historial...</div>
+        </div>          {isLoading ? (
+          <div className="p-8 text-center text-gray-500 dark:text-dark-text/60">
+            <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            Cargando historial...
+          </div>
         ) : cajas.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">Aún no hay registros de caja.</div>
+          <div className="p-8 text-center text-gray-500 dark:text-dark-text/60">Aún no hay registros de caja.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-slate-500 uppercase text-[11px] tracking-[0.18em]">
+              <thead className="bg-slate-50 dark:bg-dark-surface text-slate-500 dark:text-dark-text/60 uppercase text-[11px] tracking-[0.18em]">
                 <tr>
                   <th className="px-5 py-3 text-left">Apertura</th>
                   <th className="px-5 py-3 text-left">Cierre</th>
@@ -117,9 +118,9 @@ export default function HistorialCaja() {
                   <th className="px-5 py-3 text-right">Diferencia</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-dark-border bg-white dark:bg-dark-surface">
                 {cajas.map((caja) => (
-                  <tr key={caja.id} className="hover:bg-slate-50/70">
+                  <tr key={caja.id} className="hover:bg-slate-50/70 dark:hover:bg-dark-surface/80 transition-colors">
                     <td className="px-5 py-4 text-slate-700 font-medium">{fechaHora(caja.abiertaEn)}</td>
                     <td className="px-5 py-4 text-slate-600">{caja.cerradaEn ? fechaHora(caja.cerradaEn) : <span className="text-emerald-600 font-semibold">Turno Activo</span>}</td>
                     <td className="px-5 py-4">

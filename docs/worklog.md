@@ -231,6 +231,57 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - `AGENTS.md` — Documentación del bug y workarounds
 - `run.ps1` — Detección de `$env:MSYSTEM` y advertencia en paso [4/8]
 
+## 2026-05-26 — Fase 11: UX Core POS + Admin — shortcuts, skeletons, dark mode
+
+**Objetivo:** Mejorar la experiencia de usuario del POS y el panel admin con atajos de teclado, loaders esqueléticos, estados vacíos y cobertura de modo oscuro.
+
+### Cambios realizados
+
+#### 1. Skeleton loaders reutilizables (`frontend/src/components/shared/Skeleton.tsx` — **nuevo**)
+- `SkeletonText` — línea de texto animada
+- `SkeletonBlock` — bloque rectangular animado
+- `SkeletonCard` — card completa con icono + líneas
+- `SkeletonTable` — tabla animada con header + filas configurables
+- `SkeletonChart` — barras de gráfico animadas con alturas aleatorias
+- Todos con soporte dark mode (`dark:bg-dark-border`)
+
+#### 2. EmptyState reutilizable (`frontend/src/components/shared/EmptyState.tsx` — **nuevo**)
+- Componente genérico con icono, título, descripción, acción opcional
+- Variante `compact` para espacios reducidos
+- Clases dark mode
+
+#### 3. Keyboard shortcuts en POS (`frontend/src/pages/admin/caja/PuntoVenta.tsx`)
+- `F2` → Cobrar (usa `cobrarRef.click()` para respetar disabled del botón)
+- `F4` → Limpiar carrito + descuento + cliente
+- `F5` → Abrir caja (si está cerrada)
+- `F8` → Focus + select en campo de búsqueda
+- `useCallback` con dependencias para evitar memory leaks
+- Shortcuts hint bar visible en desktop (`<Keyboard>` icon + `<kbd>` tags)
+- `aria-keyshortcuts` en inputs y botones (accesibilidad)
+- Ignorado cuando el modal de tirilla está abierto
+
+#### 4. Layout responsive POS (`frontend/src/pages/admin/caja/PuntoVenta.tsx`)
+- `flex-col lg:flex-row` — apilado en mobile, lado a lado en desktop
+- `min-h-[50vh] lg:min-h-0` para visibilidad en mobile
+- Productos: `grid-cols-2 lg:grid-cols-3 xl:grid-cols-4` adaptativo
+- `overscroll-contain` para scroll suave
+
+#### 5. Skeleton loaders en Dashboard (`frontend/src/pages/admin/Dashboard.tsx`)
+- KpiCard muestra `SkeletonBlock` cuando `loading=true`
+- Chart muestra `SkeletonChart` cuando `reportesLoading=true`
+- Eliminados imports no usados: `ShoppingCart`, `usePermisos`, `format`
+
+#### 6. Dark mode en tablas admin
+- **HistorialCaja:** thead, tbody, rows, celdas, loading/empty states, KPIs
+- **OrdenesCompra:** thead, tbody, rows, celdas, paginación, loading/empty states
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ Vite build: exitoso (5.06s)
+- ✅ Code review: aprobado (3 detalles cosmeticos corregidos)
+
+---
+
 ## 2026-05-26 — Documentación: browser-use, kill safety, regla de git
 
 **Archivos modificados:**

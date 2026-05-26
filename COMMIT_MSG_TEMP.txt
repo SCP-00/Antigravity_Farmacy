@@ -1,0 +1,17 @@
+feat: Fase 11 — UX Core POS + Admin (shortcuts, skeletons, empty states, dark mode)
+
+Keyboard shortcuts POS:
+- F2 cobrar (via ref.click), F4 limpiar carrito, F5 abrir caja, F8 buscar
+- Hint visual con etiquetas <kbd> + accesibilidad aria-keyshortcuts
+
+Componentes reutilizables:
+- Skeleton.tsx: SkeletonText, SkeletonBlock, SkeletonCard, SkeletonTable, SkeletonChart
+- EmptyState.tsx: icono + titulo + descripcion + accion
+
+Dashboard:
+- Skeleton loaders en KPI cards y chart
+- Limpieza de imports no usados (ShoppingCart, usePermisos, format)
+
+Dark mode extendido:
+- HistorialCaja: tabla completa, KPIs, estados
+- OrdenesCompra: tabla, paginacion, estados
