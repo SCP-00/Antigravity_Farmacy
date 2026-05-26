@@ -210,6 +210,35 @@ if ($pidOnPort) { Stop-Process -Id $pidOnPort -Force }
 
 ---
 
+## 🛡️ Fase 10 — Seguridad hardening
+
+Esta sección documenta las medidas de seguridad implementadas en Fase 10.
+
+### CORS
+- `backend/src/config/env.ts` → `CORS_ORIGINS` (comma-separated, para producción)
+- `backend/src/app.ts` → CORS con `methods`, `allowedHeaders`, `maxAge` explícitos
+- En producción, si `CORS_ORIGINS` no está configurado, se loggea un warning y la API solo acepta orígenes de desarrollo
+
+### Helmet / CSP
+- `backend/src/config/env.ts` → `CSP_ENABLED` (default `'true'`)
+- CSP cubre: Cloudinary (imágenes/scripts), Wompi (checkout), Stripe (JS), MercadoPago (checkout)
+- `referrerPolicy: 'strict-origin-when-cross-origin'`
+- `hsts: maxAge=31536000, includeSubDomains, preload`
+- Si `CSP_ENABLED=false`, se usa Helmet básico (útil si CSP bloquea recursos de desarrollo)
+
+### Sanitización de chatbot
+- `backend/src/modules/chatbot/chatbot.routes.ts`:
+  - `sanitizarInput()`: elimina HTML/XML tags, caracteres de control, limita a 500 chars
+  - `sanitizarSessionToken()`: solo `[a-zA-Z0-9\-_.]`, max 128 chars
+- Aplica a: `POST /` (mensaje + sessionToken) y `POST /interacciones` (productoIds)
+
+### Secret scanning
+- Archivo: `backend/.gitleaks.toml` con reglas para: JWT, DB URLs, Google OAuth, Stripe, MP, Wompi, Cloudinary, SMTP
+- Uso: `gitleaks detect --source . --config backend/.gitleaks.toml -v`
+- Se puede agregar como script en `package.json` o como paso en CI/CD
+
+---
+
 ## 📝 Regla: documentar cambios + git commit/push siempre
 
 Cada vez que se modifique el código o la configuración del proyecto, se debe:

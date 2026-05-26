@@ -1,0 +1,80 @@
+# ══════════════════════════════════════════════════════════
+#  Gitleaks configuration — Farmacy secret scanning
+#  Uso: gitleaks detect --source . --config backend/.gitleaks.toml -v
+# ══════════════════════════════════════════════════════════
+
+title = "Farmacy secret scanning config"
+
+# ── Extensión de reglas por defecto ─────────────────────
+[extend]
+useDefault = true
+
+# ── Reglas personalizadas ───────────────────────────────
+[[rules]]
+id = "farmacy-jwt-secret"
+description = "JWT secret hardcoded in source code"
+regex = '''(?i)(JWT_SECRET|JWT_REFRESH_SECRET|JWT_CLIENTE_SECRET)\s*=\s*['"][^'"]{8,}['"]'''
+tags = ["farmacy", "jwt", "credential"]
+
+[[rules]]
+id = "farmacy-database-url"
+description = "Database connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@'''
+tags = ["farmacy", "database", "credential"]
+
+[[rules]]
+id = "farmacy-google-oauth"
+description = "Google OAuth credentials"
+regex = '''(?i)(GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET)\s*=\s*['\"][^'\"]+['\"]'''
+tags = ["farmacy", "oauth", "credential"]
+
+[[rules]]
+id = "farmacy-stripe-key"
+description = "Stripe API key"
+regex = '''(?i)(STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET)\s*=\s*['\"](?:sk_live_|sk_test_|whsec_|rk_live_|rk_test_)[^'\"]+['\"]'''
+tags = ["farmacy", "stripe", "credential"]
+
+[[rules]]
+id = "farmacy-mercadopago"
+description = "MercadoPago access token"
+regex = '''(?i)(MERCADOPAGO_ACCESS_TOKEN)\s*=\s*['\"](?:TEST-|APP-)[^'\"]+['\"]'''
+tags = ["farmacy", "mercadopago", "credential"]
+
+[[rules]]
+id = "farmacy-wompi-key"
+description = "Wompi API key"
+regex = '''(?i)(WOMPI_PRIVATE_KEY|WOMPI_PUBLIC_KEY|WOMPI_EVENTS_SECRET|WOMPI_INTEGRITY_SECRET)\s*=\s*['\"][^'\"]+['\"]'''
+tags = ["farmacy", "wompi", "credential"]
+
+[[rules]]
+id = "farmacy-cloudinary"
+description = "Cloudinary API credentials"
+regex = '''(?i)(CLOUDINARY_API_KEY|CLOUDINARY_API_SECRET)\s*=\s*['\"][^'\"]+['\"]'''
+tags = ["farmacy", "cloudinary", "credential"]
+
+[[rules]]
+id = "farmacy-smtp-password"
+description = "SMTP email password"
+regex = '''(?i)SMTP_PASS\s*=\s*['\"][^'\"]+['\"]'''
+tags = ["farmacy", "smtp", "credential"]
+
+# ── Rutas permitidas (whitelist) ─────────────────────────
+[allowlist]
+description = "Paths to exclude from scanning"
+paths = [
+  # Archivos de ejemplo y documentación
+  '''(^|/)\.env\.example$''',
+  '''(^|/)docs/.*''',
+  '''(^|/)README\.md$''',
+  # Dependencias y builds
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)build/''',
+  # Tests pueden tener credenciales de prueba deliberadamente
+  '''(^|/)__tests__/.*\.test\.ts$''',
+  # Seeds de BD con datos ficticios
+  '''(^|/)seeds/.*\.ts$''',
+  # Lockfiles generados automáticamente
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)package-lock\.json$''',
+]

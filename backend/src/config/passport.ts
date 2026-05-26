@@ -6,7 +6,7 @@ import { logger } from '../utils/logger'
 
 export function configurePassport(): void {
   // ── Google OAuth2 ─────────────────────────────────────────
-  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_CALLBACK_URL) {
     passport.use(
       new GoogleStrategy(
         {

@@ -18,6 +18,39 @@ import { verificarInteracciones, recomendarSimilares } from '../../services/inte
 
 export const chatbotRouter: Router = Router()
 
+// ── Sanitización de inputs ──────────────────────────────
+// Límites para proteger contra abuso y XSS
+const MAX_MENSAJE_LENGTH = 500
+const MAX_SESSION_TOKEN_LENGTH = 128
+
+/**
+ * Limpia un string de entrada:
+ * - Elimina etiquetas HTML/XML
+ * - Limita la longitud
+ * - Elimina caracteres de control (excepto saltos de línea básicos)
+ */
+function sanitizarInput(input: string, maxLength: number = MAX_MENSAJE_LENGTH): string {
+  let limpio = input
+    // Eliminar etiquetas HTML/XML completas con contenido
+    .replace(/<[^>]*>/g, '')
+    // Eliminar caracteres de control excepto \n, \r, \t
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    // Limitar a maxLength
+    .trim()
+    .slice(0, maxLength)
+  return limpio
+}
+
+/**
+ * Valida que un sessionToken sea seguro para usar como clave de BD.
+ * Solo permite caracteres alfanuméricos, guiones y puntos.
+ */
+function sanitizarSessionToken(token: string): string {
+  return token
+    .replace(/[^a-zA-Z0-9\-_.]/g, '')
+    .slice(0, MAX_SESSION_TOKEN_LENGTH)
+}
+
 // ── Tipos ─────────────────────────────────────────────────
 type EstadoMenu = 'menu' | 'buscar' | 'interacciones' | 'alternativas' | 'info' | 'faq'
 
@@ -939,11 +972,16 @@ chatbotRouter.post('/interacciones', async (req: Request, res: Response) => {
     productoIds?: string[]
     alergenosCliente?: string[]
   }
-  if (!productoIds?.length) {
+  // Sanitizar productoIds
+  const idsLimpios = (productoIds ?? [])
+    .filter(Boolean)
+    .map((id: string) => String(id).replace(/[^a-zA-Z0-9\-]/g, ''))
+    .filter((id: string) => id.length > 0)
+  if (idsLimpios.length < 2) {
     return responder.error(res, 'Se requieren al menos dos productos para verificar interacciones')
   }
   try {
-    const resultado = await verificarInteracciones(productoIds)
+    const resultado = await verificarInteracciones(idsLimpios)
     return responder.ok(res, {
       alertas: resultado.alertas,
       tieneAlertas: resultado.tieneAlertas,
@@ -993,11 +1031,17 @@ chatbotRouter.get('/producto/:id', async (req: Request, res: Response) => {
 // ── POST / — Mensaje principal ──────────────────────────
 chatbotRouter.post('/', async (req: Request, res: Response) => {
   const { mensaje = '', sessionToken } = req.body
-  const msg = mensaje.trim()
+  // Sanitizar entrada del usuario
+  const msg = sanitizarInput(mensaje, MAX_MENSAJE_LENGTH)
   if (!msg) return responder.error(res, 'Mensaje vacío')
 
+  const token = sessionToken
+    ? sanitizarSessionToken(String(sessionToken))
+    : `session-${Date.now()}`
+  if (!token) return responder.error(res, 'Token de sesión inválido')
+
   try {
-    const resultado = await procesarMensaje(msg, sessionToken || `session-${Date.now()}`)
+    const resultado = await procesarMensaje(msg, token)
     return responderConMenu(res, resultado.respuesta, resultado.productos, resultado.alertas, resultado.nuevoEstado)
   } catch (err) {
     logger.error('[Chatbot] Error:', err)

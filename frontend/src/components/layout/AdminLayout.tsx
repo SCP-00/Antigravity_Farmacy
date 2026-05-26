@@ -1,14 +1,15 @@
-import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
+import { Outlet, NavLink, Link } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, Truck, Users,
-  BarChart3, Settings, LogOut, Menu, X, Bell,
-  ChevronRight, CreditCard, UserCheck,
+  BarChart3, Settings, LogOut, Bell,
+  ChevronRight, CreditCard, UserCheck, PanelRightClose, PanelRightOpen,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { inventarioService } from '@/services'
 import { useAuth, usePermisos } from '@/hooks'
 import { useUiStore } from '@/store/uiStore'
+import ThemeToggle from '@/components/shared/ThemeToggle'
 
 interface NavItem {
   label: string
@@ -20,9 +21,9 @@ interface NavItem {
 export default function AdminLayout() {
   const { empleado, logout } = useAuth()
   const permisos = usePermisos()
-  const { sidebarAbierto, toggleSidebar } = useUiStore()
+  const { sidebarAbierto, toggleSidebar, darkMode } = useUiStore()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  // Mostrar solo alertas no leídas en el dropdown
+
   const { data: alertas = [] } = useQuery({
     queryKey: ['inventario', 'alertas'],
     queryFn: () => inventarioService.alertas('')
@@ -52,33 +53,38 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F5F8F6]">
+    <div className={`flex min-h-screen transition-colors duration-300
+      ${darkMode ? 'bg-dark-bg' : 'bg-[#F5F8F6]'}`}>
 
       {/* ── Sidebar ─────────────────────────────────────── */}
       <aside className={`
         fixed top-0 left-0 h-full z-50 flex flex-col
-        bg-teal-900 transition-all duration-200 ease-in-out
+        transition-all duration-300 ease-in-out
+        ${darkMode ? 'bg-dark-surface border-r border-dark-border' : 'bg-teal-900'}
         ${sidebarAbierto ? 'w-56' : 'w-16'}
       `}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-          <div className="w-8 h-8 bg-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className={`flex items-center gap-3 px-4 py-5 border-b ${darkMode ? 'border-dark-border' : 'border-white/10'}`}>
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
+            ${darkMode ? 'bg-teal-600' : 'bg-teal-500'}`}>
             <span className="text-white font-bold text-sm">F</span>
           </div>
           {sidebarAbierto && (
-            <span className="text-white font-semibold text-sm whitespace-nowrap">Farmacy</span>
+            <span className={`font-semibold text-sm whitespace-nowrap ${darkMode ? 'text-dark-text' : 'text-white'}`}>Farmacy</span>
           )}
         </div>
 
         {/* Toggle */}
         <button
           onClick={toggleSidebar}
-          className="absolute -right-3 top-16 w-6 h-6 bg-teal-700 rounded-full
-                     flex items-center justify-center border border-teal-600 z-10"
+          className={`absolute -right-3 top-16 w-6 h-6 rounded-full
+                     flex items-center justify-center z-10 transition-colors
+                     ${darkMode ? 'bg-dark-surface border border-dark-border text-dark-text-secondary' : 'bg-teal-700 border border-teal-600 text-white'}`}
+          title={sidebarAbierto ? 'Contraer menú' : 'Expandir menú'}
         >
           {sidebarAbierto
-            ? <X size={12} className="text-white" />
-            : <ChevronRight size={12} className="text-white" />}
+            ? <PanelRightClose size={12} />
+            : <PanelRightOpen size={12} />}
         </button>
 
         {/* Nav */}
@@ -90,10 +96,15 @@ export default function AdminLayout() {
               end={item.href === '/admin'}
               className={({ isActive }) => `
                 flex items-center gap-3 px-4 py-2.5 mx-2 rounded-xl mb-0.5
-                text-teal-200 text-sm transition-all duration-150
+                text-sm transition-all duration-200
                 ${isActive
-                  ? 'bg-teal-500/20 text-white border-l-2 border-teal-400'
-                  : 'hover:bg-white/5 hover:text-white'}
+                  ? darkMode
+                    ? 'bg-teal-500/15 text-teal-400 border-l-2 border-teal-500'
+                    : 'bg-teal-500/20 text-white border-l-2 border-teal-400'
+                  : darkMode
+                    ? 'text-dark-text-secondary hover:bg-dark-hover hover:text-dark-text'
+                    : 'text-teal-200 hover:bg-white/5 hover:text-white'
+                }
               `}
             >
               <span className="flex-shrink-0">{item.icon}</span>
@@ -103,22 +114,23 @@ export default function AdminLayout() {
         </nav>
 
         {/* User */}
-        <div className="px-3 py-4 border-t border-white/10">
+        <div className={`px-3 py-4 border-t ${darkMode ? 'border-dark-border' : 'border-white/10'}`}>
           <div className={`flex items-center gap-3 ${!sidebarAbierto && 'justify-center'}`}>
-            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center
-                            text-white text-xs font-bold flex-shrink-0">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center
+                            text-white text-xs font-bold flex-shrink-0
+                            ${darkMode ? 'bg-teal-600' : 'bg-teal-500'}`}>
               {initials}
             </div>
             {sidebarAbierto && (
               <div className="flex-1 min-w-0">
-                <p className="text-white text-xs font-medium truncate">{empleado?.nombre}</p>
-                <p className="text-teal-300 text-[10px]">{rolLabel[empleado?.rol ?? '']}</p>
+                <p className={`text-xs font-medium truncate ${darkMode ? 'text-dark-text' : 'text-white'}`}>{empleado?.nombre}</p>
+                <p className={`text-[10px] ${darkMode ? 'text-dark-text-secondary' : 'text-teal-300'}`}>{rolLabel[empleado?.rol ?? '']}</p>
               </div>
             )}
             {sidebarAbierto && (
               <button
                 onClick={logout}
-                className="text-teal-300 hover:text-white transition-colors"
+                className={`transition-colors ${darkMode ? 'text-dark-text-secondary hover:text-dark-text' : 'text-teal-300 hover:text-white'}`}
                 title="Cerrar sesión"
               >
                 <LogOut size={15} />
@@ -129,25 +141,35 @@ export default function AdminLayout() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────── */}
-      <main className={`flex-1 flex flex-col transition-all duration-200
+      <main className={`flex-1 flex flex-col transition-all duration-300
         ${sidebarAbierto ? 'ml-56' : 'ml-16'}`}
       >
         {/* Topbar */}
-        <header className="sticky top-0 z-40 bg-white border-b border-[#D8EBE4]
-                           px-6 py-3 flex items-center justify-between shadow-soft">
+        <header className={`sticky top-0 z-40 px-6 py-3 flex items-center justify-between transition-colors duration-300
+          ${darkMode
+            ? 'bg-dark-surface border-b border-dark-border'
+            : 'bg-white border-b border-[#D8EBE4] shadow-soft'
+          }`}>
           <div>
-            <h1 className="text-base font-semibold text-gray-900" id="page-title">Panel de Gestión</h1>
-            <p className="text-xs text-gray-400">
+            <h1 className={`text-base font-semibold ${darkMode ? 'text-dark-text' : 'text-gray-900'}`} id="page-title">Panel de Gestión</h1>
+            <p className={`text-xs ${darkMode ? 'text-dark-text-muted' : 'text-gray-400'}`}>
               {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Theme toggle */}
+            <ThemeToggle compact />
+
             {/* Alertas */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(v => !v)}
-                className="relative p-2 text-gray-500 hover:text-teal-700 hover:bg-teal-50 rounded-xl"
+                className={`relative p-2 rounded-xl transition-colors
+                  ${darkMode
+                    ? 'text-dark-text-secondary hover:bg-dark-hover'
+                    : 'text-gray-500 hover:text-teal-700 hover:bg-teal-50'
+                  }`}
                 aria-label="Alertas"
               >
                 <Bell size={18} />
@@ -160,42 +182,49 @@ export default function AdminLayout() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-lg z-50">
-                  <div className="p-3 border-b"> <strong className="text-sm">Alertas</strong> </div>
+                <div className={`absolute right-0 mt-2 w-80 border rounded-xl shadow-lg z-50 animate-menu-slide
+                  ${darkMode ? 'bg-dark-surface border-dark-border' : 'bg-white border-gray-100'}`}>
+                  <div className={`p-3 border-b ${darkMode ? 'border-dark-border' : 'border-gray-100'}`}>
+                    <strong className={`text-sm ${darkMode ? 'text-dark-text' : 'text-gray-900'}`}>Alertas</strong>
+                  </div>
                   <div className="max-h-64 overflow-y-auto">
                     {(alertasNoLeidas ?? []).slice(0, 20).map((a: any) => (
                       <Link
                         key={a.id}
                         to={a.loteId ? `/admin/inventario/lotes?loteId=${a.loteId}` : '/admin/inventario/alertas'}
-                        className="block px-3 py-2 hover:bg-gray-50 border-b last:border-b-0"
+                        className={`block px-3 py-2 border-b last:border-b-0 transition-colors
+                          ${darkMode ? 'hover:bg-dark-hover border-dark-border' : 'hover:bg-gray-50 border-gray-100'}`}
                         onClick={() => setDropdownOpen(false)}
                       >
-                        <div className="text-xs font-semibold text-gray-800">
+                        <div className={`text-xs font-semibold ${darkMode ? 'text-dark-text' : 'text-gray-800'}`}>
                           {a.tipo === 'STOCK_MINIMO' ? 'Stock Crítico' : a.tipo === 'PROXIMO_VENCER' ? 'Por Vencer' : 'Alerta'}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5 truncate">{a.mensaje}</div>
+                        <div className={`text-xs mt-0.5 truncate ${darkMode ? 'text-dark-text-secondary' : 'text-gray-500'}`}>{a.mensaje}</div>
                       </Link>
                     ))}
                     {!(alertasNoLeidas ?? []).length && (
-                      <div className="p-4 text-center text-gray-400">No hay alertas</div>
+                      <div className={`p-4 text-center ${darkMode ? 'text-dark-text-muted' : 'text-gray-400'}`}>No hay alertas</div>
                     )}
                   </div>
-                  <div className="p-2 text-right border-t bg-gray-50 rounded-b-xl">
-                    <Link to="/admin/inventario/alertas" className="text-sm text-teal-700 font-medium" onClick={() => setDropdownOpen(false)}>Ver todas</Link>
+                  <div className={`p-2 text-right border-t rounded-b-xl
+                    ${darkMode ? 'bg-dark-bg border-dark-border' : 'bg-gray-50 border-gray-100'}`}>
+                    <Link to="/admin/inventario/alertas" className={`text-sm font-medium transition-colors
+                      ${darkMode ? 'text-teal-400 hover:text-teal-300' : 'text-teal-700 hover:text-teal-600'}`}
+                      onClick={() => setDropdownOpen(false)}>Ver todas</Link>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Perfil */}
-            <div className="flex items-center gap-2 pl-3 border-l border-gray-100">
-              <div className="w-8 h-8 rounded-full bg-teal-700 flex items-center justify-center
-                              text-white text-xs font-bold">
+            <div className={`flex items-center gap-2 pl-3 border-l ${darkMode ? 'border-dark-border' : 'border-gray-100'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold
+                ${darkMode ? 'bg-teal-600' : 'bg-teal-700'}`}>
                 {initials}
               </div>
               <div className="hidden sm:block">
-                <p className="text-xs font-medium text-gray-800">{empleado?.nombre}</p>
-                <p className="text-[10px] text-gray-400">{rolLabel[empleado?.rol ?? '']}</p>
+                <p className={`text-xs font-medium ${darkMode ? 'text-dark-text' : 'text-gray-800'}`}>{empleado?.nombre}</p>
+                <p className={`text-[10px] ${darkMode ? 'text-dark-text-muted' : 'text-gray-400'}`}>{rolLabel[empleado?.rol ?? '']}</p>
               </div>
             </div>
           </div>

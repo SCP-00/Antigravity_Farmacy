@@ -1,6 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=DM+Serif+Display&display=swap');
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=DM+Serif+Display&display=swap');
+@import "tailwindcss";
+
 @theme {
   --color-teal-50: #EEF5FF;
   --color-teal-100: #D9E8FF;
@@ -26,6 +29,15 @@
   --color-red-800: #7F1330;
   --color-red-900: #5E0E23;
 
+  --color-dark-surface: #121828;
+  --color-dark-bg: #0A0F1E;
+  --color-dark-border: rgba(255,255,255,0.06);
+  --color-dark-text: #C8D4E6;
+  --color-dark-text-secondary: #7A88A6;
+  --color-dark-text-muted: #4F5B75;
+  --color-dark-accent: #2563EB;
+  --color-dark-hover: rgba(37,99,235,0.08);
+
   --font-sans: 'DM Sans', 'system-ui', 'sans-serif';
   --font-serif: 'DM Serif Display', 'serif';
 
@@ -42,30 +54,66 @@
   --animate-fade-in: enter 0.2s ease-out;
   --animate-slide-in: slide-in 0.25s ease-out;
   --animate-zoom-in-95: zoom-in 0.2s ease-out;
+  --animate-menu-slide: menu-slide 0.2s ease-out;
+  --animate-message-in: message-in 0.3s ease-out;
+  --animate-pulse-soft: pulse-soft 2s ease-in-out infinite;
 
   @keyframes enter {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
+    from { opacity: 0; transform: scale(0.95); }
   }
-
   @keyframes slide-in {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
   }
-
   @keyframes zoom-in {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+  }
+  @keyframes menu-slide {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes message-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 }
 
 @layer base {
   :root {
     color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --color-teal-50: #0F1A2E;
+    --color-teal-100: #162240;
+    --color-teal-200: #1E3056;
+    --color-teal-300: #2A4A7A;
+    --color-teal-400: #3660A0;
+    --color-teal-500: #4A7FCC;
+    --color-teal-600: #5F97E0;
+    --color-teal-700: #7AB0F0;
+    --color-teal-800: #A0C8F8;
+    --color-teal-900: #C8E0FF;
+    --color-danger-light: #2D1518;
+    --color-red-50: #2A1215;
+    --color-red-100: #3A181E;
+    --color-red-200: #521F2A;
+    --color-red-300: #732A3A;
+    --color-red-400: #93354B;
+    --color-red-500: #B8435E;
+    --color-red-600: #D55672;
+    --color-red-700: #E06A85;
+    --color-red-800: #EF95AA;
+    --color-red-900: #FABCCB;
+
+    --shadow-soft: 0 1px 4px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
   }
 
   html {
@@ -82,6 +130,14 @@
       radial-gradient(circle at top left, rgba(15, 110, 86, 0.08), transparent 34%),
       radial-gradient(circle at top right, rgba(180, 30, 54, 0.08), transparent 24%),
       linear-gradient(180deg, #f7fbff 0%, #eef5ff 100%);
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.06), transparent 34%),
+      radial-gradient(circle at top right, rgba(100, 30, 54, 0.06), transparent 24%),
+      linear-gradient(180deg, #0A0F1E 0%, #121828 100%);
   }
 
   a {
@@ -91,7 +147,19 @@
   img {
     max-width: 100%;
   }
+
+  ::selection {
+    background-color: var(--color-teal-500);
+    color: white;
+  }
+
+  .dark ::selection {
+    background-color: var(--color-teal-600);
+    color: #0A0F1E;
+  }
 }
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @utility surface {
   border-radius: var(--radius-3xl);
@@ -99,6 +167,13 @@
   background-color: rgb(255 255 255 / 0.95);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(4px);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dark .surface,
+.surface.dark-mode {
+  border-color: var(--color-dark-border);
+  background-color: var(--color-dark-surface);
 }
 
 @utility card {
@@ -108,6 +183,13 @@
   padding: 1.25rem;
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(4px);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .card,
+.card.dark-mode {
+  border-color: var(--color-dark-border);
+  background-color: var(--color-dark-surface);
 }
 
 @utility btn-primary {
@@ -121,12 +203,13 @@
   font-weight: 600;
   color: white;
   box-shadow: var(--shadow-md);
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   &:hover {
     background-color: var(--color-teal-600);
+    transform: translateY(-1px);
   }
   &:active {
-    scale: 0.99;
+    scale: 0.97;
   }
 }
 
@@ -141,9 +224,20 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-slate-700);
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   &:hover {
     background-color: var(--color-slate-50);
+    transform: translateY(-1px);
+  }
+}
+
+.dark .btn-secondary,
+.btn-secondary.dark-mode {
+  border-color: var(--color-dark-border);
+  background-color: var(--color-dark-surface);
+  color: var(--color-dark-text);
+  &:hover {
+    background-color: var(--color-dark-hover);
   }
 }
 
@@ -155,15 +249,28 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: var(--color-slate-900);
-  box-shadow: var(--shadow-xs);
   outline: none;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   &::placeholder {
     color: var(--color-slate-400);
   }
   &:focus {
     border-color: var(--color-teal-500);
     box-shadow: 0 0 0 4px var(--color-teal-100);
+  }
+}
+
+.dark .input-base,
+.input-base.dark-mode {
+  border-color: var(--color-dark-border);
+  background-color: color-mix(in srgb, var(--color-dark-surface) 80%, transparent);
+  color: var(--color-dark-text);
+  &::placeholder {
+    color: var(--color-dark-text-muted);
+  }
+  &:focus {
+    border-color: var(--color-teal-500);
+    box-shadow: 0 0 0 4px rgba(74, 127, 204, 0.2);
   }
 }
 
@@ -224,6 +331,10 @@
   }
 }
 
+.dark .section-title {
+  color: var(--color-dark-text);
+}
+
 @utility section-kicker {
   font-size: 0.75rem;
   font-weight: 700;
@@ -238,6 +349,12 @@
   background-color: rgb(255 255 255 / 0.95);
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   backdrop-filter: blur(12px);
+  animation: menu-slide 0.2s ease-out;
+}
+
+.dark .menu-popover {
+  border-color: var(--color-dark-border);
+  background-color: color-mix(in srgb, var(--color-dark-surface) 95%, transparent);
 }
 
 @utility menu-item {
@@ -252,6 +369,15 @@
   &:hover {
     background-color: var(--color-teal-50);
     color: var(--color-teal-800);
+    transform: translateX(2px);
+  }
+}
+
+.dark .menu-item {
+  color: var(--color-dark-text-secondary);
+  &:hover {
+    background-color: var(--color-dark-hover);
+    color: var(--color-dark-text);
   }
 }
 
@@ -259,6 +385,12 @@
   background-image:
     radial-gradient(circle at top left, rgba(255,255,255,0.28), transparent 30%),
     linear-gradient(135deg, #0f6e56 0%, #145fdd 100%);
+}
+
+.dark .hero-panel {
+  background-image:
+    radial-gradient(circle at top left, rgba(255,255,255,0.10), transparent 30%),
+    linear-gradient(135deg, #0A1628 0%, #0F1F40 100%);
 }
 
 @utility feature-pill {
@@ -283,4 +415,41 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-teal-800);
+}
+
+/* ── Scrollbar personalizada ─────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── focus-visible global ─────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--color-teal-500);
+  outline-offset: 2px;
+}
+
+.dark *:focus-visible {
+  outline-color: var(--color-teal-600);
 }

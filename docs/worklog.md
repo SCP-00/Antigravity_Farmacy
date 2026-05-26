@@ -2,6 +2,47 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-26 — Fase 10: Baseline de producción — CORS, Helmet, sanitización chatbot, secret scanning
+
+**Objetivo:** Cerrar huecos operativos y de seguridad de bajo esfuerzo con alto impacto.
+
+### Cambios realizados
+
+#### 1. CORS endurecido (`backend/src/app.ts` + `backend/src/config/env.ts`)
+- Se agregó `CORS_ORIGINS` en `env.ts` (separado por comas, para producción)
+- CORS ahora usa `env.CORS_ORIGINS` con split por comas, con fallback a localhost para desarrollo
+- Se agregaron `methods`, `allowedHeaders` y `maxAge` explícitos
+- Warning en producción si `CORS_ORIGINS` no está configurado
+
+#### 2. Helmet / Security headers (`backend/src/app.ts` + `backend/src/config/env.ts`)
+- Se agregó `CSP_ENABLED` en `env.ts` (default `'true'`)
+- CSP configurado con directivas para: Cloudinary, Wompi, Stripe, MercadoPago, Google Fonts
+- `referrerPolicy: 'strict-origin-when-cross-origin'`
+- `hsts: maxAge 31536000, includeSubDomains, preload`
+- `crossOriginEmbedderPolicy: false` documentado (necesario para SPA + CDN)
+- Si `CSP_ENABLED=false`, cae a Helmet básico original
+
+#### 3. Sanitización de chatbot (`backend/src/modules/chatbot/chatbot.routes.ts`)
+- `sanitizarInput()`: elimina etiquetas HTML/XML, caracteres de control, limita a 500 chars
+- `sanitizarSessionToken()`: solo permite `[a-zA-Z0-9\-_.]`, max 128 chars
+- Aplicado en `POST /` (mensaje + sessionToken) y `POST /interacciones` (productoIds)
+
+#### 4. Secret scanning (`backend/.gitleaks.toml`)
+- Nuevo archivo con reglas personalizadas para Farmacy:
+  - JWT secrets, DB URLs, Google OAuth, Stripe, MercadoPago, Wompi, Cloudinary, SMTP
+- Whitelist de rutas: `.env.example`, `docs/`, `node_modules/`, tests, seeds, lockfiles
+- Uso: `gitleaks detect --source . --config backend/.gitleaks.toml -v`
+
+#### 5. HEADLESS mode (verificación)
+- `run.ps1` ya usa `Get-Job` correctamente en modo headless (implementado previamente)
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ Tests: 520/520 pasan (27 archivos)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-26 — Fix MSYS path translation + tests + documentación
 
 **Bug:** Al ejecutar el backend desde Git Bash (o cualquier shell MSYS/Cygwin), las rutas

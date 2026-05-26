@@ -62,7 +62,7 @@ describe('configurePassport()', () => {
   it('configura Google OAuth cuando hay credenciales', async () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
-    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/clientes/auth/google/callback'
 
     const { configurePassport } = await import('../config/passport')
     configurePassport()
@@ -100,7 +100,7 @@ describe('configurePassport()', () => {
   it('verify callback: crea cliente nuevo si no existe', async () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
-    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/clientes/auth/google/callback'
 
     const { configurePassport } = await import('../config/passport')
     configurePassport()
@@ -143,7 +143,7 @@ describe('configurePassport()', () => {
   it('verify callback: retorna cliente existente', async () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
-    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/clientes/auth/google/callback'
 
     const { configurePassport } = await import('../config/passport')
     configurePassport()
@@ -174,7 +174,7 @@ describe('configurePassport()', () => {
   it('verify callback: error si no hay email de Google', async () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
-    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/clientes/auth/google/callback'
 
     const { configurePassport } = await import('../config/passport')
     configurePassport()
@@ -197,7 +197,7 @@ describe('configurePassport()', () => {
   it('verify callback: maneja error de base de datos', async () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id'
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
-    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/clientes/auth/google/callback'
 
     const { configurePassport } = await import('../config/passport')
     configurePassport()

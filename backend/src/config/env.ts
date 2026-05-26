@@ -86,6 +86,9 @@ const envSchema = z.object({
   // Frontend
   FRONTEND_URL: z.string().default('http://localhost:5173'),
 
+  // CORS — orígenes permitidos separados por coma (para producción)
+  CORS_ORIGINS: z.string().default(''),
+
   // Rate limit
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
   RATE_LIMIT_MAX: z.string().default('100'),
@@ -99,6 +102,9 @@ const envSchema = z.object({
   HORARIO_FIN: z.string().default('18:00'),
   HORARIO_TIMEZONE: z.string().default('America/Bogota'),
   HORARIO_DIAS: z.string().default('1,2,3,4,5'),
+
+  // Content Security Policy — deshabilitar en desarrollo si causa problemas
+  CSP_ENABLED: z.string().default('true'),
 
   // Info farmacia
   FARMACIA_NOMBRE: z.string().default('Farmacy'),

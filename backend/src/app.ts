@@ -10,6 +10,7 @@ import passport from 'passport'
 import { env } from './config/env'
 import { configurePassport } from './config/passport'
 import { manejarErrores, limitarPeticiones, loggerHttp } from './middlewares/index'
+import { logger } from './utils/logger'
 
 // ── Módulos ─────────────────────────────────────────────
 import { authRouter } from './modules/auth/auth.routes'
@@ -42,10 +43,46 @@ export function createApp(): Express {
   app.use(passport.initialize())
 
   // ── Seguridad y parsing ───────────────────────────────
-  app.use(helmet({ crossOriginEmbedderPolicy: false }))
+  // crossOriginEmbedderPolicy: false — necesario para cargar recursos cross-origin
+  // (imágenes, scripts de CDN) en la SPA de Vite que se sirve desde distinto origen.
+  if (env.CSP_ENABLED === 'true') {
+    app.use(helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://*.cloudinary.com', 'https://checkout.wompi.co', 'https://js.stripe.com', 'https://www.mercadopago.com.co'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https://*.cloudinary.com', 'https://res.cloudinary.com', 'https://checkout.wompi.co', 'https://q.stripe.com'],
+          connectSrc: ["'self'", 'https://sandbox.wompi.co', 'https://api.wompi.co', 'https://api.mercadopago.com', 'https://api.stripe.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+          frameSrc: ["'self'", 'https://checkout.wompi.co', 'https://js.stripe.com', 'https://www.mercadopago.com.co'],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    }))
+  } else {
+    app.use(helmet({ crossOriginEmbedderPolicy: false }))
+  }
+
+  // CORS: en producción usar CORS_ORIGINS (separado por comas), en desarrollo localhost
+  const corsOrigins = env.CORS_ORIGINS
+    ? env.CORS_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    : [env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000']
+
+  if (env.NODE_ENV === 'production' && !env.CORS_ORIGINS) {
+    logger.warn('[CORS] CORS_ORIGINS no configurado. La API solo aceptara origenes de desarrollo.')
+  }
+
   app.use(cors({
-    origin: [env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000'],
+    origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    maxAge: 86400,
   }))
 
   // Stripe webhook necesita raw body ANTES de express.json() para verificación HMAC
