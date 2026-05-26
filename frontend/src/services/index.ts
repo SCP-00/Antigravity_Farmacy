@@ -207,6 +207,12 @@ export const clientesService = {
     apiCliente.get('/clientes/auth/pedidos').then(r => r.data.data),
   solicitarDevolucion: (ventaId: string, motivo: string) =>
     apiCliente.post(`/clientes/auth/pedidos/${ventaId}/devolucion-request`, { motivo }).then(r => r.data),
+
+  // ── Perfil de Salud ─────────────────────────────────--
+  obtenerSalud: () =>
+    apiCliente.get('/clientes/auth/salud').then(r => r.data.data),
+  actualizarSalud: (data: { alergenos?: string[]; condiciones?: string[] }) =>
+    apiCliente.patch('/clientes/auth/salud', data).then(r => r.data.data),
 }
 
 // ── EMPLEADOS ─────────────────────────────────────────────

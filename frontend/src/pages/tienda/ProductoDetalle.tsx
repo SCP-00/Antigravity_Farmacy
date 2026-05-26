@@ -1,11 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, ShoppingCart, Truck, ShieldAlert, Heart, AlertTriangle, Info, FileText, Pill, Eye, FlaskConical, Ban, Activity, Scale, ScrollText, CalendarDays, Building2, Hash, Syringe } from 'lucide-react'
+import { ArrowLeft, CheckCircle, ShoppingCart, Truck, ShieldAlert, Heart, AlertTriangle, Info, FileText, Pill, Eye, FlaskConical, Ban, Activity, Scale, ScrollText, CalendarDays, Building2, Hash, Syringe, Stethoscope } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useFormateo, useAuthCliente } from '@/hooks'
-import { clientesService, productosService } from '@/services'
+import { clientesService, productosService, chatbotService } from '@/services'
 import toast from 'react-hot-toast'
+import InteractionAlertModal from '@/components/shared/InteractionAlertModal'
 
 export default function ProductoDetalle() {
   const { slug: id } = useParams()
@@ -35,6 +36,26 @@ export default function ProductoDetalle() {
       favoritosQuery.data.some((favorito: { productoId: string }) => favorito.productoId === producto.id)
     )
   }, [favoritosQuery.data, producto])
+
+  const [alertasInteraccion, setAlertasInteraccion] = useState<any[] | null>(null)
+  const [verificandoInteraccion, setVerificandoInteraccion] = useState(false)
+
+  const verificarInteracciones = async () => {
+    if (!producto) return
+    setVerificandoInteraccion(true)
+    try {
+      const res = await chatbotService.verificarInteracciones([producto.id])
+      if (res?.tieneAlertas && res?.alertas?.length > 0) {
+        setAlertasInteraccion(res.alertas)
+      } else {
+        toast.success('No se detectaron interacciones medicamentosas para este producto')
+      }
+    } catch {
+      toast.error('Error al verificar interacciones. Intenta de nuevo.')
+    } finally {
+      setVerificandoInteraccion(false)
+    }
+  }
 
   const favoritoMutation = useMutation({
     mutationFn: () => clientesService.toggleFavorito(producto?.id || ''),
@@ -210,6 +231,14 @@ export default function ProductoDetalle() {
                 {esFavorito ? 'En favoritos' : 'Guardar favorito'}
               </button>
             )}
+            <button
+              onClick={verificarInteracciones}
+              disabled={verificandoInteraccion}
+              className="btn-secondary border-purple-200 text-purple-700 hover:bg-purple-50"
+            >
+              <Stethoscope className="w-4 h-4" />
+              {verificandoInteraccion ? 'Verificando...' : 'Verificar interacciones'}
+            </button>
           </div>
         </div>
       </div>
@@ -511,6 +540,14 @@ export default function ProductoDetalle() {
           </div>
         )}
       </div>
+      {alertasInteraccion && (
+        <InteractionAlertModal
+          alertas={alertasInteraccion}
+          onConfirm={() => setAlertasInteraccion(null)}
+          onCancel={() => setAlertasInteraccion(null)}
+          loading={false}
+        />
+      )}
     </div>
   )
 }

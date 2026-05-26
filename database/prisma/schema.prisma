@@ -242,6 +242,8 @@ model Cliente {
   autorizacionDatos Boolean        @default(false) @map("autorizacion_datos")
   proveedorAuth     String?        @map("proveedor_auth") @db.VarChar(20)
   proveedorAuthId   String?        @map("proveedor_auth_id") @db.VarChar(100)
+  alergenos         String?        @db.Text
+  condiciones       String?        @db.Text
   activo            Boolean        @default(true)
   creadoEn          DateTime       @default(now()) @map("creado_en")
   ventas            Venta[]

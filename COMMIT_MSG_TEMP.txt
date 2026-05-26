@@ -1,18 +1,9 @@
-feat: validacion inline formularios admin + InputField reutilizable
+feat: Fase 12 — UX Clínico (interacciones medicamentosas, perfil salud, alertas)
 
-Componentes reutilizables (InputField.tsx):
-- InputField, SelectField, TextAreaField, InputError
-- ARIA (aria-invalid, aria-describedby, role=alert)
-- Red border on error, dark mode, animate-fade-in
-
-FormularioEmpleado:
-- Migrado a InputField/SelectField con react-hook-form + zod
-
-NuevaOrden:
-- Validacion inline: proveedorId, fecha, notas, items
-- Touch tracking + errores en vivo + dark mode
-
-RecepcionMercancia:
-- Validacion inline por lote (codigoLote, fechaVencimiento, cantidad)
-- Touch tracking individual por campo/lote
-- Dark mode completo
+Prisma: +alergenos +condiciones en Cliente
+Backend: GET/PATCH /salud endpoints
+Frontend: InteractionAlertModal, HealthProfile en MiCuenta,
+         verificación alérgenos en Checkout, interacciones en ProductoDetalle,
+         integración POS pre-cobro
+Fix: hooks inválidos en MiCuenta, fragment en Checkout
+Docs: worklog actualizado

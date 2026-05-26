@@ -2,12 +2,13 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Search, Scan, Plus, Minus, Trash2, Receipt, X, Keyboard } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { productosService, ventasService, cajaService } from '@/services'
+import { productosService, ventasService, cajaService, chatbotService } from '@/services'
 import { useFormateo, useDebounce, useScanner } from '@/hooks'
 import { CATEGORIAS_ICONOS, METODO_PAGO_LABEL } from '@/config/constants'
 import { useAuthStore } from '@/store/authStore'
 import { fuzzyFilterProductos } from '@/utils/fuzzySearch'
 import InvoicePreview from './InvoicePreview'
+import InteractionAlertModal from '@/components/shared/InteractionAlertModal'
 
 interface ItemPOS {
   productoId: string
@@ -31,6 +32,10 @@ export default function PuntoVenta() {
   
   // Estado para la factura (tirilla)
   const [facturaVisible, setFacturaVisible] = useState<any>(null)
+
+  // ── Interacción clínica ─────────────────────────────────
+  const [alertasInteraccion, setAlertasInteraccion] = useState<any[] | null>(null)
+  const [verificandoInteraccion, setVerificandoInteraccion] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
   const cobrarRef = useRef<HTMLButtonElement>(null)
@@ -84,6 +89,39 @@ export default function PuntoVenta() {
     setCarrito(prev => prev.map(i => i.productoId === id ? { ...i, cantidad: i.cantidad + delta } : i).filter(i => i.cantidad > 0))
   }
 
+  // ── Verificar interacciones antes de cobrar ────────────
+  const handleCobrarClick = async () => {
+    if (carrito.length < 2) {
+      // Sin interacciones posibles, cobrar directamente
+      ventaMutation.mutate()
+      return
+    }
+
+    setVerificandoInteraccion(true)
+    try {
+      const res = await chatbotService.verificarInteracciones(carrito.map(i => i.productoId))
+      if (res?.tieneAlertas && res?.alertas?.length > 0) {
+        setAlertasInteraccion(res.alertas)
+      } else {
+        ventaMutation.mutate()
+      }
+    } catch {
+      // Si falla la verificación, permitir continuar
+      ventaMutation.mutate()
+    } finally {
+      setVerificandoInteraccion(false)
+    }
+  }
+
+  const handleConfirmarConInteraccion = () => {
+    setAlertasInteraccion(null)
+    ventaMutation.mutate()
+  }
+
+  const handleCancelarInteraccion = () => {
+    setAlertasInteraccion(null)
+  }
+
   const ventaMutation = useMutation({
     mutationFn: () => ventasService.registrar({
       sucursalId: empleado?.sucursalId ?? 1,
@@ -133,8 +171,8 @@ export default function PuntoVenta() {
       case 'F2':
         e.preventDefault()
         // Cobrar — usa click() para respetar disabled del botón
-        if (!ventaMutation.isPending) {
-          cobrarRef.current?.click()
+        if (!ventaMutation.isPending && carrito.length > 0 && cajaActual) {
+          handleCobrarClick()
         }
         break
       case 'F4':
@@ -179,6 +217,15 @@ export default function PuntoVenta() {
     <>
       {facturaVisible && (
         <InvoicePreview venta={facturaVisible} onClose={handleCerrarTirilla} />
+      )}
+
+      {alertasInteraccion && (
+        <InteractionAlertModal
+          alertas={alertasInteraccion}
+          onConfirm={handleConfirmarConInteraccion}
+          onCancel={handleCancelarInteraccion}
+          loading={ventaMutation.isPending}
+        />
       )}
 
       {/* Shortcuts hint (solo desktop) */}
@@ -293,8 +340,12 @@ export default function PuntoVenta() {
               {Object.entries(METODO_PAGO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
 
-            <button ref={cobrarRef} onClick={() => ventaMutation.mutate()} disabled={carrito.length === 0 || !cajaActual || ventaMutation.isPending} aria-keyshortcuts="F2" className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-600 disabled:opacity-40 transition-all flex items-center justify-center gap-2 shadow-md">
-              <Receipt size={16}/> {ventaMutation.isPending ? 'Procesando...' : `Cobrar ${cop(total)}`}
+            <button ref={cobrarRef} onClick={handleCobrarClick} disabled={carrito.length === 0 || !cajaActual || ventaMutation.isPending || verificandoInteraccion} aria-keyshortcuts="F2" className="w-full py-3 bg-teal-700 text-white rounded-xl font-bold text-sm hover:bg-teal-600 disabled:opacity-40 transition-all flex items-center justify-center gap-2 shadow-md">
+              {verificandoInteraccion ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Verificando...</>
+              ) : (
+                <><Receipt size={16}/> {ventaMutation.isPending ? 'Procesando...' : `Cobrar ${cop(total)}`}</>
+              )}
             </button>
           </div>
         </div>

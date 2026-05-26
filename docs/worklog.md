@@ -321,6 +321,69 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 
 ---
 
+## 2026-05-26 — Fase 12: UX Clínico — Drug-Interaction Alerts, Health Profiles, alertas clínicas
+
+**Objetivo:** Implementar alertas de interacciones medicamentosas en POS, perfiles de salud en B2C, y verificación clínica en ficha de producto.
+
+### Cambios realizados
+
+#### 1. Prisma schema (`database/prisma/schema.prisma`)
+- Modelo `Cliente`: nuevos campos `alergenos` (Text) y `condiciones` (Text) para almacenar alérgenos y condiciones preexistentes como strings separadas por coma
+
+#### 2. Backend endpoints (`backend/src/modules/auth-cliente/authCliente.perfil.routes.ts`)
+- `GET /salud` — Devuelve `alergenos` y `condiciones` como arrays parseados
+- `PATCH /salud` — Recibe arrays, guarda como comma-separated string en DB
+
+#### 3. Frontend services (`frontend/src/services/index.ts`)
+- `clientesService.obtenerSalud()` — GET perfil de salud
+- `clientesService.actualizarSalud(data)` — PATCH perfil de salud
+
+#### 4. InteractionAlertModal (`frontend/src/components/shared/InteractionAlertModal.tsx` — **nuevo**)
+- Modal de alertas clínicas reutilizable con:
+  - Severidad: ALTA (rojo), MEDIA (ámbar), BAJA (azul), INFO (púrpura)
+  - Iconos por severidad (AlertTriangle, AlertCircle, Info, Stethoscope)
+  - Parseo de markdown básico (`**texto**` → `<strong>`)
+  - Dark mode completo
+  - Animaciones fade-in + slide-up
+  - Botones Confirmar/Cancelar con loading state
+
+#### 5. Integración en POS (`frontend/src/pages/admin/caja/PuntoVenta.tsx`)
+- Antes de cobrar (F2 o botón), verifica interacciones entre productos en carrito
+- Si hay alertas, muestra `InteractionAlertModal` antes de proceder
+- Si no hay alertas o falla verificación, continúa normal
+
+#### 6. Perfil de Salud en MiCuenta (`frontend/src/pages/tienda/MiCuenta.tsx`)
+- Nueva pestaña "Perfil de salud" en MiCuenta
+- Formulario con textareas para alérgenos y condiciones (separados por coma)
+- Preview de tags con colores distintivos (ámbar para alérgenos)
+- Info box explicativo sobre uso de la información
+- Sincronización con `useEffect` cuando se cargan datos
+- Integración con endpoint PATCH /salud
+
+#### 7. Verificación de alérgenos en Checkout (`frontend/src/pages/tienda/Checkout.tsx`)
+- Al hacer clic en "Pagar", verifica alérgenos vs perfil de salud del cliente
+- Si detecta alérgenos en productos del carrito, muestra `InteractionAlertModal`
+- Permite continuar o cancelar
+- Badge informativo en sidebar con conteo de alérgenos registrados
+- Overlay animado durante verificación
+
+#### 8. Botón "Verificar interacciones" en ProductoDetalle (`frontend/src/pages/tienda/ProductoDetalle.tsx`)
+- Botón con icono `Stethoscope` que llama a `chatbotService.verificarInteracciones`
+- Muestra alertas en `InteractionAlertModal` si se detectan interacciones
+- Toast de éxito si no hay interacciones
+- Loading state durante verificación
+
+#### 9. Bug fixes aplicados
+- **Checkout.tsx**: Reordenamiento de `verificarAlergenosAntesDePagar` (useCallback) antes de `continuarPago` para evitar temporal dead zone + cierre de fragment `<></>` faltante
+- **MiCuenta.tsx**: Reemplazo de `useState(() => {...})` (anti-patrón) por `useEffect` correcto + eliminación del hack `prevSalud` con `setTimeout`
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ Vite build: exitoso (9.31s)
+- ✅ Code review: aprobado (bugs corregidos)
+
+---
+
 ## 2026-05-26 — Documentación: browser-use, kill safety, regla de git
 
 **Archivos modificados:**

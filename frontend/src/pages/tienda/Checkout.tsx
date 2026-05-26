@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart, Heart } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
-import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { ventasService, pagosService } from '@/services'
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import { ventasService, pagosService, clientesService, chatbotService } from '@/services'
 import { useAuthCliente } from '@/hooks'
 import toast from 'react-hot-toast'
 import { METODO_PAGO_LABEL } from '@/config/constants'
+import InteractionAlertModal from '@/components/shared/InteractionAlertModal'
 
 type MetodoPago = 'EFECTIVO' | 'WOMPI' | 'STRIPE' | 'MERCADOPAGO'
 
@@ -249,6 +250,16 @@ function Checkout() {
   const total = Math.max(0, sub - descuento - valPts)
   const ptsGanados = Math.floor(total / 100)
 
+  // ── Perfil de salud y alérgenos ───────────────────────
+  const [alertasInteraccion, setAlertasInteraccion] = useState<any[] | null>(null)
+  const [verificandoSalud, setVerificandoSalud] = useState(false)
+  const { data: perfilSalud } = useQuery({
+    queryKey: ['cliente', 'salud'],
+    queryFn: clientesService.obtenerSalud,
+    enabled: !!cliente,
+  })
+  const tieneAlergenos = perfilSalud?.alergenos?.length > 0
+
   // Validacion en vivo — solo si el campo ya fue "tocado" (onBlur)
   const erroresVisibles = useMemo(() => {
     const errs: ErroresFormulario = {}
@@ -323,12 +334,54 @@ function Checkout() {
     setPaso('pago')
   }
 
-  const continuarPago = () => {
+  const verificarAlergenosAntesDePagar = useCallback(async () => {
+    if (!tieneAlergenos || !cliente) {
+      return true
+    }
+
+    setVerificandoSalud(true)
+    try {
+      const res = await chatbotService.verificarInteracciones(
+        items.map(i => i.productoId),
+        perfilSalud?.alergenos
+      )
+      if (res?.tieneAlertas && res?.alertas?.length > 0) {
+        setAlertasInteraccion(res.alertas)
+        return false
+      }
+      return true
+    } catch {
+      return true
+    } finally {
+      setVerificandoSalud(false)
+    }
+  }, [items, cliente, tieneAlergenos, perfilSalud])
+
+  const continuarPago = async () => {
     if (!metodoPago) {
       setTocados(prev => ({ ...prev, metodoPago: true }))
       toast.error('Selecciona un metodo de pago')
       return
     }
+
+    if (tieneAlergenos && cliente) {
+      const puedeContinuar = await verificarAlergenosAntesDePagar()
+      if (!puedeContinuar) return
+    }
+
+    ejecutarPago()
+  }
+
+  const handleConfirmarConInteraccion = () => {
+    setAlertasInteraccion(null)
+    ejecutarPago()
+  }
+
+  const handleCancelarInteraccion = () => {
+    setAlertasInteraccion(null)
+  }
+
+  const ejecutarPago = () => {
     if (metodoPago === 'EFECTIVO') { ventaMut.mutate(); return }
     if (metodoPago === 'MERCADOPAGO') {
       // Crear la venta y luego redirigir a MercadoPago
@@ -466,6 +519,16 @@ function Checkout() {
 
   // ── Pantalla principal: datos + pago ────────────────────────
   return (
+    <>
+      {alertasInteraccion && (
+        <InteractionAlertModal
+          alertas={alertasInteraccion}
+          onConfirm={handleConfirmarConInteraccion}
+          onCancel={handleCancelarInteraccion}
+          loading={ventaMut.isPending}
+        />
+      )}
+
     <div className="section-shell py-8 md:py-10 px-4 md:px-0">
       <div className="mb-6"><h1 className="text-3xl font-bold text-slate-900">Finalizar compra</h1></div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -697,7 +760,35 @@ function Checkout() {
           </div>
         </aside>
       </div>
+
+      {/* ── Badge perfil de salud en sidebar ──────────── */}
+      {cliente && (
+        <div className="fixed bottom-4 right-4 z-40 md:static md:block">
+          <div className="bg-white dark:bg-dark-surface border border-rose-200 dark:border-rose-800/30 rounded-xl px-3 py-2 shadow-sm flex items-center gap-2">
+            <Heart size={14} className={tieneAlergenos ? 'text-rose-500' : 'text-gray-300'} />
+            <span className="text-[11px] text-gray-500 dark:text-dark-text/60">
+              {tieneAlergenos
+                ? `${perfilSalud.alergenos.length} alérgeno(s) registrado(s)`
+                : 'Sin perfil de salud — configura en Mi Cuenta'
+              }
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Verificación en progreso — overlay ───────── */}
+      {verificandoSalud && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl px-8 py-6 shadow-xl flex items-center gap-4">
+            <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+            <p className="text-sm font-medium text-gray-700 dark:text-dark-text">
+              Verificando alérgenos en tu carrito...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   )
 }
 

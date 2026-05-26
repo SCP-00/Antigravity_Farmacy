@@ -21,6 +21,53 @@ authClientePerfilRouter.patch('/me', autenticarCliente, async (req: Request, res
   }
 })
 
+// ── GET /salud — Obtener perfil de salud del cliente ─────
+authClientePerfilRouter.get('/salud', autenticarCliente, async (req: Request, res: Response) => {
+  try {
+    const cliente = await prisma.cliente.findUnique({
+      where: { id: req.cliente!.id },
+      select: { alergenos: true, condiciones: true },
+    })
+    if (!cliente) return responder.noEncontrado(res, 'Cliente')
+    return responder.ok(res, {
+      alergenos: cliente.alergenos ? cliente.alergenos.split(',').map(a => a.trim()).filter(Boolean) : [],
+      condiciones: cliente.condiciones ? cliente.condiciones.split(',').map(c => c.trim()).filter(Boolean) : [],
+    })
+  } catch (err) {
+    return responder.serverError(res, err)
+  }
+})
+
+// ── PATCH /salud — Actualizar perfil de salud ────────────
+authClientePerfilRouter.patch('/salud', autenticarCliente, async (req: Request, res: Response) => {
+  try {
+    const { alergenos, condiciones } = req.body
+
+    const data: any = {}
+    if (alergenos !== undefined) {
+      const lista = Array.isArray(alergenos) ? alergenos : []
+      data.alergenos = lista.map((a: string) => a.trim()).filter(Boolean).join(', ')
+    }
+    if (condiciones !== undefined) {
+      const lista = Array.isArray(condiciones) ? condiciones : []
+      data.condiciones = lista.map((c: string) => c.trim()).filter(Boolean).join(', ')
+    }
+
+    const actualizado = await prisma.cliente.update({
+      where: { id: req.cliente!.id },
+      data,
+      select: { id: true, alergenos: true, condiciones: true },
+    })
+
+    return responder.ok(res, {
+      alergenos: actualizado.alergenos ? actualizado.alergenos.split(',').map(a => a.trim()).filter(Boolean) : [],
+      condiciones: actualizado.condiciones ? actualizado.condiciones.split(',').map(c => c.trim()).filter(Boolean) : [],
+    }, 'Perfil de salud actualizado')
+  } catch (err) {
+    return responder.serverError(res, err)
+  }
+})
+
 // GET /favoritos - favoritos del cliente autenticado
 authClientePerfilRouter.get('/favoritos', autenticarCliente, async (req: Request, res: Response) => {
   try {
