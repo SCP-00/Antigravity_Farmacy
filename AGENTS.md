@@ -84,14 +84,29 @@ C:\Users\<usuario>\AppData\Local\ms-playwright\chromium-XXXX\chrome-win64\chrome
 $env:Path += ";C:\Users\andyh\AppData\Local\ms-playwright\chromium-1223\chrome-win64"
 ```
 
-> **⚠️ Importante:** El agente `browser-use` depende del System Info cacheado al inicio de la conversación. Si al inicio reporta `Chrome: not found`, no podrá usarse aunque Chromium esté en PATH. Como alternativa, se puede usar un script Playwright directo o `tmux-cli`.
+> **⚠️ Importante:** El agente `browser-use` depende del System Info cacheado al inicio de la conversación. Si al inicio reporta `Chrome: not found`, no podrá usarse en **esa conversación** aunque Chromium esté en PATH. En una **nueva conversación**, Codebuff reevaluará el System Info y detectará Chromium correctamente. Como alternativa inmediata, se puede usar un script Playwright directo.
 
 ### Script de prueba alternativo (cuando browser-use no funciona)
 Crear `test-app.mjs` temporal:
 ```js
 import { chromium } from "playwright";
-const browser = await chromium.launch();
-// ... test pages
+
+const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
+
+// Escuchar errores de consola
+page.on("console", msg => console.log(`[${msg.type()}] ${msg.text()}`));
+page.on("pageerror", err => console.log(`[PAGE ERROR] ${err.message}`));
+
+// Navegar y verificar
+await page.goto("http://localhost:5173");
+const title = await page.title();
+console.log(`Page title: ${title}`);
+
+// Verificar que React root renderizó
+const root = await page.$("#root");
+console.log(`React root: ${root ? "✅ presente" : "❌ ausente"}`);
+
 await browser.close();
 ```
 Ejecutar con: `node test-app.mjs` (no necesita npm, solo Node.js + Playwright instalado vía pnpm)
