@@ -391,6 +391,7 @@ describe('Auth Cliente - POST /clientes/auth/logout', () => {
     const res = await supertest(app).post(`${apiPrefix}/clientes/auth/logout`)
       .set('Authorization', 'Bearer valid-client-token')
     expect(res.status).toBe(200)
+    expect(mockCache.set).toHaveBeenCalled()
   })
 })
 
@@ -424,6 +425,14 @@ describe('Auth Cliente Perfil - PATCH /clientes/auth/me', () => {
       .send({ telefono: '555-1234', ciudad: 'Bogotá' })
     expect(res.status).toBe(200)
   })
+
+  it('maneja error interno al actualizar perfil', async () => {
+    mockPrisma.cliente.update.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).patch(`${apiPrefix}/clientes/auth/me`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ telefono: '555-9999' })
+    expect(res.status).toBe(500)
+  })
 })
 
 describe('Auth Cliente Perfil - GET /clientes/auth/favoritos', () => {
@@ -437,5 +446,92 @@ describe('Auth Cliente Perfil - GET /clientes/auth/favoritos', () => {
       .set('Authorization', 'Bearer valid-client-token')
     expect(res.status).toBe(200)
     expect(res.body.data).toHaveLength(1)
+  })
+
+  it('retorna favoritos vacío si no hay', async () => {
+    mockPrisma.favorito.findMany.mockResolvedValue([])
+    const res = await supertest(app).get(`${apiPrefix}/clientes/auth/favoritos`)
+      .set('Authorization', 'Bearer valid-client-token')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual([])
+  })
+
+  it('maneja error interno al obtener favoritos', async () => {
+    mockPrisma.favorito.findMany.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).get(`${apiPrefix}/clientes/auth/favoritos`)
+      .set('Authorization', 'Bearer valid-client-token')
+    expect(res.status).toBe(500)
+  })
+})
+
+describe('Auth Cliente - POST /clientes/auth/pedidos/:id/devolucion-request', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('rechaza sin autenticación', async () => {
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`).send({ motivo: 'Defectuoso' })
+    expect(res.status).toBe(401)
+  })
+
+  it('rechaza sin motivo', async () => {
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({})
+    expect(res.status).toBe(400)
+  })
+
+  it('retorna 404 si venta no existe', async () => {
+    mockPrisma.venta.findUnique.mockResolvedValue(null)
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-999/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ motivo: 'Defectuoso' })
+    expect(res.status).toBe(404)
+  })
+
+  it('rechaza si la venta no pertenece al cliente', async () => {
+    mockPrisma.venta.findUnique.mockResolvedValue({
+      id: 'v-1', numero: 'V-001', total: 50000, clienteId: 'otro-cliente', creadoEn: new Date(),
+      cliente: { nombre: 'Otro', apellido: 'User' }
+    })
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ motivo: 'Defectuoso' })
+    expect(res.status).toBe(401)
+  })
+
+  it('rechaza si pasaron más de 15 días', async () => {
+    const fechaVieja = new Date()
+    fechaVieja.setDate(fechaVieja.getDate() - 20)
+    mockPrisma.venta.findUnique.mockResolvedValue({
+      id: 'v-1', numero: 'V-001', total: 50000, clienteId: 'cli-1', creadoEn: fechaVieja,
+      cliente: { nombre: 'Juan', apellido: 'Pérez' }
+    })
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ motivo: 'Defectuoso' })
+    expect(res.status).toBe(400)
+  })
+
+  it('envía correo de solicitud exitosamente', async () => {
+    const fechaReciente = new Date()
+    fechaReciente.setDate(fechaReciente.getDate() - 3)
+    mockPrisma.venta.findUnique.mockResolvedValue({
+      id: 'v-1', numero: 'V-001', total: 50000, clienteId: 'cli-1', creadoEn: fechaReciente,
+      cliente: { nombre: 'Juan', apellido: 'Pérez' }
+    })
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ motivo: 'Producto defectuoso' })
+    expect(res.status).toBe(200)
+    expect(res.body.data).toBeNull()
+  })
+
+  it('maneja error interno', async () => {
+    mockPrisma.venta.findUnique.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).post(`${apiPrefix}/clientes/auth/pedidos/v-1/devolucion-request`)
+      .set('Authorization', 'Bearer valid-client-token')
+      .send({ motivo: 'Error' })
+    expect(res.status).toBe(500)
   })
 })

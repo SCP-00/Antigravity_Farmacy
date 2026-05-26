@@ -51,6 +51,7 @@ const mockPrisma = vi.hoisted(() => ({
   favorito: { findFirst: vi.fn(), create: vi.fn(), delete: vi.fn(), findMany: vi.fn() },
   movimientoInventario: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
   ordenCompra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  devolucion: { create: vi.fn() },
 }))
 
 const mockCache = vi.hoisted(() => ({
@@ -339,7 +340,7 @@ describe('Compras Routes - POST /compras/:id/recibir', () => {
     const res = await supertest(app).post(`${apiPrefix}/compras/oc-1/recibir`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ sucursalId: 1, lotes: [] })
-    expect(res.status).toBe(400)
+      expect(res.status).toBe(400)
   })
 
   it('procesa recepción exitosamente', async () => {
@@ -347,6 +348,7 @@ describe('Compras Routes - POST /compras/:id/recibir', () => {
       id: 'oc-1', estado: 'PENDIENTE', proveedorId: 'prov-1',
       detalles: [{ id: 'det-1', productoId: 'prod-1', cantidadPedida: 10, precioUnitario: 15000 }],
     })
+    mockPrisma.$transaction.mockImplementation(async (cb: Function) => cb(mockPrisma))
     mockPrisma.lote.create.mockResolvedValue({})
     mockPrisma.ordenCompra.update.mockResolvedValue({})
     const res = await supertest(app).post(`${apiPrefix}/compras/oc-1/recibir`)
@@ -356,5 +358,15 @@ describe('Compras Routes - POST /compras/:id/recibir', () => {
         lotes: [{ productoId: 'prod-1', codigoLote: 'LOT-NEW', fechaVencimiento: '2026-12-31', cantidad: 10, precioCompra: 15000 }],
       })
     expect(res.status).toBe(200)
+    expect(mockPrisma.lote.create).toHaveBeenCalled()
+    expect(mockPrisma.ordenCompra.update).toHaveBeenCalled()
+  })
+
+  it('maneja error interno en recepción', async () => {
+    mockPrisma.ordenCompra.findUnique.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).post(`${apiPrefix}/compras/oc-1/recibir`)
+      .set('Authorization', 'Bearer valid-admin-token')
+      .send({ sucursalId: 1, lotes: [] })
+    expect(res.status).toBe(500)
   })
 })

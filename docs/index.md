@@ -22,10 +22,14 @@ This folder is the living documentation hub for Farmacy (SGF).
 |---|---|
 | Backend TypeScript 6.0 | ✅ 0 errores |
 | Frontend TypeScript 6.0 | ✅ 0 errores |
-| Tests | ✅ 462/462 pasan (27 archivos) |
-| Cobertura | 83.7% statements |
+| Tests | ✅ 510/510 pasan (27 archivos) |
+| Cobertura | 95.35% statements (94.87% functions) |
+| React | 19.2.6 |
+| Tailwind CSS | 4.3.0 |
 | Módulos backend | 18 activos |
 | Páginas frontend | 40+ (tienda + admin + auth) |
 | Pasarelas de pago | Wompi, Stripe, MercadoPago, Efectivo |
 | Docker services | PostgreSQL 15, Redis 7, pgAdmin |
 | Vite | 6.4.2 |
+| React | 19.2.6 |
+| Tailwind CSS | 4.3.0 |

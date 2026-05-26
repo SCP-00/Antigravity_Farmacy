@@ -53,7 +53,7 @@ const mockPrisma = vi.hoisted(() => ({
   $queryRawUnsafe: vi.fn().mockResolvedValue([]),
   $transaction: vi.fn(),
   movimientoInventario: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
-  ordenCompra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
+  ordenCompra: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn(), aggregate: vi.fn(), groupBy: vi.fn() },
 }))
 
 const mockCache = vi.hoisted(() => ({
@@ -189,6 +189,110 @@ describe('Reportes Routes - GET /reportes/inventario', () => {
   it('maneja error interno', async () => {
     mockPrisma.lote.aggregate.mockRejectedValue(new Error('DB error'))
     const res = await supertest(app).get(`${apiPrefix}/reportes/inventario`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(500)
+  })
+})
+
+describe('Reportes Routes - GET /reportes/compras', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('rechaza sin autenticación', async () => {
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras`)
+    expect(res.status).toBe(401)
+  })
+
+  it('rechaza con rol no autorizado', async () => {
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras`)
+      .set('Authorization', 'Bearer valid-auxiliar-token')
+    expect(res.status).toBe(403)
+  })
+
+  it('retorna reporte de compras con totales, por mes y por proveedor', async () => {
+    mockPrisma.ordenCompra.aggregate.mockResolvedValue({ _sum: { total: 2000000 }, _count: { id: 15 }, _avg: { total: 133333 } })
+    mockPrisma.ordenCompra.groupBy
+      .mockResolvedValue([{ proveedorId: 'prov-1', _sum: { total: 2000000 }, _count: { id: 15 } }])
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.body.data.totales._sum.total).toBe(2000000)
+    expect(res.body.data.porProveedor).toHaveLength(1)
+  })
+
+  it('filtra por fechas', async () => {
+    mockPrisma.ordenCompra.aggregate.mockResolvedValue({ _sum: { total: 0 }, _count: { id: 0 }, _avg: { total: 0 } })
+    mockPrisma.ordenCompra.groupBy.mockResolvedValue([]).mockResolvedValue([])
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras?desde=2026-01-01&hasta=2026-06-30`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+  })
+
+  it('maneja error interno', async () => {
+    mockPrisma.ordenCompra.aggregate.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(500)
+  })
+})
+
+describe('Reportes Routes - GET /reportes/:tipo/csv', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('rechaza sin autenticación', async () => {
+    const res = await supertest(app).get(`${apiPrefix}/reportes/ventas/csv`)
+    expect(res.status).toBe(401)
+  })
+
+  it('exporta CSV de ventas', async () => {
+    mockPrisma.venta.findMany.mockResolvedValue([
+      { creadoEn: new Date('2026-05-01'), numero: 'V-001', total: 50000, estado: 'PAGADO', metodoPago: 'EFECTIVO', cliente: { nombre: 'Juan', apellido: 'Pérez' } },
+      { creadoEn: new Date('2026-05-02'), numero: 'V-002', total: 30000, estado: 'PAGADO', metodoPago: 'TRANSFERENCIA', cliente: null },
+    ])
+    const res = await supertest(app).get(`${apiPrefix}/reportes/ventas/csv`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.header['content-type']).toContain('text/csv')
+    expect(res.text).toContain('V-001')
+    expect(res.text).toContain('Mostrador')
+    expect(res.text).toContain('Juan Pérez')
+  })
+
+  it('exporta CSV de compras', async () => {
+    mockPrisma.ordenCompra.findMany.mockResolvedValue([
+      { creadoEn: new Date('2026-05-01'), total: 200000, estado: 'RECIBIDA', proveedor: { nombre: 'Proveedor XYZ' } },
+    ])
+    const res = await supertest(app).get(`${apiPrefix}/reportes/compras/csv`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('Proveedor XYZ')
+  })
+
+  it('exporta CSV de inventario', async () => {
+    mockPrisma.lote.findMany.mockResolvedValue([
+      { codigoLote: 'LOT-001', cantidadActual: 50, fechaVencimiento: new Date('2026-12-31'), precioCompra: 15000, producto: { nombre: 'Acetaminofén' } },
+    ])
+    const res = await supertest(app).get(`${apiPrefix}/reportes/inventario/csv`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('Acetaminofén')
+    expect(res.text).toContain('LOT-001')
+  })
+
+  it('retorna 400 para tipo de reporte no soportado', async () => {
+    const res = await supertest(app).get(`${apiPrefix}/reportes/clientes/csv`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(400)
+    // El handler setea Content-Type: text/csv primero, así que res.body no se parsea como JSON
+    expect(res.text).toContain('no soportado')
+  })
+
+  it('maneja error interno en CSV', async () => {
+    mockPrisma.venta.findMany.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).get(`${apiPrefix}/reportes/ventas/csv`)
       .set('Authorization', 'Bearer valid-admin-token')
     expect(res.status).toBe(500)
   })

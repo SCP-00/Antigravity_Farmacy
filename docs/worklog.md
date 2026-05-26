@@ -104,3 +104,24 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - ✅ Tests: 462/462 pasan (27 archivos)
 - ✅ Vite build: exitoso (9.63s)
 - ✅ pnpm store: 156MB liberados
+
+## 2026-05-26 — Migración React 19 + Tailwind 4 + Coverage 95%+
+
+**React 18→19:**
+- react@19.2.6, react-dom@19.2.6, @types/react@19.0.0
+- zustand@4.5.0, @tanstack/react-query@5.0.0, react-router-dom@6.22.0
+- recharts@2.12.0, lucide-react@1.16.0 (íconos sociales migrados a SVG inline)
+- TypeScript: 0 errores
+
+**Tailwind 3→4:**
+- tailwindcss@4.3.0 + @tailwindcss/vite@4.3.0
+- postcss.config.cjs y tailwind.config.ts eliminados
+- index.css migrado a @import "tailwindcss" + @theme
+- vite.config.ts: @tailwindcss/vite plugin reemplaza postcss
+- build exitoso (5.70s)
+
+**Cobertura 83.7%→95.35%:**
+- 510 tests (27 archivos), 0 fallos
+- Reportes: 44%→100%, auth-cliente perfil: 66%→100%
+- schemas: 94.93% stmts, servicios: 95.76%, config: 99.5%
+- Todos los módulos ≥90% (excepto imagenes 46.96%)

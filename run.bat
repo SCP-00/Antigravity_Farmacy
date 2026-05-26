@@ -14,6 +14,20 @@ echo  ║     FARMACY — Inicio de Aplicacion           ║
 echo  ╚══════════════════════════════════════════════╝
 echo.
 
+:: ── 0. Verificar pnpm ───────────────────────────────────
+echo [0/6] Verificando pnpm...
+pnpm --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo  [ERROR] pnpm no esta disponible.
+    echo  Instalalo con: npm install -g pnpm
+    echo.
+    pause
+    exit /b 1
+)
+echo    pnpm detectado correctamente.
+echo.
+
 :: ── 1. Verificar Docker ─────────────────────────────────
 echo [1/6] Verificando Docker...
 docker info >nul 2>&1
@@ -29,7 +43,7 @@ echo    Docker detectado correctamente.
 echo.
 
 :: ── 2. Limpiar procesos en puertos ───────────────────────
-echo [2/6] Limpiando procesos en puertos 3000 y 5173...
+echo [2/7] Limpiando procesos en puertos 3000 y 5173...
 powershell -Command "
     Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object {
         try { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } catch {}
@@ -42,7 +56,7 @@ echo    Puertos liberados.
 echo.
 
 :: ── 3. Verificar .env ────────────────────────────────────
-echo [3/6] Verificando archivo .env...
+echo [3/7] Verificando archivo .env...
 if not exist ".env" (
     if exist ".env.example" (
         echo    Creando .env desde .env.example...
@@ -63,7 +77,7 @@ echo    .env encontrado.
 echo.
 
 :: ── 4. Instalar dependencias si faltan ───────────────────
-echo [4/6] Verificando dependencias...
+echo [4/7] Verificando dependencias...
 if not exist "node_modules" (
     echo    Instalando dependencias del monorepo...
     call pnpm install
@@ -77,7 +91,7 @@ echo    Dependencias listas.
 echo.
 
 :: ── 5. Levantar Docker (PostgreSQL + Redis) ──────────────
-echo [5/6] Levantando contenedores Docker...
+echo [5/7] Levantando contenedores Docker...
 docker compose -f docker-compose.dev.yml up -d
 if %ERRORLEVEL% neq 0 (
     echo  [ERROR] Fallo al levantar contenedores Docker.
@@ -88,7 +102,7 @@ echo    Contenedores iniciados.
 echo.
 
 :: ── 6. Iniciar servidores ────────────────────────────────
-echo [6/6] Iniciando servidores...
+echo [6/7] Iniciando servidores...
 echo.
 
 if "%HEADLESS%"=="true" (

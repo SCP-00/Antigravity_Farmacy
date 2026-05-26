@@ -194,6 +194,28 @@ describe('Auth Routes - POST /refresh', () => {
     const res = await supertest(app).post(`${apiPrefix}/auth/refresh`).send({ refreshToken: 'token-invalido' })
     expect(res.status).toBe(401)
   })
+
+  it('refresca exitosamente y rota tokens', async () => {
+    mockCache.get.mockResolvedValue(null)
+    mockPrisma.empleado.findUnique.mockResolvedValue({
+      id: 'emp-1', activo: true, nombre: 'Admin', apellido: 'Sistema',
+      email: 'admin@test.com', rol: 'ADMINISTRADOR', sucursalId: 1,
+    })
+    const res = await supertest(app).post(`${apiPrefix}/auth/refresh`).send({ refreshToken: 'valid-refresh' })
+    expect(res.status).toBe(200)
+    expect(res.body.data.token).toBeDefined()
+    expect(res.body.data.refreshToken).toBeDefined()
+    expect(mockCache.set).toHaveBeenCalledWith('bl_ref_valid-refresh', 'revoked', expect.any(Number))
+  })
+
+  it('rechaza refresh si empleado está inactivo', async () => {
+    mockCache.get.mockResolvedValue(null)
+    mockPrisma.empleado.findUnique.mockResolvedValue({
+      id: 'emp-1', activo: false,
+    })
+    const res = await supertest(app).post(`${apiPrefix}/auth/refresh`).send({ refreshToken: 'valid-refresh' })
+    expect(res.status).toBe(401)
+  })
 })
 
 describe('Auth Routes - POST /logout', () => {
@@ -204,6 +226,24 @@ describe('Auth Routes - POST /logout', () => {
   it('rechaza sin token de autenticación', async () => {
     const res = await supertest(app).post(`${apiPrefix}/auth/logout`).send({})
     expect(res.status).toBe(401)
+  })
+
+  it('cierra sesión exitosamente con token y refreshToken', async () => {
+    mockPrisma.logActividad.create.mockResolvedValue({})
+    const res = await supertest(app).post(`${apiPrefix}/auth/logout`)
+      .set('Authorization', 'Bearer valid-admin-token')
+      .send({ refreshToken: 'some-refresh-token' })
+    expect(res.status).toBe(200)
+    expect(mockCache.set).toHaveBeenCalledTimes(2)
+  })
+
+  it('cierra sesión sin refreshToken', async () => {
+    mockPrisma.logActividad.create.mockResolvedValue({})
+    const res = await supertest(app).post(`${apiPrefix}/auth/logout`)
+      .set('Authorization', 'Bearer valid-admin-token')
+      .send({})
+    expect(res.status).toBe(200)
+    expect(mockCache.set).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -305,3 +305,51 @@ describe('Clientes Admin Routes - GET /clientes/:id', () => {
     expect(res.status).toBe(500)
   })
 })
+
+describe('Clientes Admin Routes - GET /clientes/:id/compras', () => {
+  let app: express.Express
+  beforeAll(() => { app = createApp() })
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('rechaza sin autenticación', async () => {
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1/compras`)
+    expect(res.status).toBe(401)
+  })
+
+  it('retorna 404 si cliente no existe', async () => {
+    mockPrisma.cliente.findUnique.mockResolvedValue(null)
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-999/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(404)
+  })
+
+  it('retorna historial de compras del cliente', async () => {
+    mockPrisma.cliente.findUnique.mockResolvedValue({ id: 'cli-1' })
+    mockPrisma.venta.findMany.mockResolvedValue([{
+      id: 'v-1', numero: 'V-001', total: 50000, estado: 'PAGADO',
+      metodoPago: 'EFECTIVO', creadoEn: new Date(),
+      detalles: [{ cantidad: 2, precioUnitario: 25000, producto: { nombre: 'Acetaminofén', presentacion: 'Tab x 30' } }],
+    }])
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toHaveLength(1)
+    expect(res.body.data[0].numero).toBe('V-001')
+  })
+
+  it('retorna array vacío si no hay compras', async () => {
+    mockPrisma.cliente.findUnique.mockResolvedValue({ id: 'cli-1' })
+    mockPrisma.venta.findMany.mockResolvedValue([])
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual([])
+  })
+
+  it('maneja error interno', async () => {
+    mockPrisma.cliente.findUnique.mockRejectedValue(new Error('DB error'))
+    const res = await supertest(app).get(`${apiPrefix}/clientes/cli-1/compras`)
+      .set('Authorization', 'Bearer valid-admin-token')
+    expect(res.status).toBe(500)
+  })
+})

@@ -57,31 +57,44 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 
 ## Testing
 - **Framework:** Vitest v3 (sync backend/frontend) + supertest para tests de integración
-- **27 archivos de test** (462 tests — todos pasan ✅)
-- **Cobertura global: 83.7%** statements, 83.42% branches, 87.17% functions
+- **27 archivos de test** (510 tests — todos pasan ✅)
+- **Cobertura global: 95.35%** statements, 84.03% branches, 94.87% functions
 - **TypeScript 6.0:** 0 errores en backend y frontend
+- **Coverage ≥90% en todos los módulos funcionales** (excepto imagenes — 46.96%)
 
 ### Cobertura por módulo
 
 | Módulo | Statements | Branches | Functions |
 |---|---|---|---|
+| `app` | 100% | 100% | 100% |
 | `caja` | 100% | 60% | 100% |
+| `clientes (admin)` | 100% | 100% | 100% |
+| `auth` | 100% | 79.16% | 100% |
+| `auth-cliente perfil` | 100% | 100% | 100% |
+| `compras` | 100% | 82.35% | 100% |
 | `inventario` | 100% | 75% | 100% |
 | `lotes` | 100% | 50% | 100% |
+| `reportes` | 100% | 86.11% | 100% |
 | `sucursales` | 100% | 85.71% | 100% |
 | `utils` | 100% | 95% | 100% |
+| `ventas` | 100% | 76.66% | 100% |
+| `config` | 99.5% | 93.18% | 100% |
 | `pagos` | 98.37% | 84.74% | 100% |
 | `jobs` | 98.59% | 87.5% | 100% |
-| `middlewares` | 97.84% | 88% | 100% |
+| `middlewares` | 97.84% | 88.23% | 100% |
+| `productos` | 96.84% | 77.77% | 100% |
+| `empleados` | 96.87% | 76.92% | 100% |
+| `proveedores` | 96.55% | 69.23% | 100% |
+| `categorias` | 95.83% | 90% | 100% |
 | `servicios` | 95.76% | 86.74% | 100% |
+| `auth-cliente` | 94.75% | 85% | 100% |
+| `chatbot` | 94.33% | 84.55% | 100% |
 | `schemas` | 94.93% | 0% | 0% |
-| `config` | 88% | 97.05% | 100% |
-| `reportes` | 44.58% | 91.66% | 100% |
 | `imagenes` | 46.96% | 80% | 0% |
 
 ### Para ejecutar
 ```bash
-cd backend && pnpm run test                  # 462 tests
+cd backend && pnpm run test                  # 510 tests
 cd backend && pnpm run test -- --coverage    # Con cobertura
 ```
 

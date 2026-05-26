@@ -52,8 +52,9 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 ## Tech stack
 - **Runtime:** Node.js v24.15.0 + pnpm v11.2.2
 - **Backend:** Express 4 + TypeScript 6.0 + Prisma 5.22
-- **Frontend:** React 18 + TypeScript 6.0 + Vite 6.4 + Tailwind CSS 3
-- **Testing:** Vitest v3 (462 tests, 83.7% cobertura)
+- **Frontend:** React 19 + TypeScript 6.0 + Vite 6.4 + Tailwind CSS 4
+- **Build:** @tailwindcss/vite plugin (reemplaza postcss + autoprefixer)
+- **Testing:** Vitest v3 (510 tests, 95.35% cobertura)
 
 ## Script entrypoints
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)

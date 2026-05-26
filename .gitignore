@@ -17,6 +17,13 @@ out/
 .env.*.local
 !.env.example
 
+# ── Coverage ─────────────────────────────────────────────
+backend/coverage/
+backend/coverage.json
+
+# ── Temp ──────────────────────────────────────────────────
+frontend/outdated.json
+
 # ── Logs ──────────────────────────────────────────────────
 logs/
 *.log

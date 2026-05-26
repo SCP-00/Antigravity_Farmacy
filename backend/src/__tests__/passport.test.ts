@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // ── Mocks ─────────────────────────────────────────────────
 const mockPassportUse = vi.hoisted(() => vi.fn())
 
+// Capturar el callback verify de GoogleStrategy para probarlo directamente
+let capturedVerifyCallback: any = null
+
 vi.mock('dotenv', () => ({
   default: { config: vi.fn() },
   config: vi.fn(),
@@ -16,7 +19,9 @@ vi.mock('passport', () => ({
 vi.mock('passport-google-oauth20', () => {
   class MockGoogleStrategy {
     name = 'google'
-    constructor(opts: any, verify: any) {}
+    constructor(opts: any, verify: any) {
+      capturedVerifyCallback = verify
+    }
   }
   return {
     Strategy: MockGoogleStrategy,
@@ -90,5 +95,128 @@ describe('configurePassport()', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Google OAuth no configurado')
     )
+  })
+
+  it('verify callback: crea cliente nuevo si no existe', async () => {
+    process.env.GOOGLE_CLIENT_ID = 'test-client-id'
+    process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+
+    const { configurePassport } = await import('../config/passport')
+    configurePassport()
+
+    expect(capturedVerifyCallback).not.toBeNull()
+
+    const db = await import('../config/database')
+    vi.mocked(db.prisma.cliente.findUnique).mockResolvedValue(null)
+    vi.mocked(db.prisma.cliente.create).mockResolvedValue({
+      id: 'new-cli-1', nombre: 'Juan', apellido: 'Google', email: 'juan@gmail.com',
+      puntosAcumulados: 0, emailVerificado: true, autorizacionDatos: true,
+      activo: true, creadoEn: new Date(),
+    } as any)
+
+    // Simular callback de Google
+    const done = vi.fn()
+    await capturedVerifyCallback(
+      'access-token',
+      'refresh-token',
+      {
+        id: 'google-id-123',
+        name: { givenName: 'Juan', familyName: 'Pérez' },
+        emails: [{ value: 'juan@gmail.com' }],
+      },
+      done
+    )
+
+    expect(db.prisma.cliente.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          email: 'juan@gmail.com',
+          proveedorAuth: 'GOOGLE',
+          proveedorAuthId: 'google-id-123',
+        }),
+      })
+    )
+    expect(done).toHaveBeenCalledWith(null, expect.objectContaining({ id: 'new-cli-1' }))
+  })
+
+  it('verify callback: retorna cliente existente', async () => {
+    process.env.GOOGLE_CLIENT_ID = 'test-client-id'
+    process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+
+    const { configurePassport } = await import('../config/passport')
+    configurePassport()
+
+    const db = await import('../config/database')
+    vi.mocked(db.prisma.cliente.findUnique).mockResolvedValue({
+      id: 'existente-cli', nombre: 'Juan', apellido: 'Pérez', email: 'juan@gmail.com',
+      puntosAcumulados: 50, emailVerificado: true, autorizacionDatos: true,
+      activo: true, creadoEn: new Date('2024-01-01'),
+    } as any)
+
+    const done = vi.fn()
+    await capturedVerifyCallback(
+      'access-token',
+      'refresh-token',
+      {
+        id: 'google-id-123',
+        name: { givenName: 'Juan', familyName: 'Pérez' },
+        emails: [{ value: 'juan@gmail.com' }],
+      },
+      done
+    )
+
+    expect(db.prisma.cliente.create).not.toHaveBeenCalled()
+    expect(done).toHaveBeenCalledWith(null, expect.objectContaining({ id: 'existente-cli' }))
+  })
+
+  it('verify callback: error si no hay email de Google', async () => {
+    process.env.GOOGLE_CLIENT_ID = 'test-client-id'
+    process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+
+    const { configurePassport } = await import('../config/passport')
+    configurePassport()
+
+    const done = vi.fn()
+    await capturedVerifyCallback(
+      'access-token',
+      'refresh-token',
+      {
+        id: 'google-id-no-email',
+        name: { givenName: 'No', familyName: 'Email' },
+        emails: [],
+      },
+      done
+    )
+
+    expect(done).toHaveBeenCalledWith(expect.any(Error))
+  })
+
+  it('verify callback: maneja error de base de datos', async () => {
+    process.env.GOOGLE_CLIENT_ID = 'test-client-id'
+    process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/api/v1/auth/google/callback'
+
+    const { configurePassport } = await import('../config/passport')
+    configurePassport()
+
+    const db = await import('../config/database')
+    vi.mocked(db.prisma.cliente.findUnique).mockRejectedValue(new Error('DB connection error'))
+
+    const done = vi.fn()
+    await capturedVerifyCallback(
+      'access-token',
+      'refresh-token',
+      {
+        id: 'google-id-db',
+        name: { givenName: 'Test', familyName: 'User' },
+        emails: [{ value: 'test@gmail.com' }],
+      },
+      done
+    )
+
+    expect(done).toHaveBeenCalledWith(expect.any(Error))
   })
 })

@@ -32,7 +32,7 @@ const mockPrisma = vi.hoisted(() => ({
   producto: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
   categoria: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
   sucursal: { findMany: vi.fn().mockResolvedValue([]), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
-  venta: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
+  venta: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn(), aggregate: vi.fn() },
   lote: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn(), create: vi.fn(), count: vi.fn() },
   inventario: { findMany: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
   caja: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), count: vi.fn() },
@@ -288,9 +288,31 @@ describe('Ventas Routes - POST /ventas/:id/devolucion', () => {
       total: 50000, devolucion: null,
       detalles: [{ loteId: 'lote-1', cantidad: 2, productoId: 'prod-1', precioUnitario: 2500, subtotal: 5000, id: 'det-1' }],
     })
+    mockPrisma.$transaction.mockImplementation(async (cb: Function) => cb(mockPrisma))
     const res = await supertest(app).post(`${apiPrefix}/ventas/v-1/devolucion`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ motivo: 'Defectuoso', reintegraStock: true })
     expect(res.status).toBe(200)
+    expect(mockPrisma.venta.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'v-1' }, data: { estado: 'DEVUELTO' } })
+    )
+    expect(mockPrisma.devolucion.create).toHaveBeenCalled()
+    expect(mockPrisma.lote.update).toHaveBeenCalled()
+  })
+
+  it('procesa devolución sin reintegro de stock', async () => {
+    const fechaReciente = new Date()
+    fechaReciente.setDate(fechaReciente.getDate() - 3)
+    mockPrisma.venta.findUnique.mockResolvedValue({
+      id: 'v-2', estado: 'PAGADO', creadoEn: fechaReciente,
+      total: 30000, devolucion: null,
+      detalles: [{ loteId: 'lote-2', cantidad: 1, productoId: 'prod-2', precioUnitario: 30000, subtotal: 30000, id: 'det-2' }],
+    })
+    mockPrisma.$transaction.mockImplementation(async (cb: Function) => cb(mockPrisma))
+    const res = await supertest(app).post(`${apiPrefix}/ventas/v-2/devolucion`)
+      .set('Authorization', 'Bearer valid-admin-token')
+      .send({ motivo: 'Cliente insatisfecho', reintegraStock: false })
+    expect(res.status).toBe(200)
+    expect(mockPrisma.lote.update).not.toHaveBeenCalled()
   })
 })

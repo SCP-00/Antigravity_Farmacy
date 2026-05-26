@@ -5,31 +5,6 @@ import { responder } from '../../utils/respuesta.utils'
 
 export const authClientePerfilRouter: Router = Router()
 
-// GET /me - perfil del cliente autenticado
-authClientePerfilRouter.get('/me', autenticarCliente, async (req: Request, res: Response) => {
-  try {
-    const cliente = await prisma.cliente.findUnique({
-      where: { id: req.cliente!.id },
-      select: {
-        id: true,
-        nombre: true,
-        apellido: true,
-        email: true,
-        telefono: true,
-        ciudad: true,
-        puntosAcumulados: true,
-        puntosExpiranEn: true,
-        creadoEn: true,
-      },
-    })
-
-    if (!cliente) return responder.noEncontrado(res, 'Cliente')
-    return responder.ok(res, cliente)
-  } catch (err) {
-    return responder.serverError(res, err)
-  }
-})
-
 // PATCH /me - actualizar perfil del cliente autenticado
 authClientePerfilRouter.patch('/me', autenticarCliente, async (req: Request, res: Response) => {
   try {

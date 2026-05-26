@@ -414,6 +414,228 @@ describe('POST / — flujo de estados', () => {
     expect(res.status).toBe(200)
     expect(res.body.data.respuesta).toContain('Preguntas Frecuentes')
   })
+
+  it('estado alternativas: "atrás" vuelve al menú', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-alt',
+      mensajes: mockSesionBase({ estado: 'alternativas' }),
+      escalaHumano: false,
+    })
+    const res = await request(app).post('/').send({
+      mensaje: 'atrás',
+      sessionToken: 'session-alt',
+    })
+    expect(res.body.data.menuActivo).toBe('menu')
+  })
+
+  it('estado alternativas: sin resultados pide nombre', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-alt2',
+      mensajes: mockSesionBase({ estado: 'alternativas' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([])
+    const res = await request(app).post('/').send({
+      mensaje: 'zzz',
+      sessionToken: 'session-alt2',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('alternativas')
+  })
+
+  it('estado alternativas: múltiples productos muestra lista', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-alt3',
+      mensajes: mockSesionBase({ estado: 'alternativas' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1', nombre: 'Ibuprofeno' }), lotes: [{ cantidadActual: 5 }] },
+      { ...mockProducto({ id: 'p2', nombre: 'Ibuprofeno MK' }), lotes: [{ cantidadActual: 3 }] },
+    ])
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno',
+      sessionToken: 'session-alt3',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('¿Para cuál deseas alternativas?')
+  })
+
+  it('estado alternativas: un producto busca similares', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-alt4',
+      mensajes: mockSesionBase({ estado: 'alternativas' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 5 }] },
+    ])
+    mockInteracciones.recomendarSimilares.mockResolvedValue([
+      { id: 's1', nombre: 'Naproxeno', concentracion: '500mg', precioVenta: 12000, laboratorio: 'Genfar' },
+      { id: 's2', nombre: 'Diclofenaco', concentracion: '50mg', precioVenta: 8000, laboratorio: 'La Sante' },
+    ])
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno',
+      sessionToken: 'session-alt4',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('Alternativas')
+    expect(res.body.data.productos.length).toBeGreaterThan(1)
+  })
+
+  it('estado info: "atrás" vuelve al menú', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-info',
+      mensajes: mockSesionBase({ estado: 'info' }),
+      escalaHumano: false,
+    })
+    const res = await request(app).post('/').send({
+      mensaje: 'atrás',
+      sessionToken: 'session-info',
+    })
+    expect(res.body.data.menuActivo).toBe('menu')
+  })
+
+  it('estado info: sin resultados', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-info2',
+      mensajes: mockSesionBase({ estado: 'info' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([])
+    const res = await request(app).post('/').send({
+      mensaje: 'xyz',
+      sessionToken: 'session-info2',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('qué producto')
+  })
+
+  it('estado info: múltiples productos muestra lista para elegir', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-info3',
+      mensajes: mockSesionBase({ estado: 'info' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 5 }] },
+      { ...mockProducto({ id: 'p2', nombre: 'Ibuprofeno MK' }), lotes: [{ cantidadActual: 3 }] },
+    ])
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno',
+      sessionToken: 'session-info3',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('Varios productos')
+  })
+
+  it('estado info: un producto muestra detalle completo', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-info4',
+      mensajes: mockSesionBase({ estado: 'info' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 10 }] },
+    ])
+    mockPrisma.producto.findUnique.mockResolvedValue({
+      id: 'p1', nombre: 'Ibuprofeno', concentracion: '400mg',
+      presentacion: 'Tabletas x 30', laboratorio: 'Tecnoquímicas',
+      precioVenta: 8500, requiereRx: false,
+      principioActivo: 'Ibuprofeno', atc: 'M01AE01',
+      descripcionAtc: 'Antiinflamatorios', formaFarmaceutica: 'Tableta',
+      viaAdministracion: 'Oral', indicaciones: 'Dolor e inflamación',
+      contraindicaciones: 'Úlcera péptica', reaccionesAdversas: 'Náuseas',
+      interacciones: 'Anticoagulantes', modoUso: '1 cada 8h',
+      alergenos: 'Lactosa', advertencias: 'No exceder',
+      registroInvima: 'INVIMA 2023M-001234', cum: '1234567890',
+      estadoCum: 'VIGENTE', titular: 'Tecnoquímicas S.A.',
+    })
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno',
+      sessionToken: 'session-info4',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('Ficha completa')
+    expect(res.body.data.respuesta).toContain('Registro INVIMA')
+    expect(res.body.data.respuesta).toContain('INVIMA 2023M-001234')
+  })
+
+  it('estado interacciones: "atrás" vuelve al menú', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-inter',
+      mensajes: mockSesionBase({ estado: 'interacciones' }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([])
+    const res = await request(app).post('/').send({
+      mensaje: 'atrás',
+      sessionToken: 'session-inter',
+    })
+    expect(res.body.data.menuActivo).toBe('menu')
+  })
+
+  it('estado interacciones: menos de 2 medicamentos pide más', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-inter2',
+      mensajes: mockSesionBase({ estado: 'interacciones', productosConsultados: [] }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 5 }] },
+    ])
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno',
+      sessionToken: 'session-inter2',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.respuesta).toContain('dos medicamentos')
+  })
+
+  it('estado interacciones: detecta alertas', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-inter3',
+      mensajes: mockSesionBase({ estado: 'interacciones', productosConsultados: ['existing-id'] }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 5 }] },
+      { ...mockProducto({ id: 'p2', nombre: 'Warfarina' }), lotes: [{ cantidadActual: 10 }] },
+    ])
+    mockInteracciones.verificarInteracciones.mockResolvedValue({
+      tieneAlertas: true,
+      alertas: [{ tipo: 'INTERACCION', productoA: 'Ibuprofeno', productoB: 'Warfarina', descripcion: 'Riesgo de sangrado', severidad: 'ALTA' }],
+    })
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno y warfarina',
+      sessionToken: 'session-inter3',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.alertas).toHaveLength(1)
+    expect(res.body.data.alertas[0].severidad).toBe('ALTA')
+  })
+
+  it('estado interacciones: sin alertas retorna ok', async () => {
+    mockPrisma.chatbotSesion.findUnique.mockResolvedValue({
+      sessionToken: 'session-inter4',
+      mensajes: mockSesionBase({ estado: 'interacciones', productosConsultados: ['existing-id'] }),
+      escalaHumano: false,
+    })
+    mockPrisma.producto.findMany.mockResolvedValue([
+      { ...mockProducto({ id: 'p1' }), lotes: [{ cantidadActual: 5 }] },
+      { ...mockProducto({ id: 'p2', nombre: 'Vitamina C' }), lotes: [{ cantidadActual: 10 }] },
+    ])
+    mockInteracciones.verificarInteracciones.mockResolvedValue({
+      tieneAlertas: false,
+      alertas: [],
+    })
+    const res = await request(app).post('/').send({
+      mensaje: 'ibuprofeno vitamina c',
+      sessionToken: 'session-inter4',
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.data.alertas).toEqual([])
+  })
 })
 
 // ═══════════════════════════════════════════════════════════
