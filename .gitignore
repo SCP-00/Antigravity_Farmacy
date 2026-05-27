@@ -9,6 +9,7 @@ yarn.lock
 dist/
 build/
 out/
+dev-dist/
 *.tsbuildinfo
 
 # ── Entorno ───────────────────────────────────────────────

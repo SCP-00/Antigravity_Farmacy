@@ -22,6 +22,9 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.60.0
       csv-parse:
         specifier: ^6.2.1
         version: 6.2.1
@@ -239,9 +242,6 @@ importers:
       tailwindcss:
         specifier: ^4.3.0
         version: 4.3.0
-      workbox-window:
-        specifier: ^7.4.1
-        version: 7.4.1
       zod:
         specifier: ^3.22.4
         version: 3.25.76
@@ -285,6 +285,9 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.48.0)
+      workbox-window:
+        specifier: ^7.4.1
+        version: 7.4.1
 
 packages:
 
@@ -1155,6 +1158,11 @@ packages:
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
+
+  '@playwright/test@1.60.0':
+    resolution: {integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   '@prisma/client@5.22.0':
     resolution: {integrity: sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==}
@@ -5647,6 +5655,10 @@ snapshots:
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
+
+  '@playwright/test@1.60.0':
+    dependencies:
+      playwright: 1.60.0
 
   '@prisma/client@5.22.0(prisma@5.22.0)':
     optionalDependencies:

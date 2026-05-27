@@ -1,8 +1,13 @@
-feat: PWA install analytics — beforeinstallprompt + banner + localStorage tracking
+feat: Fase 15 — Testing E2E con Playwright (18 tests)
 
-- Hook usePWAInstall: captura beforeinstallprompt, expone install(), dismiss(),
-  analytics en localStorage (timestamps + conteos de banner, clics, instalaciones)
-- InstallPWABanner: slide-up animado con botones Instalar / Ahora no, dark mode
-- Integrado en PublicLayout para toda la tienda
-- Fix de double-conteo con hasRecordedInstallRef (appinstalled + userChoice)
-- Exportado desde hooks/index.ts
+e2e/:
+  - playwright.config.ts — Config 2 proyectos (chromium, mobile) + timeouts + retries
+  - fixtures/auth.ts — loginAdmin/loginCliente vía API con addInitScript
+  - specs/public-navigation.spec.ts — Home, catálogo, ficha producto, búsqueda, 404 (5 tests)
+  - specs/admin-login.spec.ts — Login exitoso/fallido, redirect, logout (4 tests)
+  - specs/pos-flujo.spec.ts — POS: farmaceuta, admin search, auth guard, rol auxiliar (4 tests)
+  - specs/b2c-flujo.spec.ts — Login cliente, carrito, registro, sucursales (5 tests)
+
+package.json: Scripts e2e/e2e:ui/e2e:headed/e2e:debug/e2e:report
+.gitignore: Agregado dev-dist/
+docs/worklog.md: Documentación completa de Fase 15

@@ -605,3 +605,78 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - ✅ Vite build: exitoso (8.26s)
 - ✅ Workbox generateSW: 85 entries precached (2.4 MB)
 - ✅ Code review: aprobado (fix de double-conteo en analytics corregido)
+
+---
+
+## 2026-05-27 — Fase 15: Testing E2E con Playwright
+
+**Objetivo:** Implementar pruebas end-to-end con Playwright que validen los flujos críticos de navegación pública, login admin, POS y B2C.
+
+### Dependencias agregadas
+| Paquete | Versión | Tipo |
+|---|---|---|
+| `@playwright/test` | ^1.60.0 | devDependency |
+
+### Archivos creados
+
+#### 1. Configuración global (`e2e/playwright.config.ts`)
+- 2 proyectos: **chromium** (desktop 1280×900) y **chromium-mobile** (Pixel 7 412×915)
+- baseURL: `http://localhost:5173`
+- Timeouts: test 60s, expect 15s, action 10s, navigation 30s
+- Retries: 1 (2 en CI), workers: 1 (2 en CI)
+- Reporter: HTML (`e2e/reports`) + list con steps
+- `--unsafely-treat-insecure-origin-as-secure` para probar PWA sin HTTPS
+
+#### 2. Fixtures de autenticación (`e2e/fixtures/auth.ts`)
+- `CREDENTIALS`: admin, farmaceuta, auxiliar, cliente con emails y passwords
+- `loginAdmin()`: login vía API → token en localStorage via `addInitScript`
+- `loginCliente()`: login cliente vía API
+- `loginAdminForm()`: llena formulario de login en página
+- `gotoDashboard()`: navega al dashboard admin
+
+#### 3. Specs de tests (`e2e/specs/`)
+
+**public-navigation.spec.ts** — 5 tests:
+- Home page: título, logo, búsqueda, enlaces, sin page errors
+- Catálogo: título, botones "Agregar" visibles, categoría Analgésicos
+- Ficha producto: clic en primer enlace `/productos/`, URL cambia, precio visible
+- Búsqueda: llenar input → esperar debounce → Enter → URL con `q=alercet` → resultado visible
+- 404: ruta inexistente muestra mensaje de no encontrado
+
+**admin-login.spec.ts** — 4 tests:
+- Redirección a `/admin/login` sin sesión
+- Login exitoso con admin → redirect → mensaje dashboard
+- Login fallido → permanece en login → mensaje error
+- Cerrar sesión → clic botón → redirige a login
+
+**pos-flujo.spec.ts** — 4 tests:
+- Login farmaceuta → redirige a `/admin/caja/pos` (ruta por defecto)
+- Login admin → navega a POS → busca ibuprofeno
+- Sin sesión → redirige a login
+- Auxiliar (sin permiso caja) → redirige a inventario
+
+**b2c-flujo.spec.ts** — 5 tests:
+- Login cliente desde `/login` → redirect a `/` → nombre visible
+- Catálogo → agregar al carrito → navegar a `/carrito`
+- Carrito vacío muestra página de carrito
+- Registro: formulario visible con campos email
+- Sucursales: listado o mapa visible
+
+### Scripts agregados (`package.json` raíz)
+| Script | Comando |
+|---|---|
+| `e2e` | `npx playwright test --config=e2e/playwright.config.ts` |
+| `e2e:ui` | Modo interactivo UI |
+| `e2e:headed` | Navegador visible |
+| `e2e:debug` | Modo debug |
+| `e2e:report` | Mostrar reporte HTML |
+
+### Resultados
+- ✅ **18 tests pasaron** en 37.9s
+- ✅ TypeScript frontend: 0 errores
+- ✅ Code review: aprobado
+
+### Fixes durante implementación
+- **Catálogo test**: Selector `[class*="product"]` no existía — cambiado a `button:has-text("Agregar")`
+- **Búsqueda test**: Form submit usaba `debouncedQ` (300ms debounce) — agregado `waitForTimeout(500)` antes de Enter
+- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`
