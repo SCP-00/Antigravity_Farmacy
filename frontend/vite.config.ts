@@ -2,9 +2,126 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    tailwindcss(),
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.ico',
+        'robots.txt',
+        'sitemap.xml',
+        'offline.html',
+        'icons/*.svg',
+      ],
+      manifest: {
+        name: 'Farmacy — Tu farmacia digital',
+        short_name: 'Farmacy',
+        description: 'Catálogo de medicamentos INVIMA, suplementos y cuidado personal. Tu farmacia de confianza en Pereira.',
+        theme_color: '#0F6E56',
+        background_color: '#F5F8F6',
+        display: 'standalone',
+        orientation: 'portrait-primary',
+        start_url: '/',
+        scope: '/',
+        lang: 'es',
+        categories: ['health', 'medical', 'pharmacy', 'shopping'],
+        icons: [
+          { src: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+          { src: '/icons/icon.svg',     sizes: '512x512', type: 'image/svg+xml' },
+          { src: '/icons/icon-maskable.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'maskable' },
+        ],
+        shortcuts: [
+          {
+            name: 'Buscar productos',
+            short_name: 'Buscar',
+            description: 'Busca medicamentos y productos',
+            url: '/productos',
+            icons: [{ src: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' }],
+          },
+          {
+            name: 'Contacto',
+            short_name: 'Contacto',
+            description: 'Encuentra nuestras sucursales',
+            url: '/sucursales',
+            icons: [{ src: '/icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' }],
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,xml,txt,woff2}'],
+        navigateFallback: '/offline.html',
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/admin\//,
+          /^\/auth\//,
+        ],
+        runtimeCaching: [
+          // API: catálogo público (productos, categorías, sucursales) — CacheFirst
+          {
+            urlPattern: /^\/api\/productos\/(?:buscar|lista-rapida)/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'api-productos',
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^\/api\/categorias/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'api-categorias',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /^\/api\/sucursales/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'api-sucursales',
+              expiration: { maxEntries: 5, maxAgeSeconds: 60 * 60 * 24 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // Google Fonts
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 60 },
+            },
+          },
+          // External images (icons8)
+          {
+            urlPattern: /^https:\/\/img\.icons8\.com/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'external-images',
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
+        ],
+      },
+      devOptions: {
+        enabled: false,
+        type: 'module',
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

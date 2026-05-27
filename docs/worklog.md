@@ -497,3 +497,88 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 | `vendor-query` | 232 kB | 66 kB |
 | app `index` | 184 kB | 39 kB |
 | Otros (5 chunks) | 23–86 kB | — |
+
+---
+
+## 2026-05-27 — Fase 14: PWA + Offline — Service Worker, manifest, íconos, offline fallback
+
+**Objetivo:** Convertir Farmacy en una Progressive Web App instalable con soporte offline para la tienda.
+
+### Cambios realizados
+
+#### 1. Dependencias agregadas
+| Paquete | Versión | Tipo |
+|---|---|---|
+| `vite-plugin-pwa` | ^1.3.0 | devDependency |
+| `workbox-window` | ^7.4.1 | devDependency (tipos) |
+
+#### 2. Service Worker con Workbox (`frontend/vite.config.ts`)
+- Plugin `VitePWA` con `registerType: 'autoUpdate'`
+- **Strategy:** `generateSW` — genera `dist/sw.js` + `dist/workbox-b1bafff1.js`
+- **Precaching:** 85 entries (2.4 MB) — JS, CSS, HTML, SVG, PNG, JPG, ICO, JSON, XML, WOFF2
+- **Offline fallback:** `navigateFallback: '/offline.html'` con denylist para `/api/`, `/admin/`, `/auth/`
+- **Runtime caching estratégico:**
+  | Pattern | Handler | Cache | Expiración |
+  |---|---|---|---|
+  | `/api/productos/buscar`, `/api/productos/lista-rapida` | `CacheFirst` | `api-productos` | 1 hora |
+  | `/api/categorias` | `CacheFirst` | `api-categorias` | 24 horas |
+  | `/api/sucursales` | `CacheFirst` | `api-sucursales` | 24 horas |
+  | Google Fonts stylesheets | `StaleWhileRevalidate` | `google-fonts-stylesheets` | 30 días |
+  | Google Fonts webfonts | `CacheFirst` | `google-fonts-webfonts` | 60 días |
+  | External images (icons8) | `StaleWhileRevalidate` | `external-images` | 7 días |
+
+#### 3. Manifest PWA (`frontend/vite.config.ts`)
+- **Name:** Farmacy — Tu farmacia digital
+- **Theme color:** `#0F6E56` (verde farmacia)
+- **Display:** `standalone` — experiencia tipo app al instalar
+- **Icons:** 3 SVG (192x192, 512x512, maskable 512x512)
+- **Shortcuts:** "Buscar productos" → `/productos`, "Contacto" → `/sucursales`
+- **Categories:** health, medical, pharmacy, shopping
+
+#### 4. Íconos PWA (`frontend/public/icons/` — **3 nuevos**)
+- `icon.svg` (512x512): Cruz farmacia verde con gradient, rounded square
+- `icon-192.svg` (192x192): Misma cruz, para sizes 192x192
+- `icon-maskable.svg` (512x512): Full bleed para Android adaptive icons
+
+#### 5. Offline fallback page (`frontend/public/offline.html` — **nuevo**)
+- Página standalone con diseño card, icono decorativo (signal-off SVG), mensaje claro
+- Botón "Reintentar" que hace `window.location.reload()`
+- Colores y branding farmacia (verde `#0F6E56`, fondo `#F5F8F6`)
+- Inline styles, responsive, sin dependencias externas
+
+#### 6. Actualización PWA en vivo (`frontend/src/components/shared/PWAUpdatePrompt.tsx` — **nuevo**)
+- Componente React que importa dinámicamente `virtual:pwa-register`
+- `registerSW` con dos callbacks:
+  - `onNeedRefresh()`: Toast "Nueva versión disponible" (duración 8s, icono 🔄)
+  - `onOfflineReady()`: Toast "Funciona sin conexión" (duración 4s)
+- Error boundary (try/catch) para desarrollo donde el módulo virtual no existe
+- Cleanup flag `cancelled` para evitar estado inconsistente tras desmontar
+- Colores de toast acordes a la marca (verde/ámbar)
+
+#### 7. Type declarations (`frontend/src/vite-env.d.ts`)
+- `/// <reference types="vite/client" />` — tipos de Vite
+- `declare module 'virtual:pwa-register'` — exporta `registerSW()` y `RegisterSWOptions`
+- Importa tipos desde `workbox-window`
+
+#### 8. Meta tags PWA (`frontend/index.html`)
+- `theme-color: #0F6E56` — color de la barra de herramientas en mobile
+- `apple-mobile-web-app-capable: yes` — iOS fullscreen
+- `apple-mobile-web-app-title: Farmacy` — nombre en home screen iOS
+- `apple-touch-icon` → `/icons/icon-192.svg`
+- `mask-icon` → `/icons/icon.svg` color `#0F6E56` (Safari pinned tab)
+- `viewport-fit=cover` — notched devices
+- Icono cambiado de `favicon.ico` a `/icons/icon.svg`
+
+#### 9. Integración en main.tsx (`frontend/src/main.tsx`)
+- Importado `<PWAUpdatePrompt />` desde `./components/shared/PWAUpdatePrompt`
+- Renderizado dentro de `<QueryClientProvider>`, después de `<ReactQueryDevtools>`
+
+#### 10. Package reorganized
+- `workbox-window` movido de `dependencies` a `devDependencies` (solo tipos en build)
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ Vite build: exitoso (8.04s)
+- ✅ Workbox generateSW: 85 entries precached (2.4 MB)
+- ✅ Archivos generados: `dist/sw.js` + `dist/workbox-b1bafff1.js`
+- ✅ Code review: aprobado (solo detalle workbox-window en devDependencies corregido)

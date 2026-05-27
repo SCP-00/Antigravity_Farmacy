@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'react-hot-toast'
 import App from './app'
+import { PWAUpdatePrompt } from './components/shared/PWAUpdatePrompt'
 import './index.css'
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         }}
       />
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      <PWAUpdatePrompt />
     </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>

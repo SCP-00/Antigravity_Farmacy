@@ -1,15 +1,11 @@
-feat: Fase 13 — SEO Técnico + Performance (meta tags, sitemap, lazy loading, bundles)
+feat: Fase 14 — PWA + Offline (Service Worker, manifest, offline fallback, update prompt)
 
-SEO:
-- SEOHead component con react-helmet-async + HelmetProvider en main.tsx
-- Meta tags OG + Twitter Card en 13 páginas públicas
-- robots.txt + sitemap.xml estático (12 URLs)
-
-Performance:
-- LazyImage con IntersectionObserver + skeleton placeholder
-- Bundle optimization: 7 manualChunks granulares, cssCodeSplit, chunkSizeWarningLimit
-- Footer images migradas a LazyImage
-
-Bug fixes:
-- MisPedidos/ProductoDetalle/LoginCliente: fragments <> sin cerrar corregidos
-- sitemap.ts eliminado (importaba Express en frontend)
+- vite-plugin-pwa + Workbox generateSW con 85 assets precached (2.4 MB)
+- Runtime caching: API catálogo (CacheFirst), Google Fonts, external images
+- Manifest PWA: standalone, icons SVG, shortcuts (buscar/contacto)
+- offline.html — Página offline branding con botón reintentar
+- PWAUpdatePrompt — Toast de nueva versión disponible vía registerSW
+- Type declarations para virtual:pwa-register en vite-env.d.ts
+- Meta tags PWA en index.html (theme-color, apple-touch-icon, mask-icon)
+- 3 iconos SVG (192x192, 512x512, maskable) con cruz farmacia verde
+- Workbox-window movido a devDependencies
