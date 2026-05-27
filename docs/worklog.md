@@ -576,9 +576,32 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 #### 10. Package reorganized
 - `workbox-window` movido de `dependencies` a `devDependencies` (solo tipos en build)
 
+#### 11. PWA Install Analytics — `beforeinstallprompt` + banner de instalación
+- **`frontend/src/hooks/usePWAInstall.ts`** (NUEVO):
+  - Hook `usePWAInstall()` que escucha `beforeinstallprompt` con `e.preventDefault()`
+  - Escucha `appinstalled` y `display-mode: standalone` change para detectar instalación
+  - Expone: `isInstallable`, `isInstalled`, `install()`, `dismiss()`, `markBannerShown()`, `getAnalytics()`, `resetAnalytics()`
+  - Analytics en localStorage (clave `farmacy_pwa_install_analytics`) con timestamps y conteos
+  - `install()` llama a `event.prompt()` y trackea `userChoice.outcome`
+  - `dismiss()` desactiva el banner por el resto de la sesión
+  - Cleanup de listeners en useEffect return
+  - Fix de double-conteo con `hasRecordedInstallRef` (previene que `appinstalled` incremente dos veces)
+
+- **`frontend/src/components/shared/InstallPWABanner.tsx`** (NUEVO):
+  - Banner slide-up animado con CSS `@keyframes slide-up`
+  - Diseño card con icono Download, título, descripción, botones Instalar / Ahora no
+  - Dark mode completo
+  - `role="alert"`, `aria-live="polite"` para accesibilidad
+  - Marca bannerShownCount automáticamente en analytics
+
+- **`frontend/src/components/layout/PublicLayout.tsx`**:
+  - Integrado `<InstallPWABanner />` antes del cierre del contenedor principal
+
+- **`frontend/src/hooks/index.ts`**:
+  - Exportado `usePWAInstall` y tipo `PWAInstallAnalytics`
+
 ### Validaciones
 - ✅ TypeScript frontend: 0 errores
-- ✅ Vite build: exitoso (8.04s)
+- ✅ Vite build: exitoso (8.26s)
 - ✅ Workbox generateSW: 85 entries precached (2.4 MB)
-- ✅ Archivos generados: `dist/sw.js` + `dist/workbox-b1bafff1.js`
-- ✅ Code review: aprobado (solo detalle workbox-window en devDependencies corregido)
+- ✅ Code review: aprobado (fix de double-conteo en analytics corregido)

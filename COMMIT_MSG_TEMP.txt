@@ -1,11 +1,8 @@
-feat: Fase 14 — PWA + Offline (Service Worker, manifest, offline fallback, update prompt)
+feat: PWA install analytics — beforeinstallprompt + banner + localStorage tracking
 
-- vite-plugin-pwa + Workbox generateSW con 85 assets precached (2.4 MB)
-- Runtime caching: API catálogo (CacheFirst), Google Fonts, external images
-- Manifest PWA: standalone, icons SVG, shortcuts (buscar/contacto)
-- offline.html — Página offline branding con botón reintentar
-- PWAUpdatePrompt — Toast de nueva versión disponible vía registerSW
-- Type declarations para virtual:pwa-register en vite-env.d.ts
-- Meta tags PWA en index.html (theme-color, apple-touch-icon, mask-icon)
-- 3 iconos SVG (192x192, 512x512, maskable) con cruz farmacia verde
-- Workbox-window movido a devDependencies
+- Hook usePWAInstall: captura beforeinstallprompt, expone install(), dismiss(),
+  analytics en localStorage (timestamps + conteos de banner, clics, instalaciones)
+- InstallPWABanner: slide-up animado con botones Instalar / Ahora no, dark mode
+- Integrado en PublicLayout para toda la tienda
+- Fix de double-conteo con hasRecordedInstallRef (appinstalled + userChoice)
+- Exportado desde hooks/index.ts

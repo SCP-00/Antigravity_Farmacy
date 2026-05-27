@@ -5,6 +5,7 @@ import { useAuthCliente, useDebounce, useCategorias } from '@/hooks'
 import { CATEGORIAS_ICONOS } from '@/config/constants'
 import { useUiStore } from '@/store/uiStore'
 import ThemeToggle from '@/components/shared/ThemeToggle'
+import InstallPWABanner from '@/components/shared/InstallPWABanner'
 import ChatbotWidget from '@/components/tienda/ChatbotWidget'
 
 export default function PublicLayout() {
@@ -360,6 +361,9 @@ export default function PublicLayout() {
 
       {/* Chatbot */}
       <ChatbotWidget/>
+
+      {/* PWA Install Banner */}
+      <InstallPWABanner />
     </div>
   )
 }
