@@ -680,3 +680,37 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - **Catálogo test**: Selector `[class*="product"]` no existía — cambiado a `button:has-text("Agregar")`
 - **Búsqueda test**: Form submit usaba `debouncedQ` (300ms debounce) — agregado `waitForTimeout(500)` antes de Enter
 - **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`nnnn + " + "prisma generate`" + " + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/nnbackend/scripts/prisma-postgenerate.jsn2.  � predev chain con post-generatennnn--color-dark-text-muted: #718096#7a8ba6n- Eliminados  duplicados (PostCSS warning fix)n### Docker Composen-  eliminado de ambos archivos (docker-compose.yml + docker-compose.dev.yml)n### Validacionesn- ? Frontend TS: 0 erroresn- ? E2E flujo-completo: 11/11 testsn
+---
+## 2026-05-27 â€” Fase 16: Prisma Client durable fix + Flujo completo E2E (11 tests) + Dark mode WCAG AA
+
+**Objetivo:** Hacer durable la generaciÃ³n de Prisma Client con pnpm, agregar test E2E integral de 11 escenarios, y mejorar accesibilidad de dark mode.
+
+### Problema raÃ­z: Prisma Client con pnpm
+
+En pnpm, `prisma generate` escribe los archivos generados en `node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/`, NO en `backend/node_modules/.prisma/client/`. Como el tsconfig del backend mapea `@prisma/client -> ./node_modules/.prisma/client`, TypeScript no encontraba los nuevos campos `condiciones` y `alergenos`.
+
+### Fix durable
+
+1. `backend/scripts/prisma-postgenerate.js` â€” Script Node.js nativo (fs.cpSync, sin PowerShell)
+2. `backend/package.json` â€” predev ejecuta post-generate tras cada `prisma generate`
+3. Prisma Client regenerado + copiado (1.58 MB)
+
+### Test E2E: flujo-completo.spec.ts (11 tests)
+
+Tests: Home carga, CatÃ¡logo, Login cliente, Producto detalle INVIMA, Carrito, Checkout Efectivo, Login admin, NavegaciÃ³n admin, 404, RedirecciÃ³n sin sesiÃ³n, Login farmaceuta.
+
+### Dark mode WCAG AA
+
+- `--color-dark-text-muted: #718096` -> `#7a8ba6` (contraste 5.07:1)
+- Eliminados `@import` duplicados (PostCSS warning fix)
+
+### Docker Compose
+
+- `version: '3.9'` eliminado de docker-compose.yml y docker-compose.dev.yml
+
+### Validaciones
+- Backend TS: 0 errores
+- Frontend TS: 0 errores
+- Vitest: 520/520 tests
+- E2E flujo-completo: 11/11 tests
+- prisma-postgenerate: verificado manualmente
