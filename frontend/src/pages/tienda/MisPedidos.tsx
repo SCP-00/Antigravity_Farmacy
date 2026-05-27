@@ -3,6 +3,7 @@ import { Package, Calendar } from 'lucide-react'
 import { clientesService } from '@/services'
 import { useFormateo } from '@/hooks'
 import toast from 'react-hot-toast'
+import SEOHead from '@/components/shared/SEOHead'
 
 export default function MisPedidos() {
   const { cop, fechaCorta } = useFormateo()
@@ -21,14 +22,19 @@ export default function MisPedidos() {
 
   if (isLoading) {
     return (
-      <div className="section-shell py-12 flex justify-center">
-        <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <>
+        <SEOHead title="Mis pedidos" description="Historial de tus compras en Farmacy. Consulta el estado de tus pedidos y solicita devoluciones." path="/cuenta/pedidos" />
+        <div className="section-shell py-12 flex justify-center">
+          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="section-shell py-8">
+    <>
+      <SEOHead title="Mis pedidos" description="Historial de tus compras en Farmacy. Consulta el estado de tus pedidos y solicita devoluciones." path="/cuenta/pedidos" />
+      <div className="section-shell py-8">
       <h1 className="text-3xl font-bold text-slate-900 mb-2">Mis pedidos</h1>
       <p className="text-slate-500 mb-8">Historial de todas tus compras en Farmacy.</p>
       
@@ -102,5 +108,6 @@ export default function MisPedidos() {
         )}
       </div>
     </div>
+    </>
   )
 }

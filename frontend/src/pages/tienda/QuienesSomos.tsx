@@ -1,5 +1,13 @@
+import SEOHead from '@/components/shared/SEOHead'
+
 export default function QuienesSomos() {
 	return (
+		<>
+		<SEOHead
+        title="Quiénes somos"
+        description="Conoce la historia de Farmacy. Farmacia digital en Pereira con sedes físicas, atención profesional y cumplimiento normativo INVIMA."
+        path="/quienes-somos"
+      />
 		<div className="section-shell py-10">
 			<div className="max-w-4xl mx-auto">
 				<h1 className="text-3xl font-bold">Quiénes somos</h1>
@@ -20,5 +28,6 @@ export default function QuienesSomos() {
 				<p className="mt-2 text-gray-700">Operamos con varias sedes en la ciudad y ofrecemos entrega a domicilio en zonas urbanas. Consulta nuestras sedes para ver horarios y direcciones.</p>
 			</div>
 		</div>
+		</>
 	)
 }

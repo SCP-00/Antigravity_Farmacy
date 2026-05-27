@@ -1,9 +1,15 @@
-feat: Fase 12 — UX Clínico (interacciones medicamentosas, perfil salud, alertas)
+feat: Fase 13 — SEO Técnico + Performance (meta tags, sitemap, lazy loading, bundles)
 
-Prisma: +alergenos +condiciones en Cliente
-Backend: GET/PATCH /salud endpoints
-Frontend: InteractionAlertModal, HealthProfile en MiCuenta,
-         verificación alérgenos en Checkout, interacciones en ProductoDetalle,
-         integración POS pre-cobro
-Fix: hooks inválidos en MiCuenta, fragment en Checkout
-Docs: worklog actualizado
+SEO:
+- SEOHead component con react-helmet-async + HelmetProvider en main.tsx
+- Meta tags OG + Twitter Card en 13 páginas públicas
+- robots.txt + sitemap.xml estático (12 URLs)
+
+Performance:
+- LazyImage con IntersectionObserver + skeleton placeholder
+- Bundle optimization: 7 manualChunks granulares, cssCodeSplit, chunkSizeWarningLimit
+- Footer images migradas a LazyImage
+
+Bug fixes:
+- MisPedidos/ProductoDetalle/LoginCliente: fragments <> sin cerrar corregidos
+- sitemap.ts eliminado (importaba Express en frontend)

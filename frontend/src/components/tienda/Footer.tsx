@@ -72,9 +72,9 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p>&copy; 2024 Farmacy. Todos los derechos reservados.</p>
             <div className="flex gap-6">
-              <img src="https://img.icons8.com/?size=32&id=nAH3QQzz0nO1&format=png" alt="Visa" className="h-6" />
-              <img src="https://img.icons8.com/?size=32&id=sC7bTJuB5rqV&format=png" alt="Mastercard" className="h-6" />
-              <img src="https://img.icons8.com/?size=32&id=16509&format=png" alt="PayPal" className="h-6" />
+              <img src="https://img.icons8.com/?size=32&id=nAH3QQzz0nO1&format=png" alt="Visa" className="h-6" loading="lazy" />
+              <img src="https://img.icons8.com/?size=32&id=sC7bTJuB5rqV&format=png" alt="Mastercard" className="h-6" loading="lazy" />
+              <img src="https://img.icons8.com/?size=32&id=16509&format=png" alt="PayPal" className="h-6" loading="lazy" />
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { useCarritoStore } from '@/store/carritoStore'
 import { useFormateo, useAuthCliente } from '@/hooks'
 import { clientesService, productosService, chatbotService } from '@/services'
 import toast from 'react-hot-toast'
+import SEOHead from '@/components/shared/SEOHead'
 import InteractionAlertModal from '@/components/shared/InteractionAlertModal'
 
 export default function ProductoDetalle() {
@@ -67,12 +68,19 @@ export default function ProductoDetalle() {
   })
 
   if (isLoadingProducto) {
-    return <div className="py-20 text-center text-gray-500">Cargando información regulatoria de la base de datos...</div>
+    return (
+      <>
+        <SEOHead title="Cargando..." path={`/productos/${id}`} />
+        <div className="py-20 text-center text-gray-500">Cargando información regulatoria de la base de datos...</div>
+      </>
+    )
   }
 
   if (!producto) {
     return (
-      <div className="section-shell py-12">
+      <>
+        <SEOHead title="Producto no encontrado" path={`/productos/${id}`} />
+        <div className="section-shell py-12">
         <div className="surface p-8 text-center">
           <h1 className="text-2xl font-bold text-slate-900">Producto no encontrado</h1>
           <p className="mt-3 text-slate-600">El producto no existe, es de uso institucional controlado o fue retirado del sistema INVIMA.</p>
@@ -81,6 +89,7 @@ export default function ProductoDetalle() {
           </Link>
         </div>
       </div>
+      </>
     )
   }
 
@@ -116,7 +125,14 @@ export default function ProductoDetalle() {
   const esControlEspecial = producto.requiereRx || producto.modalidad?.toLowerCase().includes('control')
 
   return (
-    <div className="section-shell py-8 md:py-10">
+    <>
+      <SEOHead
+        title={producto?.nombre ? `${producto.nombre} ${producto.concentracion || ''}` : 'Producto'}
+        description={producto?.presentacion ? `${producto.nombre} — ${producto.presentacion}. ${producto.laboratorio || ''}. Precio: $${Number(producto.precioVenta).toLocaleString()}.` : `Detalle de ${producto?.nombre}`}
+        path={`/productos/${id}`}
+        image={producto?.imagenUrl || undefined}
+      />
+      <div className="section-shell py-8 md:py-10">
       <Link to="/productos" className="inline-flex items-center gap-2 text-teal-700 font-semibold hover:text-teal-900 mb-6">
         <ArrowLeft className="w-4 h-4" /> Volver al catálogo
       </Link>
@@ -549,5 +565,6 @@ export default function ProductoDetalle() {
         />
       )}
     </div>
+    </>
   )
 }

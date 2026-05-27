@@ -5,6 +5,7 @@ import { useCarrito, useFormateo, useCategorias } from '@/hooks'
 import { CATEGORIAS_ICONOS } from '@/config/constants'
 import { mockSedes } from '@/data/catalogo'
 import { productosService } from '@/services'
+import SEOHead from '@/components/shared/SEOHead'
 
 function Hero() {
   const { data } = useQuery({ queryKey: ['productos-hero'], queryFn: () => productosService.buscar({ limite: 4 }) })
@@ -152,6 +153,11 @@ function SeccionSedes() {
 export default function Inicio() {
   return (
     <>
+      <SEOHead
+        title="Inicio"
+        description="Farmacy — Tu farmacia digital de confianza en Pereira. Explora medicamentos, cuidado personal y vitaminas con inventario en tiempo real."
+        path="/"
+      />
       <Hero />
       <SeccionCategorias />
       <ProductosDestacados />

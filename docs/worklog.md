@@ -414,3 +414,86 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 - Reportes: 44%→100%, auth-cliente perfil: 66%→100%
 - schemas: 94.93% stmts, servicios: 95.76%, config: 99.5%
 - Todos los módulos ≥90% (excepto imagenes 46.96%)
+
+---
+
+## 2026-05-27 — Fase 13: SEO Técnico + Performance — meta tags, sitemap, lazy loading, bundle optimization
+
+**Objetivo:** Implementar meta tags dinámicos por página, sitemap XML, lazy loading de imágenes con IntersectionObserver, y optimización de bundles/build.
+
+### Cambios realizados
+
+#### 1. SEOHead reutilizable (`frontend/src/components/shared/SEOHead.tsx` — **nuevo**)
+- Componente con `Helmet` de `react-helmet-async` que recibe: `title`, `description`, `path`, `image`, `type`, `keywords`
+- Defaults: description, title suffix `| Farmacy`, keywords desde constants
+- Open Graph tags (`og:title`, `og:description`, `og:image`, `og:type`, `og:url`)
+- Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`)
+- `lang="es"` en `<html>` tag
+- Canonical URL generada automáticamente desde `path`
+
+#### 2. HelmetProvider en main.tsx
+- `frontend/src/main.tsx`: Envuelto con `<HelmetProvider>` (anidado dentro de StrictMode)
+
+#### 3. SEOHead integrado en páginas públicas
+| Página | Title | Description |
+|---|---|---|
+| Inicio | `Farmacy — Tu farmacia digital` | Catálogo de medicamentos INVIMA |
+| Catalogo | `Catálogo de productos` | + categorías + laboratorios |
+| ProductoDetalle | `{nombre} {concentracion}` | + presentación + precio |
+| QuienesSomos | `Quiénes somos` | + resumen corporativo |
+| Contacto | `Contacto` | + sucursales principales |
+| Sucursales | `Nuestras sucursales` | + horarios + servicios |
+| Carrito | `Tu carrito de compras` | + resumen |
+| Favoritos | `Mis favoritos` | + descripción |
+| MisPedidos | `Mis pedidos` | + historial de compras |
+| NoEncontrado | `Página no encontrada` | + mensaje 404 |
+| PoliticaPrivacidad | `Política de privacidad` | + resumen legal |
+| TerminosCondiciones | `Términos y condiciones` | + resumen legal |
+| LoginCliente | `Iniciar sesión` | + descripción
+
+#### 4. Sitemap XML + robots.txt
+- `frontend/public/sitemap.xml` (nuevo): 12 URLs principales con prioridades y frecuencias
+- `frontend/public/robots.txt`: Disallow `/api/*`, `/admin/*`, `/auth/*`; agregada directiva `Host`
+- `frontend/src/services/sitemap.ts` eliminado (importaba Express dentro del frontend)
+
+#### 5. LazyImage component (`frontend/src/components/shared/LazyImage.tsx` — **nuevo**)
+- Lazy loading con `IntersectionObserver` + `rootMargin: 200px` para carga anticipada
+- Placeholder/skeleton animado mientras carga
+- Fade-in transition (`opacity-0` → `opacity-100` con `duration-300`)
+- Fallback en error (oculta placeholder)
+- Soporte dark mode
+- Migrado a `<img loading="lazy">` nativo como capa adicional
+- Footer.tsx: imágenes de Visa/Mastercard/PayPal migradas a `<LazyImage>`
+
+#### 6. Bundle optimization (`frontend/vite.config.ts`)
+- `cssCodeSplit: true` — CSS dividido por chunk
+- `chunkSizeWarningLimit: 400` — warning solo si >400 kB
+- `assetsInlineLimit: 4096` — assets <4 KB inline como base64
+- `manualChunks` granular con función:
+  - `vendor-core`: React + ReactDOM + Router
+  - `vendor-seo`: react-helmet-async + dependencias
+  - `vendor-query`: @tanstack/react-query
+  - `vendor-charts`: recharts + d3
+  - `vendor-ui`: lucide-react
+  - `vendor-toast`: react-hot-toast + goober
+  - `vendor-state`: zustand
+
+#### 7. Bug fixes de JSX
+- **MisPedidos.tsx**: Loading state `return` reestructurado para cerrar fragment correctamente
+- **ProductoDetalle.tsx**: `!producto` return y main return — fragmentos `<>` sin cerrar, corregidos agregando `</>` 
+- **ProductoDetalle.tsx**: Fragment suelto dentro del tab de seguridad (listaAlergenos.map) corregido
+- **LoginCliente.tsx**: Doble `</>` eliminado
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ Vite build: exitoso (19.89s)
+- ✅ Code review: aprobado (3 fixes de fragment/div aplicados correctamente)
+
+### Chunks generados
+| Chunk | Tamaño | Gzip |
+|---|---|---|
+| `vendor-core` | 430 kB | 130 kB |
+| `vendor-charts` | 396 kB | 111 kB |
+| `vendor-query` | 232 kB | 66 kB |
+| app `index` | 184 kB | 39 kB |
+| Otros (5 chunks) | 23–86 kB | — |

@@ -1,0 +1,15 @@
+# Farmacy — robots.txt
+# https://farmacy.co
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /cuenta/
+Disallow: /auth/
+
+Sitemap: https://farmacy.co/sitemap.xml
+
+# Host
+Host: https://farmacy.co

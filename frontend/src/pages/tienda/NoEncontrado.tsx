@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
+import SEOHead from '@/components/shared/SEOHead'
 
 export default function NoEncontrado() {
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+    <>
+      <SEOHead title="Página no encontrada" description="La página que buscas no existe o fue movida. Farmacy — Tu farmacia digital de confianza." path="*" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
       <div className="text-8xl mb-4">🔍</div>
       <h1 className="text-4xl font-bold text-gray-900 mb-2">404</h1>
       <p className="text-xl text-gray-600 mb-2">Página no encontrada</p>
@@ -12,5 +15,6 @@ export default function NoEncontrado() {
         <Link to="/productos" className="btn-outline">Ver productos</Link>
       </div>
     </div>
+    </>
   )
 }
