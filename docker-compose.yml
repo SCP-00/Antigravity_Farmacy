@@ -1,13 +1,11 @@
-version: '3.9'
-
 # ══════════════════════════════════════════════════════════
 #  FARMACY — Docker Compose PRODUCCIÓN
 #  Levanta toda la aplicación: backend, frontend, BD, Redis
 #
 #  Uso:
-#    docker-compose up -d --build
-#    docker-compose down
-#    docker-compose logs -f backend
+#    docker compose up -d --build
+#    docker compose down
+#    docker compose logs -f backend
 # ══════════════════════════════════════════════════════════
 
 services:

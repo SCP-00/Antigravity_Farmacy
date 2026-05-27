@@ -679,4 +679,4 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 ### Fixes durante implementación
 - **Catálogo test**: Selector `[class*="product"]` no existía — cambiado a `button:has-text("Agregar")`
 - **Búsqueda test**: Form submit usaba `debouncedQ` (300ms debounce) — agregado `waitForTimeout(500)` antes de Enter
-- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`
+- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`nnnn + " + "prisma generate`" + " + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/nnbackend/scripts/prisma-postgenerate.jsn2.  � predev chain con post-generatennnn--color-dark-text-muted: #718096#7a8ba6n- Eliminados  duplicados (PostCSS warning fix)n### Docker Composen-  eliminado de ambos archivos (docker-compose.yml + docker-compose.dev.yml)n### Validacionesn- ? Frontend TS: 0 erroresn- ? E2E flujo-completo: 11/11 testsn
