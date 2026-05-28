@@ -54,12 +54,16 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - **Backend:** Express 4 + TypeScript 6.0 + Prisma 5.22
 - **Frontend:** React 19 + TypeScript 6.0 + Vite 6.4 + Tailwind CSS 4
 - **Build:** @tailwindcss/vite plugin (reemplaza postcss + autoprefixer)
-- **Testing:** Vitest v3 (510 tests, 95.35% cobertura)
+- **Testing:** Vitest v3 (521 tests, 95.35% cobertura)
+- **CI/CD:** GitHub Actions (3 workflows)
+- **Monitoreo:** Rutina documentada en `docs/monitoreo.md`
 
 ## Script entrypoints
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)
-- Frontend: `frontend/src/main.tsx` (React 18 + QueryClient)
-- Tests: Vitest v3 en `backend/` + `frontend/` (27 archivos, 462 tests, 83.7% cobertura)
+- Frontend: `frontend/src/main.tsx` (React 19 + QueryClient)
+- Tests: Vitest v3 en `backend/` (27 archivos, 521 tests)
+- CI: `pnpm run test` en GitHub Actions (3 workflows)
+- Monitoreo: `docs/monitoreo.md` — rutina operativa + checklist deploy
 
 ## 🧪 Regla: tests de frontend/browser siempre con @browser-use
 
@@ -126,6 +130,84 @@ console.log(`React root: ${root ? "✅ presente" : "❌ ausente"}`);
 await browser.close();
 ```
 Ejecutar con: `node test-app.mjs` (no necesita npm, solo Node.js + Playwright instalado vía pnpm)
+
+---
+
+## 🚀 CI/CD — GitHub Actions
+
+Este proyecto tiene **3 workflows** de GitHub Actions:
+
+### 1. CI (`ci.yml`)
+- **Disparador:** push/PR a `main`
+- **Jobs:** Backend (typecheck + tests + build), Frontend (typecheck + build), Prisma schema validation
+- **Concurrencia:** Cancela runs previos del mismo PR
+- **Redis service:** Incluido para compatibilidad con ioredis/BullMQ
+
+```yaml
+# Jobs principales:
+backend:  typecheck + 521 tests + build (15 min timeout)
+frontend: typecheck + Vite build (10 min timeout)
+prisma:   validate + generate schema (5 min timeout)
+```
+
+### 2. Secret Scanning (`secret-scanning.yml`)
+- **Disparador:** push/PR a `main`
+- **Tool:** Gitleaks con configuración custom en `backend/.gitleaks.toml`
+- **Cobertura:** JWT, DB URLs, Stripe, Wompi, MercadoPago, Cloudinary, SMTP, Google OAuth
+
+### 3. E2E Smoke (`e2e-smoke.yml`)
+- **Disparador:** `workflow_dispatch` (manual) o PR etiquetado con `e2e-smoke`
+- **Servicios:** PostgreSQL 15 + Redis 7
+- **Flujo:** Seed DB → Iniciar backend → Iniciar frontend → Playwright tests → Upload report
+- **Timeout:** 20 minutos
+
+### Variables de entorno para CI
+
+Todas las variables de CI están definidas inline en los workflows. No requieren secrets de GitHub para correr (usan valores de prueba). Para producción, configurar como **secrets del repositorio**:
+
+| Secret | Descripción |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Mínimo 32 caracteres |
+| `JWT_REFRESH_SECRET` | Refresh tokens |
+| `JWT_CLIENTE_SECRET` | Clientes B2C |
+| `REDIS_URL` | Redis connection string |
+| `VITE_API_URL` | Backend URL para el frontend |
+
+---
+
+## 📊 Monitoreo operativo
+
+Documentación completa en `docs/monitoreo.md`. Resumen:
+
+### Rutina de revisión
+
+| Periodo post-deploy | Frecuencia |
+|---|---|
+| Primera semana | 2 veces al día |
+| Semanas 2 a 4 | 1 vez al día |
+| Luego de estabilización | 3 veces por semana |
+| Tras cada release | Primeras 2 horas continuas |
+
+### Rutina rápida (5 min)
+
+```bash
+# 1. Contenedores arriba
+docker ps --format "table {{.Names}}\t{{.Status}}" | grep farmacy
+
+# 2. Healthcheck backend
+curl -s http://localhost:3000/api/v1/health
+
+# 3. Últimos errores
+docker logs farmacy_backend --since 1h | grep -i "error\|fatal\|crash" | tail -20
+
+# 4. Últimos 5XX Nginx
+docker logs farmacy_frontend --since 1h | grep "HTTP/1.1\" [45][0-9][0-9]" | tail -20
+```
+
+### Checklist de deploy
+
+Ver `docs/monitoreo.md#6-checklist-deploy` para el checklist completo de pre/post-deploy.
 
 ---
 

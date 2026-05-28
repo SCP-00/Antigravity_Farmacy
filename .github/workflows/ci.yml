@@ -1,0 +1,165 @@
+# ══════════════════════════════════════════════════════════
+#  FARMACY — CI Pipeline
+#  Corre en cada push a main y en cada PR.
+#
+#  Jobs:
+#    1. backend — typecheck + tests + build
+#    2. frontend — typecheck + build
+#    3. prisma — genera client y verifica schema
+# ══════════════════════════════════════════════════════════
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "11"
+
+jobs:
+  # ── Backend: typecheck + tests + build ─────────────────
+  backend:
+    name: Backend (typecheck + tests + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      # Redis necesario para ioredis/BullMQ (fallos no bloqueantes)
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: pnpm run db:generate
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+
+      - name: TypeScript check
+        working-directory: ./backend
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        working-directory: ./backend
+        run: pnpm run test
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+          REDIS_URL: "redis://localhost:6379"
+          JWT_SECRET: "test_jwt_secret_minimo_32_caracteres_para_ci"
+          JWT_REFRESH_SECRET: "test_refresh_secret_minimo_32_caracteres_para_ci"
+          JWT_CLIENTE_SECRET: "test_cliente_secret_minimo_32_caracteres_ci"
+          NODE_ENV: "test"
+
+      - name: Build
+        working-directory: ./backend
+        run: pnpm run build
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+          NODE_ENV: "production"
+
+  # ── Frontend: typecheck + build ────────────────────────
+  frontend:
+    name: Frontend (typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript check
+        working-directory: ./frontend
+        run: npx tsc --noEmit
+
+      - name: Build
+        working-directory: ./frontend
+        run: pnpm run build
+        env:
+          VITE_API_URL: "http://localhost:3000/api/v1"
+          VITE_APP_NAME: "Farmacy CI"
+
+  # ── Prisma: verifica que el schema compile ────────────
+  prisma:
+    name: Prisma schema validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        working-directory: ./backend
+        run: npx prisma validate --schema=../database/prisma/schema.prisma
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: pnpm run db:generate
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"

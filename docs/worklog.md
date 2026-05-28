@@ -2,6 +2,60 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 18: CI/CD con GitHub Actions + Monitoreo operativo
+
+**Objetivo:** Automatizar la validación y despliegue mediante GitHub Actions, y definir una rutina operativa de monitoreo con checklist de deploy.
+
+### Cambios realizados
+
+#### 1. CI Pipeline (`.github/workflows/ci.yml` — NUEVO)
+- **Disparador:** push/PR a `main`
+- **3 jobs paralelos:**
+  - **Backend:** Install → Prisma generate → Typecheck → Tests (521) → Build (tsc)
+  - **Frontend:** Install → Typecheck → Build (Vite)
+  - **Prisma:** Validate schema → Generate client
+- Service Redis incluido para ioredis/BullMQ
+- Concurrencia con cancelación de runs previos
+- Variables de entorno inline para CI (valores de prueba)
+
+#### 2. Secret Scanning (`.github/workflows/secret-scanning.yml` — NUEVO)
+- **Disparador:** push/PR a `main`
+- Usa `gitleaks/gitleaks-action@v2` con configuración custom `backend/.gitleaks.toml`
+- `fetch-depth: 0` para escanear todo el historial
+- Mensaje de error claro con instrucciones para falsos positivos
+
+#### 3. E2E Smoke (`.github/workflows/e2e-smoke.yml` — NUEVO)
+- **Disparador:** `workflow_dispatch` manual o PR etiquetado `e2e-smoke`
+- Servicios: PostgreSQL 15 + Redis 7 con healthchecks
+- Flujo completo: Seed DB → Iniciar backend (healthcheck polling) → Iniciar frontend → Playwright → Upload report
+- Filter opcional `test_filter` para correr tests específicos
+- Cleanup de servidores en `always()`
+
+#### 4. Monitoreo Operativo (`docs/monitoreo.md` — NUEVO)
+- 7 secciones:
+  1. Healthchecks del sistema (PostgreSQL, Redis, Backend, Frontend)
+  2. Logs a revisar por fuente (backend, nginx, postgres, redis)
+  3. Rutina de revisión escalonada (primera semana → estabilización)
+  4. Errores críticos (🔴) vs no críticos (🟡) vs informativos (⚪)
+  5. Alertas que requieren acción manual (inventario + sistema)
+  6. Checklist de deploy (antes/durante/después/post-mortem 24h)
+  7. Comandos útiles (Docker, backend, monitoreo continuo con cron)
+- Apéndice A: Referencia rápida de variables de entorno
+
+#### 5. Documentación actualizada
+- `AGENTS.md` — Nueva sección `🚀 CI/CD — GitHub Actions` con descripción de 3 workflows y tabla de secrets
+- `AGENTS.md` — Nueva sección `📊 Monitoreo operativo` con rutina rápida de 5 min
+- `plan.md` — Fase 18 marcada como ✅ COMPLETADA, orden actualizado
+- `docs/worklog.md` — Esta entrada
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-27 — Fase 17: Tiempo real y jobs asíncronos
 
 **Objetivo:** Eliminar polling innecesario y mover tareas pesadas fuera del request-response clásico mediante EventBus, SSE, WebSockets y BullMQ.

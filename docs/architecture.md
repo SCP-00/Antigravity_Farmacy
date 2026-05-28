@@ -58,6 +58,256 @@ Para asegurar la fiabilidad y rapidez requerida por el negocio, se han planifica
 ## Jobs (CRON)
 - \backend/src/jobs/alertas.ts: Verificación diaria (7:00 AM) de lotes próximos a vencer con umbrales escalonados (30/15/0 días) y stock crítico. Crea alertas en BD, notifica admins por email.
 
+## Infraestructura de Tiempo Real
+
+El sistema de tiempo real elimina el polling HTTP reemplazándolo por tres canales de comunicación asíncrona orquestados por un EventBus central:
+
+```
+┌──────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  Módulos     │────▶│    EventBus       │────▶│   SSE Manager    │──▶ Dashboard (admin)
+│  (ventas,    │     │  (EventEmitter)   │     └──────────────────┘
+│   caja,      │     │                   │     ┌──────────────────┐
+│   inventario)│────▶│  9 eventos        │────▶│  WS Manager      │──▶ POS (caja, stock)
+└──────────────┘     │  de dominio       │     └──────────────────┘
+                     │                   │     ┌──────────────────┐
+                     │                   │────▶│   BullMQ Workers  │──▶ CSV Export
+                     └───────────────────┘     └──────────────────┘
+```
+
+### Orden de inicialización en server.ts
+
+1. PostgreSQL (connectDB)
+2. Redis (connectRedis)
+3. Express app (createApp)
+4. SSE Manager (sseManager.init) — escucha EventBus, no necesita server HTTP
+5. Job alertas (iniciarJobAlertas)
+6. HTTP Server (app.listen)
+7. WebSocket Manager (wsManager.init) — necesita el server HTTP
+8. BullMQ Workers (iniciarWorkers) — después de WS
+
+**Shutdown (SIGTERM/SIGINT):** WS → SSE → Workers → HTTP → DB
+
+---
+
+### 1. EventBus (`backend/src/services/eventbus.service.ts`)
+
+Singleton basado en `EventEmitter` de Node.js. Es el middleware de mensajería entre los módulos del backend y los canales de salida (SSE, WebSocket, Queue).
+
+| Método | Descripción |
+|---|---|
+| `emit(tipo, data)` | Emite un evento de dominio con payload tipado `PayloadEvento { tipo, data, timestamp }` |
+| `on(tipo, listener)` | Se suscribe a un evento; retorna función unsubscribe |
+| `once(tipo, listener)` | Suscripción única (auto-removida tras emitir) |
+| `removeAll(tipo)` | Remueve todos los listeners de un tipo |
+| `stats()` | Estadísticas de listeners activos por tipo de evento |
+
+**Límite de listeners:** 30 (default de EventEmitter es 10)
+
+---
+
+### 2. SSE Service (`backend/src/services/sse.service.ts`)
+
+Distribuye eventos del EventBus a clientes conectados vía **Server-Sent Events**. Usado por el **Dashboard en vivo** del panel admin.
+
+| Método | Descripción |
+|---|---|
+| `init()` | Se suscribe a todos los eventos del EventBus + inicia heartbeat cada 15s |
+| `agregar(id, res, filtros?)` | Registra un nuevo cliente SSE con filtro opcional por tipo de evento |
+| `enviar(clienteId, evento, data)` | Envía un evento a un cliente específico |
+| `destroy()` | Detiene heartbeat, unsubscribe de EventBus, cierra todas las conexiones |
+| `stats()` | Retorna `{ clientesConectados, clientesIds }` |
+
+**Endpoint:** `GET /reportes/stream` (autenticación ADMIN / FARMACEUTA)
+**Query params opcionales:** `?eventos=dashboard:kpis-update,inventario:alerta`
+**Heartbeat:** Cada 15s (`:heartbeat`) para mantener conexión viva
+**Reconexión sugerida:** 3s (`retry: 3000`)
+
+**Headers de respuesta:**
+- `Content-Type: text/event-stream`
+- `Cache-Control: no-cache, no-transform`
+- `Connection: keep-alive`
+- `X-Accel-Buffering: no` (Nginx compat)
+
+**Ruta Express:** `backend/src/modules/reportes/reportes.sse.ts`
+
+---
+
+### 3. WebSocket Manager (`backend/src/services/websocket.service.ts`)
+
+WebSocket nativo (librería `ws`) sobre el mismo server HTTP. Usado por el **POS en vivo** (eventos de caja, stock crítico, ventas concurrentes).
+
+| Método | Descripción |
+|---|---|
+| `init(server)` | Crea WebSocketServer sobre el HTTP server existente, path `/ws` |
+| `destroy()` | Cierra todas las conexiones y limpia |
+| `stats()` | Retorna `{ clientesConectados, canales: { [canal]: count } }` |
+
+#### Canales de suscripción
+
+| Canal | Suscriptores por defecto | Eventos que recibe |
+|---|---|---|
+| `pos:caja` | Todos los roles autenticados | Apertura/cierre de caja en otras sesiones |
+| `pos:ventas` | Todos los roles autenticados | Nueva venta registrada |
+| `pos:stock` | Anónimos + autenticados | Stock crítico (< 10 unidades) |
+| `admin:alertas` | Solo ADMINISTRADOR | Alertas de inventario |
+
+Los clientes pueden cambiar sus canales dinámicamente enviando mensajes:
+```json
+{"type": "SUBSCRIBE", "channel": "admin:alertas"}
+{"type": "UNSUBSCRIBE", "channel": "pos:ventas"}
+```
+
+**Autenticación:** JWT vía query param `?token=...` en la URL WS.
+**Heartbeat:** Ping automático cada 30s.
+**Payload máximo:** 100 KB.
+**Formato de mensaje saliente:** `{ "event": string, "data": object, "timestamp": string }`
+
+---
+
+### 4. BullMQ Queue + Workers (`backend/src/jobs/queue.ts`)
+
+Cola de jobs asíncronos sobre Redis para tareas pesadas fuera del request-response.
+
+#### Colas definidas
+
+| Cola | Worker | Retry | Backoff | Concurrencia | Rate limit |
+|---|---|---|---|---|---|
+| `csv-export` | ✅ Activo | 3 | 2s exponencial | 2 | 5/min |
+| `emails` | ❌ Pendiente | 5 (definido) | 5s exponencial | — | — |
+
+#### Configuración de retención
+| Cola | `removeOnComplete` | `removeOnFail` |
+|---|---|---|
+| csv-export | 7 días | 30 días |
+| emails | 1 día | 7 días |
+
+#### CSV Export Worker
+
+Procesa jobs `csv-export` generando archivos CSV de ventas/compras/inventario y persistiendo el resultado en Redis con expiración de 1 hora:
+
+```
+Job recibido → import dinámico de csv-export.job → exportarCSV() → redis.setex(`csv:${jobId}`, 3600, csv) → eventBus.emit(JOB_COMPLETADO)
+```
+
+**Resultado descargable:** `GET /reportes/csv/:jobId` (lee desde Redis — implementación pendiente)
+
+**Eventos emitidos:**
+- `JOB_COMPLETADO` con `{ tipo, jobId, key }`
+- `JOB_ERROR` con `{ tipo, jobId, error }`
+
+**Archivos:**
+- `backend/src/jobs/queue.ts` — Definición de colas, workers, inicialización/detención
+- `backend/src/jobs/csv-export.job.ts` — Lógica de exportación CSV (también exportable para uso síncrono directo)
+
+---
+
+### 5. Event Wiring — Contratos de Eventos
+
+Los módulos de negocio emiten eventos al EventBus en puntos específicos del flujo:
+
+#### Ventas (`backend/src/modules/ventas/ventas.routes.ts`)
+```typescript
+// POST /ventas — Crear venta (después de completar transacción)
+eventBus.emit(Eventos.VENTA_REGISTRADA, { ventaId, numero, total, metodoPago })
+```
+
+#### Caja (`backend/src/modules/caja/caja.routes.ts`)
+```typescript
+// POST /caja/abrir — Abrir caja (después de crear sesión)
+eventBus.emit(Eventos.CAJA_ABIERTA, { cajaId, empleadoId, montoInicial, abiertaEn })
+
+// POST /caja/:id/cerrar — Cerrar caja (después de registrar cierre)
+eventBus.emit(Eventos.CAJA_CERRADA, { cajaId, empleadoId, montoFinal, diferencia })
+```
+
+#### Inventario (`backend/src/modules/inventario/inventario.routes.ts`)
+```typescript
+// POST /inventario/ajuste — Ajustar stock
+eventBus.emit(Eventos.STOCK_AJUSTADO, { productoId, loteId, cantidadAnterior, cantidadNueva, tipo })
+
+// Si stock final <= 10, se emite además:
+eventBus.emit(Eventos.STOCK_CRITICO, { productoId, nombre, stockActual })
+```
+
+---
+
+### 6. Tabla completa de eventos del dominio
+
+| Constante | Valor string | Emisor | Consumidores | Payload |
+|---|---|---|---|---|
+| `DASHBOARD_KPIS_UPDATE` | `dashboard:kpis-update` | — *(reservado)* | SSE → Dashboard | `{ kpis... }` |
+| `INVENTARIO_ALERTA` | `inventario:alerta` | — *(reservado)* | SSE + WS → Dashboard, POS | `{ alertaId, tipo, mensaje }` |
+| `CAJA_ABIERTA` | `caja:abierta` | `caja.routes.ts` | WS → POS (canal `pos:caja`) | `{ cajaId, empleadoId, montoInicial, abiertaEn }` |
+| `CAJA_CERRADA` | `caja:cerrada` | `caja.routes.ts` | WS → POS (canal `pos:caja`) | `{ cajaId, empleadoId, montoFinal, diferencia }` |
+| `VENTA_REGISTRADA` | `venta:registrada` | `ventas.routes.ts` | WS → POS (canal `pos:ventas`) | `{ ventaId, numero, total, metodoPago }` |
+| `STOCK_CRITICO` | `inventario:stock-critico` | `inventario.routes.ts` | WS → POS (canal `pos:stock`) | `{ productoId, nombre, stockActual }` |
+| `STOCK_AJUSTADO` | `inventario:stock-ajustado` | `inventario.routes.ts` | WS (canal `pos:stock`) | `{ productoId, loteId, cantidadAnterior, cantidadNueva, tipo }` |
+| `JOB_COMPLETADO` | `job:completado` | `csv-export.job.ts` | EventBus (logging) | `{ tipo, jobId, key }` |
+| `JOB_ERROR` | `job:error` | `csv-export.job.ts` | EventBus (logging) | `{ tipo, jobId, error }` |
+
+---
+
+### 7. Frontend — Hooks (`frontend/src/hooks/useRealtime.ts`)
+
+| Hook | Protocolo | Uso | Reconexión |
+|---|---|---|---|
+| `useSSE(options)` | Fetch + ReadableStream (SSE) | Dashboard en vivo | Backoff exponencial 1s→30s, max 20 intentos |
+| `useWS(options)` | WebSocket nativo | POS en vivo | Backoff exponencial 1s→30s, max 20 intentos |
+
+#### `useSSE(options)`
+
+Usa `fetch()` con header `Authorization` en lugar de `EventSource` nativo (no soporta headers personalizados). Retorna `{ conectado, ultimoEvento }`.
+
+| Option | Tipo | Default | Descripción |
+|---|---|---|---|
+| `eventos` | `string[]` | `undefined` | Filtro opcional de eventos a recibir (query param `?eventos=...`) |
+| `onEvent` | `(event: SSEEvent) => void` | — | Callback por cada evento recibido |
+| `onConnected` | `() => void` | — | Callback al conectar o reconectar exitosamente |
+| `enabled` | `boolean` | `true` | Si `false`, no intenta conectar |
+
+**Payload SSEEvent:** `{ tipo: string, data: Record<string, unknown>, timestamp: string }`
+
+#### `useWS(options)`
+
+Retorna `{ conectado, ultimoEvento, enviar }`.
+
+| Option | Tipo | Default | Descripción |
+|---|---|---|---|
+| `onEvent` | `(event: WSEvent) => void` | — | Callback por cada mensaje WS recibido |
+| `onConnected` | `() => void` | — | Callback al conectar |
+| `enabled` | `boolean` | `true` | Si `false`, no intenta conectar |
+
+| Método `enviar` | Descripción |
+|---|---|
+| `enviar('SUBSCRIBE', 'admin:alertas')` | Suscribirse a un canal |
+| `enviar('UNSUBSCRIBE', 'pos:ventas')` | Desuscribirse de un canal |
+| `enviar('PING')` | Heartbeat manual |
+
+**Payload WSEvent:** `{ event: string, data: Record<string, unknown>, timestamp: string }`
+
+**URL de conexión:** Se deriva automáticamente de `VITE_API_URL` convirtiendo `http://` → `ws://`.
+
+**Exportado desde:** `frontend/src/hooks/index.ts`
+
+---
+
+### 8. Conexión Redis para BullMQ
+
+BullMQ necesita conexiones Redis dedicadas. El módulo `queue.ts` parsea `REDIS_URL` (formato `redis://[[usuario][:password]@][host][:port]`) usando `new URL()`:
+
+```typescript
+const url = new URL(process.env.REDIS_URL)
+return {
+  host: url.hostname || 'localhost',
+  port: Number(url.port) || 6379,
+  password: url.password || undefined,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+}
+```
+
+Fallback a `localhost:6379` si `REDIS_URL` no está configurada o tiene formato inválido.
+
 ## Testing
 - **Framework:** Vitest v3 (sync backend/frontend) + supertest para tests de integración
 - **27 archivos de test** (510 tests — todos pasan ✅)

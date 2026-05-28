@@ -1,0 +1,164 @@
+# ══════════════════════════════════════════════════════════
+#  FARMACY — E2E Smoke Tests (Playwright)
+#
+#  Corre tests end-to-end de flujos críticos.
+#  Se ejecuta manualmente (workflow_dispatch) y en PRs
+#  etiquetados con "e2e-smoke".
+#
+#  Requisitos:
+#    - PostgreSQL y Redis deben estar disponibles
+#    - Seeds deben estar pobladas
+# ══════════════════════════════════════════════════════════
+
+name: E2E Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_filter:
+        description: "Filtro de tests (ej: public-navigation o vacío para todos)"
+        required: false
+        default: ""
+        type: string
+  pull_request:
+    types: [labeled]
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "11"
+
+jobs:
+  e2e:
+    name: Playwright E2E tests
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e-smoke'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: farmacy_db
+          POSTGRES_USER: farmacy_user
+          POSTGRES_PASSWORD: farmacy_pass
+        options: >-
+          --health-cmd "pg_isready -U farmacy_user -d farmacy_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: |
+            backend/pnpm-lock.yaml
+            frontend/pnpm-lock.yaml
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: pnpm run db:generate
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+
+      - name: Push database schema
+        working-directory: ./backend
+        run: npx prisma db push --schema=../database/prisma/schema.prisma
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+
+      - name: Seed database
+        working-directory: ./backend
+        run: npx tsx ../database/seeds/seed.ts
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+          JWT_SECRET: "test_jwt_secret_minimo_32_caracteres_para_ci"
+          JWT_REFRESH_SECRET: "test_refresh_secret_minimo_32_caracteres_para_ci"
+          JWT_CLIENTE_SECRET: "test_cliente_secret_minimo_32_caracteres_ci"
+          NODE_ENV: "development"
+
+      - name: Start backend
+        working-directory: ./backend
+        run: |
+          npx tsx src/server.ts &
+          BACKEND_PID=$!
+          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
+          # Esperar a que el backend esté listo
+          for i in $(seq 1 30); do
+            curl -s http://localhost:3000/api/v1/health && break
+            sleep 1
+          done
+        env:
+          DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
+          REDIS_URL: "redis://localhost:6379"
+          JWT_SECRET: "test_jwt_secret_minimo_32_caracteres_para_ci"
+          JWT_REFRESH_SECRET: "test_refresh_secret_minimo_32_caracteres_para_ci"
+          JWT_CLIENTE_SECRET: "test_cliente_secret_minimo_32_caracteres_ci"
+          FRONTEND_URL: "http://localhost:5173"
+          NODE_ENV: "development"
+          PORT: "3000"
+
+      - name: Start frontend
+        working-directory: ./frontend
+        run: |
+          npx vite --host 0.0.0.0 --port 5173 &
+          FRONTEND_PID=$!
+          echo "FRONTEND_PID=$FRONTEND_PID" >> $GITHUB_ENV
+          # Esperar a que Vite esté listo
+          for i in $(seq 1 15); do
+            curl -s http://localhost:5173 && break
+            sleep 2
+          done
+
+      - name: Run Playwright tests
+        working-directory: ./
+        run: |
+          npx playwright test --config=e2e/playwright.config.ts \
+            ${{ github.event.inputs.test_filter && format('--grep {0}', github.event.inputs.test_filter) || '' }} \
+            --reporter=html,list
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/reports/
+          retention-days: 7
+
+      - name: Stop servers
+        if: always()
+        run: |
+          kill $BACKEND_PID 2>/dev/null || true
+          kill $FRONTEND_PID 2>/dev/null || true

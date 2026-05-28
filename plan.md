@@ -402,35 +402,26 @@ Eliminar polling innecesario y mover tareas pesadas fuera del request-response c
 
 ---
 
-### Fase 18 — CI/CD, Deploy y monitoreo ⏳
+### Fase 18 — CI/CD, Deploy y monitoreo ✅
 
 **Estimación:** 1 semana
 **Prioridad:** 🔴 Must have
-**Estado:** ⏳ PENDIENTE
+**Estado:** ✅ COMPLETADA (2026-05-28)
 
 #### Objetivo
 Automatizar la validación y despliegue, y definir rutina operativa de monitoreo.
 
 #### Tareas
-- [ ] Configurar **GitHub Actions**
-  - [ ] Install + Typecheck + Tests backend/frontend + Build
-  - [ ] Secret scanning
-  - [ ] E2E smoke si el entorno lo permite
-- [ ] Definir **monitoreo básico**
-  - [ ] Qué logs revisar
-  - [ ] Cada cuánto revisarlos
-  - [ ] Qué errores son críticos
-  - [ ] Qué alertas requieren acción manual
-- [ ] Documentar checklist de deploy
-
-#### Rutina mínima de monitoreo sugerida
-
-| Periodo | Acción |
-|---|---|
-| **Primera semana post-deploy** | Revisar logs **2 veces al día** |
-| **Semanas 2 a 4** | Revisar logs **1 vez al día** |
-| **Luego de estabilización** | Revisar logs **3 veces por semana** |
-| **Tras cada release** | Revisar logs y healthchecks durante las primeras **2 horas** |
+- [x] Configurar **GitHub Actions** (3 workflows)
+  - [x] CI: typecheck + tests + build (back + front + prisma)
+  - [x] Secret scanning con Gitleaks en PR y push a main
+  - [x] E2E smoke con Playwright (manual o con label `e2e-smoke`)
+- [x] Definir **monitoreo básico** en `docs/monitoreo.md`
+  - [x] Qué logs revisar y dónde
+  - [x] Frecuencia de revisión escalonada
+  - [x] Errores críticos vs no críticos
+  - [x] Alertas que requieren acción manual
+- [x] Documentar checklist de deploy completo (antes/durante/después/post-mortem)
 
 ---
 
@@ -498,9 +489,9 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [ ] CDN de assets estáticos
 - [x] Docker multi-stage de producción
 - [x] Healthchecks en compose
-- [ ] GitHub Actions (CI/CD)
+- [x] GitHub Actions (CI/CD)
 - [x] PWA + Service Worker + offline fallback
-- [ ] Monitoreo básico documentado
+- [x] Monitoreo básico documentado
 
 ---
 
@@ -516,7 +507,7 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 | 6 | **Fase 15** — Docker producción + deploy | ✅ COMPLETADA |
 | 7 | **Fase 16** — Auditoría + trazabilidad | ✅ COMPLETADA |
 | 8 | **Fase 17** — Tiempo real + jobs asíncronos | ✅ COMPLETADA |
-| 9 | **Fase 18** — CI/CD + monitoreo | ⏳ PENDIENTE |
+| 9 | **Fase 18** — CI/CD + monitoreo | ✅ COMPLETADA |
 | 10 | **Fase 19** — Polish extendido | ⏳ PENDIENTE |
 
 ---
@@ -539,8 +530,8 @@ Se considerará esta etapa terminada cuando:
 
 - [ ] Todos los **Must have** estén implementados
 - [x] Los flujos críticos tengan cobertura **E2E**
-- [ ] Exista pipeline **CI/CD** funcional
+- [x] Exista pipeline **CI/CD** funcional
 - [x] El despliegue en Docker de producción sea reproducible
-- [ ] Exista monitoreo básico y rutina documentada
+- [x] Exista monitoreo básico y rutina documentada
 - [x] La documentación (`plan.md`, `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md`, `docs/worklog.md`) esté alineada
 - [ ] El producto pueda operar con confianza razonable en entorno real sin depender de conocimiento tácito
