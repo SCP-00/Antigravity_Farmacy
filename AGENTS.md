@@ -354,8 +354,9 @@ netstat -ano | findstr :3000
 ### Rate limiters granulares
 | Middleware | Límite | Aplica en |
 |---|---|---|
-| `limitarCreacion` | 30 req/min | POST/PUT/PATCH (productos, ventas, compras) |
-| `limitarBusqueda` | 60 req/min | GET /buscar (productos, ventas) |
+| `limitarCreacion` | 30 req/min | POST/PUT/PATCH (productos, ventas, compras, auth refresh/logout, auth-cliente) |
+| `limitarBusqueda` | 60 req/min | GET /buscar + GET / + GET /:id (productos, ventas) |
+| `limitarRegistro` | **5 req/hora** | POST /registro (auth-cliente) — skip automático en `NODE_ENV=test` |
 | `limitarWebhook` | `RATE_LIMIT_WEBHOOK_MAX` env var | Webhooks Wompi/Stripe/MercadoPago |
 | `limitarLogin` | `RATE_LIMIT_AUTH_MAX` env var | Login admin + cliente |
 
@@ -366,6 +367,62 @@ netstat -ano | findstr :3000
 | `RATE_LIMIT_WEBHOOK_MAX` | 60 | Máx requests/min para webhooks |
 | `RATE_LIMIT_CREACION_MAX` | 30 | Máx requests/min para POST/PUT/PATCH |
 | `RATE_LIMIT_BUSQUEDA_MAX` | 60 | Máx requests/min para búsqueda pública |
+
+### Endpoints protegidos
+
+#### Auth admin (`auth.routes.ts`)
+| Endpoint | Middleware |
+|---|---|
+| POST /login | `limitarLogin` (10/15min) |
+| POST /refresh | `limitarCreacion` |
+| POST /logout | `limitarCreacion` |
+
+#### Auth cliente (`authCliente.routes.ts`)
+| Endpoint | Middleware |
+|---|---|
+| POST /registro | `limitarRegistro` (5/hora) |
+| POST /login | `limitarLogin` |
+| POST /verificar-email | `limitarCreacion` |
+| POST /recuperar-password | `limitarCreacion` |
+| POST /reset-password | `limitarCreacion` |
+| POST /logout | `limitarCreacion` |
+| POST /favoritos | `limitarCreacion` |
+| POST /pedidos/:id/devolucion-request | `limitarCreacion` |
+
+#### Catálogo público (`productos.routes.ts`)
+| Endpoint | Middleware |
+|---|---|
+| GET / (admin list) | `autenticar, validarQuery, limitarBusqueda` |
+| GET /buscar (público) | `limitarBusqueda, validarQuery` |
+| GET /:id (detalle público) | `limitarBusqueda` |
+
+---
+
+## 🛡️ Fase 23a — NoSQL injection hardening
+
+### Chatbot (`chatbot.routes.ts`)
+- **Zod body validation:** `mensajeChatbotSchema` (string max 500) + `interaccionesSchema` (string[] 2-20)
+- **Type guards:** `sanitizarInput(input: unknown)`, `sanitizarSessionToken(token: unknown)`, `buscarProductos(query)` con `typeof` check
+- **Filter guard:** `.filter((p: unknown) => typeof p === 'string')` en split de palabras
+- Orden: `limitarCreacion, validarCuerpo(schema), handler` — rate limiting antes de validación costosa
+
+### Endpoints con `contains` de Prisma — Zod query validation
+| Archivo | Schema | Validación |
+|---|---|---|
+| `productos.routes.ts` | `listarAdminSchema` | `q`, `categoriaId`, `activo`, `laboratorio` como `z.string().optional()` |
+| `auditoria.routes.ts` | `logsQuerySchema` | `desde`, `hasta`, `accion`, `modulo`, `empleadoId`, `ip`, `q` como `z.string().optional()` |
+| `proveedores.routes.ts` | `listarProveedoresSchema` | `q`, `activo` como `z.string().optional()` |
+| `clientes.admin.routes.ts` | `listarClientesSchema` | `q`, `documento` como `z.string().optional()` |
+
+### iLike() helper — defense-in-depth
+```typescript
+const iLike = (value: unknown) => ({
+  contains: typeof value === 'string' ? value : '',
+  mode: Prisma.QueryMode.insensitive,
+})
+```
+- Tipo cambiado de `value: string` a `value: unknown` con runtime type guard
+- Aplicado en: `proveedores.routes.ts`, `clientes.admin.routes.ts`
 
 ---
 

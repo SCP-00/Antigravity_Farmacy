@@ -19,7 +19,7 @@ import { prisma } from '../../config/database'
 import { cache } from '../../config/redis'
 import { jwtCliente, jwtTemp } from '../../utils/jwt.utils'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticarCliente, validarCuerpo, limitarLogin } from '../../middlewares/index'
+import { autenticarCliente, validarCuerpo, limitarLogin, limitarCreacion, limitarRegistro } from '../../middlewares/index'
 import { sendEmail, emailTemplates } from '../../config/mailer'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
@@ -50,6 +50,7 @@ export const authClienteRouter: Router = Router()
 // ── POST /registro ────────────────────────────────────────
 authClienteRouter.post(
   '/registro',
+  limitarRegistro,
   validarCuerpo(registroSchema),
   async (req: Request, res: Response) => {
     const { nombre, apellido, email, password, autorizacionDatos } = req.body
@@ -151,7 +152,7 @@ authClienteRouter.get('/google/callback',
 )
 
 // ── POST /verificar-email ─────────────────────────────────
-authClienteRouter.post('/verificar-email', async (req: Request, res: Response) => {
+authClienteRouter.post('/verificar-email', limitarCreacion, async (req: Request, res: Response) => {
   const { token } = req.body
   if (!token) return responder.error(res, 'Token requerido')
 
@@ -172,7 +173,7 @@ authClienteRouter.post('/verificar-email', async (req: Request, res: Response) =
 })
 
 // ── POST /recuperar-password ──────────────────────────────
-authClienteRouter.post('/recuperar-password', async (req: Request, res: Response) => {
+authClienteRouter.post('/recuperar-password', limitarCreacion, async (req: Request, res: Response) => {
   const { email } = req.body
   if (!email) return responder.error(res, 'Email requerido')
 
@@ -203,7 +204,7 @@ authClienteRouter.post('/recuperar-password', async (req: Request, res: Response
 })
 
 // ── POST /reset-password ──────────────────────────────────
-authClienteRouter.post('/reset-password', async (req: Request, res: Response) => {
+authClienteRouter.post('/reset-password', limitarCreacion, async (req: Request, res: Response) => {
   const { token, password } = req.body
   if (!token || !password) return responder.error(res, 'Token y contraseña requeridos')
 
@@ -257,7 +258,7 @@ authClienteRouter.get('/pedidos', autenticarCliente, async (req: Request, res: R
 })
 
 // ── POST /pedidos/:id/devolucion-request — Cliente solicita devolución
-authClienteRouter.post('/pedidos/:id/devolucion-request', autenticarCliente, async (req: Request, res: Response) => {
+authClienteRouter.post('/pedidos/:id/devolucion-request', autenticarCliente, limitarCreacion, async (req: Request, res: Response) => {
   const ventaId = req.params.id
   const { motivo } = req.body
   if (!motivo) return responder.error(res, 'motivo requerido', 400)
@@ -281,7 +282,7 @@ authClienteRouter.post('/pedidos/:id/devolucion-request', autenticarCliente, asy
 })
 
 // ── POST /favoritos — Toggle favorito para el cliente autenticado
-authClienteRouter.post('/favoritos', autenticarCliente, async (req: Request, res: Response) => {
+authClienteRouter.post('/favoritos', autenticarCliente, limitarCreacion, async (req: Request, res: Response) => {
   const { productoId } = req.body
   if (!productoId) return responder.error(res, 'productoId requerido', 400)
   try {
@@ -295,7 +296,7 @@ authClienteRouter.post('/favoritos', autenticarCliente, async (req: Request, res
   } catch (err) { return responder.serverError(res, err) }
 })
 // ── POST /logout ──────────────────────────────────────────
-authClienteRouter.post('/logout', autenticarCliente, async (req: Request, res: Response) => {
+authClienteRouter.post('/logout', autenticarCliente, limitarCreacion, async (req: Request, res: Response) => {
   const header = req.headers.authorization
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null
   

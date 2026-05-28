@@ -4,14 +4,28 @@
 // ══════════════════════════════════════════════════════════
 
 import { Router, Request, Response } from 'express'
+import { z } from 'zod'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar } from '../../middlewares/index'
+import { autenticar, autorizar, validarQuery } from '../../middlewares/index'
 
 export const auditoriaRouter: Router = Router()
 
+// ── Schema validación query params — previene NoSQL injection
+const logsQuerySchema = z.object({
+  desde:      z.string().optional(),
+  hasta:      z.string().optional(),
+  accion:     z.string().optional(),
+  modulo:     z.string().optional(),
+  empleadoId: z.string().optional(),
+  ip:         z.string().optional(),
+  q:          z.string().optional(),
+  pagina:     z.string().optional(),
+  limite:     z.string().optional(),
+})
+
 // ── GET /logs-actividad ───────────────────────────────────
-auditoriaRouter.get('/logs-actividad', autenticar, autorizar('ADMINISTRADOR'), async (req: Request, res: Response) => {
+auditoriaRouter.get('/logs-actividad', autenticar, autorizar('ADMINISTRADOR'), validarQuery(logsQuerySchema), async (req: Request, res: Response) => {
   const { skip, limite, pagina } = parsePaginacion(req.query as any)
   const { desde, hasta, accion, modulo, empleadoId, ip, q } = req.query as any
 

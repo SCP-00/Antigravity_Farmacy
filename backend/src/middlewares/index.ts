@@ -207,6 +207,17 @@ export const limitarBusqueda: RateLimitRequestHandler = rateLimit({
   message: { ok: false, error: 'Demasiadas búsquedas. Intenta más tarde.' },
 })
 
+// Rate limiter estricto para registro de nuevos usuarios (5 intentos por hora por IP)
+// Se desactiva en test (NODE_ENV=test) para no interferir con unit tests
+export const limitarRegistro: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  skip: () => env.NODE_ENV === 'test',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Demasiados intentos de registro. Espera 1 hora.' },
+})
+
 export function loggerHttp(req: Request, _res: Response, next: NextFunction) {
   if (env.NODE_ENV === 'development') logger.debug(`-> ${req.method} ${req.path}`)
   next()

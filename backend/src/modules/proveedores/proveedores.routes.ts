@@ -1,19 +1,27 @@
 import { Router, Request, Response } from 'express'
+import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, validarQuery, limitarCreacion } from '../../middlewares/index'
 import { crearProveedorSchema, actualizarProveedorSchema } from '../../schemas/inventario.schema'
 
 export const proveedoresRouter: Router = Router()
 
+// ── Schema validación query params — previene NoSQL injection
+const listarProveedoresSchema = z.object({
+  q:      z.string().optional(),
+  pagina: z.string().optional(),
+  limite: z.string().optional(),
+})
+
 // ── Insensitive mode helper ───────────────────────────────
-const iLike = (value: string) => ({
-  contains: value,
+const iLike = (value: unknown) => ({
+  contains: typeof value === 'string' ? value : '',
   mode: Prisma.QueryMode.insensitive,
 })
 
-proveedoresRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+proveedoresRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), validarQuery(listarProveedoresSchema),
   async (req: Request, res: Response) => {
     const { skip, limite, pagina } = parsePaginacion(req.query as any)
     const { q } = req.query as any

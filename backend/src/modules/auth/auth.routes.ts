@@ -5,7 +5,7 @@ import { prisma } from '../../config/database'
 import { cache } from '../../config/redis'
 import { jwtEmpleado } from '../../utils/jwt.utils'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticar, validarCuerpo, limitarLogin } from '../../middlewares/index'
+import { autenticar, validarCuerpo, limitarLogin, limitarCreacion } from '../../middlewares/index'
 import { logger } from '../../utils/logger'
 
 const loginSchema = z.object({
@@ -53,7 +53,7 @@ authRouter.post('/login', limitarLogin, validarCuerpo(loginSchema), async (req: 
 })
 
 // POST /api/v1/auth/refresh (Rotación de Tokens)
-authRouter.post('/refresh', async (req: Request, res: Response) => {
+authRouter.post('/refresh', limitarCreacion, async (req: Request, res: Response) => {
   const { refreshToken } = req.body
   if (!refreshToken) return responder.error(res, 'Refresh token requerido')
 
@@ -84,7 +84,7 @@ authRouter.post('/refresh', async (req: Request, res: Response) => {
 })
 
 // POST /api/v1/auth/logout
-authRouter.post('/logout', autenticar, async (req: Request, res: Response) => {
+authRouter.post('/logout', autenticar, limitarCreacion, async (req: Request, res: Response) => {
   const header = req.headers.authorization
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null
   const { refreshToken } = req.body

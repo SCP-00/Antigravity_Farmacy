@@ -10,16 +10,31 @@
 // ══════════════════════════════════════════════════════════
 
 import { Router, Request, Response } from 'express'
+import { z } from 'zod'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
 import { verificarInteracciones, recomendarSimilares } from '../../services/interacciones.service'
+import { validarCuerpo } from '../../middlewares/index'
 
 export const chatbotRouter: Router = Router()
 
+// ── Schemas de validación Zod ──────────────────────────
+// Protegen contra NoSQL injection (objetos inyectados como strings)
+// y aseguran types correctos antes de llegar a Prisma
+
+const mensajeChatbotSchema = z.object({
+  mensaje: z.string().max(500).default(''), // Permite vacío; el handler retorna 400 custom
+  sessionToken: z.string().max(128).optional(),
+})
+
+const interaccionesSchema = z.object({
+  productoIds: z.array(z.string().min(1)).max(20).optional().default([]), // Default vacío; handler retorna 400 custom
+  alergenosCliente: z.array(z.string().min(1)).max(20).optional(),
+})
+
 // ── Sanitización de inputs ──────────────────────────────
-// Límites para proteger contra abuso y XSS
 const MAX_MENSAJE_LENGTH = 500
 const MAX_SESSION_TOKEN_LENGTH = 128
 
@@ -28,8 +43,11 @@ const MAX_SESSION_TOKEN_LENGTH = 128
  * - Elimina etiquetas HTML/XML
  * - Limita la longitud
  * - Elimina caracteres de control (excepto saltos de línea básicos)
+ * - Seguridad: fuerza typeof === 'string' para prevenir NoSQL injection
  */
-function sanitizarInput(input: string, maxLength: number = MAX_MENSAJE_LENGTH): string {
+function sanitizarInput(input: unknown, maxLength: number = MAX_MENSAJE_LENGTH): string {
+  // Defense-in-depth: rechazar no-strings (evita inyección de objetos)
+  if (typeof input !== 'string') return ''
   let limpio = input
     // Eliminar etiquetas HTML/XML completas con contenido
     .replace(/<[^>]*>/g, '')
@@ -44,8 +62,10 @@ function sanitizarInput(input: string, maxLength: number = MAX_MENSAJE_LENGTH): 
 /**
  * Valida que un sessionToken sea seguro para usar como clave de BD.
  * Solo permite caracteres alfanuméricos, guiones y puntos.
+ * Seguridad: fuerza typeof === 'string' para prevenir NoSQL injection.
  */
-function sanitizarSessionToken(token: string): string {
+function sanitizarSessionToken(token: unknown): string {
+  if (typeof token !== 'string') return ''
   return token
     .replace(/[^a-zA-Z0-9\-_.]/g, '')
     .slice(0, MAX_SESSION_TOKEN_LENGTH)
@@ -241,10 +261,13 @@ async function guardarSesion(sessionToken: string, data: SesionData): Promise<vo
 
 // ── Buscar productos en BD ────────────────────────────────
 async function buscarProductos(query: string) {
+  // Defense-in-depth: garantizar que query sea string (no objeto inyectado)
+  if (typeof query !== 'string') return []
+
   const palabras = query
     .split(/[,\s]+/)
-    .filter((p: string) => p.length >= 2)
-    .slice(0, 5)
+    .filter((p: unknown) => typeof p === 'string' && p.length >= 2)
+    .slice(0, 5) as string[]
 
   if (palabras.length === 0) return []
 
@@ -967,15 +990,11 @@ chatbotRouter.get('/horario', (_req: Request, res: Response) => {
 })
 
 // ── POST /interacciones ───────────────────────────────────
-chatbotRouter.post('/interacciones', async (req: Request, res: Response) => {
-  const { productoIds, alergenosCliente } = req.body as {
-    productoIds?: string[]
-    alergenosCliente?: string[]
-  }
-  // Sanitizar productoIds
-  const idsLimpios = (productoIds ?? [])
-    .filter(Boolean)
-    .map((id: string) => String(id).replace(/[^a-zA-Z0-9\-]/g, ''))
+chatbotRouter.post('/interacciones', validarCuerpo(interaccionesSchema), async (req: Request, res: Response) => {
+  const { productoIds, alergenosCliente } = req.body as z.infer<typeof interaccionesSchema>
+  // Sanitizar productoIds (defense-in-depth: asegurar formato UUID)
+  const idsLimpios = productoIds
+    .map((id: string) => id.replace(/[^a-zA-Z0-9\-]/g, '').slice(0, 36))
     .filter((id: string) => id.length > 0)
   if (idsLimpios.length < 2) {
     return responder.error(res, 'Se requieren al menos dos productos para verificar interacciones')
@@ -1029,14 +1048,14 @@ chatbotRouter.get('/producto/:id', async (req: Request, res: Response) => {
 })
 
 // ── POST / — Mensaje principal ──────────────────────────
-chatbotRouter.post('/', async (req: Request, res: Response) => {
-  const { mensaje = '', sessionToken } = req.body
-  // Sanitizar entrada del usuario
+chatbotRouter.post('/', validarCuerpo(mensajeChatbotSchema), async (req: Request, res: Response) => {
+  const { mensaje, sessionToken } = req.body as z.infer<typeof mensajeChatbotSchema>
+  // Sanitizar entrada del usuario (defense-in-depth: incluso con Zod, sanitizar)
   const msg = sanitizarInput(mensaje, MAX_MENSAJE_LENGTH)
   if (!msg) return responder.error(res, 'Mensaje vacío')
 
   const token = sessionToken
-    ? sanitizarSessionToken(String(sessionToken))
+    ? sanitizarSessionToken(sessionToken)
     : `session-${Date.now()}`
   if (!token) return responder.error(res, 'Token de sesión inválido')
 

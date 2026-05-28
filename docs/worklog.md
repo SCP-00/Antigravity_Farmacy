@@ -2,6 +2,58 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 23a: Rate limiting faltante + fortalecimiento NoSQL injection
+
+**Objetivo:** Cerrar endpoints sin rate limiting (auth, registro cliente, catálogo público) y fortalecer defensa contra NoSQL injection en chatbot, búsquedas y endpoints con `contains` de Prisma.
+
+### 1. Rate limiting en endpoints faltantes
+
+| Endpoint | Limiter | Límite |
+|---|---|---|
+| **auth** POST /refresh | `limitarCreacion` | 30/min |
+| **auth** POST /logout | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /registro | `limitarRegistro` | **5/hora** (skip en test) |
+| **auth-cliente** POST /verificar-email | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /recuperar-password | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /reset-password | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /logout | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /favoritos | `limitarCreacion` | 30/min |
+| **auth-cliente** POST /devolucion-request | `limitarCreacion` | 30/min |
+| **productos** GET / (admin list) | `limitarBusqueda` | 60/min |
+| **productos** GET /:id (detalle público) | `limitarBusqueda` | 60/min |
+
+**Archivos:** `backend/src/middlewares/index.ts` (nuevo `limitarRegistro`), `auth.routes.ts`, `authCliente.routes.ts`, `productos.routes.ts`
+
+### 2. Fortalecimiento NoSQL injection
+
+#### Chatbot (`backend/src/modules/chatbot/chatbot.routes.ts`)
+- Zod schemas: `mensajeChatbotSchema` (mensaje: string max 500, sessionToken opcional), `interaccionesSchema` (productoIds: string[] 2-20, alergenos opcional)
+- `validarCuerpo()` en POST / y POST /interacciones
+- `sanitizarInput(input: unknown)` — type guard `typeof !== 'string'` retorna ''
+- `sanitizarSessionToken(token: unknown)` — type guard `typeof !== 'string'` retorna ''
+- `buscarProductos(query: string)` — type guard `typeof query !== 'string'` retorna []
+- `.filter((p: unknown) => typeof p === 'string' && ...)` en split de palabras
+
+#### Búsquedas con `contains` — Zod query validation
+- **productos GET /** (`backend/src/modules/productos/productos.routes.ts`): `listarAdminSchema` + `validarQuery()`
+- **auditoria GET /logs-actividad** (`backend/src/modules/auditoria/auditoria.routes.ts`): `logsQuerySchema` + `validarQuery()`
+- **proveedores GET /** (`backend/src/modules/proveedores/proveedores.routes.ts`): `listarProveedoresSchema` + `validarQuery()`
+- **clientes admin GET /** (`backend/src/modules/clientes/clientes.admin.routes.ts`): `listarClientesSchema` + `validarQuery()`
+- **iLike() helper**: tipo cambiado de `value: string` a `value: unknown` con type guard `typeof value === 'string' ? value : ''` (defense-in-depth final antes de Prisma `contains`)
+
+### Ajustes durante code review
+- `limitarRegistro` usa `skip: () => env.NODE_ENV === 'test'` para no bloquear unit tests
+- `productos GET /`: middleware order corregido a `autenticar, validarQuery(...), limitarBusqueda` (query validation antes de rate limiting)
+- Chatbot: Zod schemas con valores default que pasan al handler para mensajes de error custom
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 536/536 pasan (28 archivos)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-28 — Fase 22b: Hardening seguridad complementario — GitHub Actions fixes + pentest automation
 
 **Objetivo:** Resolver vulnerabilidades identificadas en auditoría: mass assignment, path traversal en Cloudinary, workflows CI/CD inconsistentes, y agregar tests de penetración automatizados.

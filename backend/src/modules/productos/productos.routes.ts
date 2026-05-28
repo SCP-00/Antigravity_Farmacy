@@ -21,6 +21,15 @@ const buscarSchema = z.object({
   limite:     z.string().optional().default('20'),
 })
 
+// Schema para GET / (admin list) — previene inyección de objetos en query params
+const listarAdminSchema = z.object({
+  q:           z.string().optional(),
+  categoriaId: z.string().optional(),
+  activo:      z.string().optional(),
+  pagina:      z.string().optional(),
+  limite:      z.string().optional(),
+})
+
 // ══════════════════════════════════════════════════════════
 //  GET /buscar — Búsqueda pública (Excluye Muestras Médicas)
 // ══════════════════════════════════════════════════════════
@@ -114,7 +123,7 @@ productosRouter.get('/buscar', limitarBusqueda, validarQuery(buscarSchema), asyn
 // ══════════════════════════════════════════════════════════
 //  GET / — Listado administrativo completo
 // ══════════════════════════════════════════════════════════
-productosRouter.get('/', autenticar, async (req: Request, res: Response) => {
+productosRouter.get('/', autenticar, validarQuery(listarAdminSchema), limitarBusqueda, async (req: Request, res: Response) => {
   const { skip, limite, pagina } = parsePaginacion(req.query as any)
   const { q, categoriaId, activo } = req.query as any
 
@@ -160,7 +169,7 @@ productosRouter.get('/', autenticar, async (req: Request, res: Response) => {
 })
 
 // ── GET /:id ──────────────────────────────────────────────
-productosRouter.get('/:id', async (req: Request, res: Response) => {
+productosRouter.get('/:id', limitarBusqueda, async (req: Request, res: Response) => {
   try {
     const producto = await prisma.producto.findUnique({
       where: { id: req.params.id },
