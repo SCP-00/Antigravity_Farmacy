@@ -3,9 +3,21 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import viteCompression from 'vite-plugin-compression'
 
 export default defineConfig({
+  // CDN base path: configurable via VITE_CDN_URL (default / para desarrollo)
+  base: process.env.VITE_CDN_URL || '/',
+
   plugins: [
+    // Compresión Brotli en build de producción
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 1024,       // Comprimir archivos > 1KB
+      deleteOriginFile: false,
+      filter: /\/\.(js|css|html|svg|json|xml|txt|ico|woff2)$/,
+    }),
     tailwindcss(),
     react(),
     VitePWA({

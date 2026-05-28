@@ -124,12 +124,12 @@ Y **cuando aplique**:
 |---|---|---|---|---|
 | UX | Transiciones suaves y polish visual consistente | 🟡 Medio | 🟢 Bajo | ✅ |
 | UX | Modo oscuro | 🟡 Medio | 🟡 Medio | ✅ |
-| Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio | ✅ |
 | Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
-| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
-| SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo | ⏳ Pendiente |
-| SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
-| SEO / Deploy | Monitoreo operativo básico con rutina de revisión de logs | 🔴 Alto | 🟢 Bajo | ⏳ Pendiente |
+| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ⏳ Pendiente (futuro) |
+| SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo | ✅ |
+| SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio | ✅ |
+| SEO / Deploy | Monitoreo operativo básico con rutina de revisión de logs | 🔴 Alto | 🟢 Bajo | ✅ |
 
 ### 🟢 Could have — mejora valiosa, no bloqueante
 
@@ -474,7 +474,7 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 ### 3) Interacción dinámica
 - [x] WebSockets para POS en tiempo real
 - [x] SSE para dashboard en vivo
-- [ ] WebSocket para chatbot en vivo
+- [x] WebSocket para chatbot en vivo
 - [ ] Push notifications para inventario
 - [x] Bull/BullMQ para jobs asíncronos
 
@@ -484,8 +484,8 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [x] `sitemap.xml` + `robots.txt`
 - [ ] Pre-render o SSR/SSG parcial público
 - [x] Lazy loading de rutas admin
-- [ ] Brotli
-- [ ] CDN de assets estáticos
+- [x] Brotli
+- [x] CDN de assets estáticos
 - [x] Docker multi-stage de producción
 - [x] Healthchecks en compose
 - [x] GitHub Actions (CI/CD)
@@ -507,7 +507,7 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 | 7 | **Fase 16** — Auditoría + trazabilidad | ✅ COMPLETADA |
 | 8 | **Fase 17** — Tiempo real + jobs asíncronos | ✅ COMPLETADA |
 | 9 | **Fase 18** — CI/CD + monitoreo | ✅ COMPLETADA |
-| 10 | **Fase 19** — Polish extendido | ⏳ PENDIENTE |
+| 10 | **Fase 19** — Polish extendido | ✅ COMPLETADA |
 
 ---
 

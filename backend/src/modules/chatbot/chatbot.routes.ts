@@ -888,7 +888,7 @@ async function manejarFAQ(message: string, sesion: SesionData): Promise<{
 }
 
 // ── Procesador principal de mensajes ──────────────────────
-async function procesarMensaje(
+export async function procesarMensaje(
   mensaje: string, sessionToken: string
 ): Promise<{
   respuesta: string; productos: any[]; alertas: any[];

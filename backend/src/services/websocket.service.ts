@@ -9,11 +9,16 @@ import { eventBus, Eventos, type PayloadEvento } from './eventbus.service'
 import { logger } from '../utils/logger'
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env'
+import { procesarMensaje } from '../modules/chatbot/chatbot.routes'
 
 // ── Tipos de mensajes WS ──────────────────────────────────
 interface MensajeWS {
-  type: 'SUBSCRIBE' | 'UNSUBSCRIBE' | 'PING' | 'PONG'
+  type: 'SUBSCRIBE' | 'UNSUBSCRIBE' | 'PING' | 'PONG' | 'CHATBOT'
   channel?: string
+  /** Para CHATBOT: texto del mensaje */
+  mensaje?: string
+  /** Para CHATBOT: token de sesión */
+  sessionToken?: string
 }
 
 interface ClienteWS {
@@ -29,6 +34,7 @@ const CANALES = {
   POS_VENTAS:    'pos:ventas',
   POS_STOCK:     'pos:stock',
   ADMIN_ALERTAS: 'admin:alertas',
+  CHATBOT:       'chatbot',
 } as const
 
 class WSManager {
@@ -157,9 +163,34 @@ class WSManager {
       case 'PING':
         this.enviar(cliente, 'pong', {})
         break
+      case 'CHATBOT':
+        if (msg.mensaje) {
+          this.procesarChatbot(cliente, msg)
+        }
+        break
       default:
         // Ignorar
         break
+    }
+  }
+
+  /** Procesar mensaje de chatbot via WS */
+  private async procesarChatbot(cliente: ClienteWS, msg: MensajeWS): Promise<void> {
+    const sessionToken = msg.sessionToken || `ws_chat_${cliente.id}`
+    try {
+      const resultado = await procesarMensaje(msg.mensaje!, sessionToken)
+      this.enviar(cliente, 'chatbot:respuesta', {
+        respuesta: resultado.respuesta,
+        productos: resultado.productos,
+        alertas: resultado.alertas,
+        menuActivo: resultado.nuevoEstado,
+        sessionToken,
+      })
+    } catch (err) {
+      logger.error(`[WS] Error procesando chatbot para ${cliente.id}:`, err)
+      this.enviar(cliente, 'chatbot:error', {
+        mensaje: 'Error al procesar el mensaje. Intenta de nuevo.',
+      })
     }
   }
 

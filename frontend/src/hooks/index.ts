@@ -196,12 +196,59 @@ export interface MensajeChat {
   menuActivo?: string
 }
 
-export function useChatbot() {
+/**
+ * useChatbot — hook principal del chatbot.
+ * Envía mensajes vía HTTP REST por defecto.
+ * Si `useWS` está disponible, puede usar WebSocket para menor latencia.
+ */
+export function useChatbot(transport: 'http' | 'ws' = 'http') {
   const [mensajes,     setMensajes]     = useState<MensajeChat[]>([])
   const [escribiendo,  setEscribiendo]  = useState(false)
   const [sessionToken, _setSessionToken] = useState(() =>
     `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
   )
+
+  const wsRef = useRef<WebSocket | null>(null)
+  const [wsConnected, setWsConnected] = useState(false)
+  const wsReconnectAttempts = useRef(0)
+  const wsReconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Conectar WebSocket con reconexión exponencial
+  useEffect(() => {
+    if (transport !== 'ws') return
+
+    const conectarWS = () => {
+      const token = useAuthStore.getState().token
+      const baseUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || ''
+      const wsUrl = (baseUrl.startsWith('https') ? baseUrl.replace('https', 'wss') : baseUrl.replace('http', 'ws')) || 'ws://localhost:3000'
+      const url = `${wsUrl}/ws?token=${token || ''}`
+
+      const ws = new WebSocket(url)
+      ws.onopen = () => {
+        setWsConnected(true)
+        wsReconnectAttempts.current = 0
+      }
+      ws.onclose = () => {
+        setWsConnected(false)
+        // Reconexión exponencial: 1s → 30s max, hasta 20 intentos
+        if (wsReconnectAttempts.current < 20) {
+          const delay = Math.min(1000 * Math.pow(2, wsReconnectAttempts.current), 30000)
+          wsReconnectAttempts.current++
+          wsReconnectTimer.current = setTimeout(conectarWS, delay)
+        }
+      }
+      ws.onerror = () => { ws.close() }
+      wsRef.current = ws
+    }
+
+    conectarWS()
+
+    return () => {
+      setWsConnected(false)
+      if (wsReconnectTimer.current) clearTimeout(wsReconnectTimer.current)
+      wsRef.current?.close()
+    }
+  }, [transport])
 
   const enviar = useCallback(async (texto: string) => {
     if (!texto.trim()) return
@@ -210,15 +257,54 @@ export function useChatbot() {
     setEscribiendo(true)
 
     try {
-      const res = await chatbotService.enviarMensaje(texto, sessionToken)
-      setMensajes(prev => [...prev, {
-        role: 'bot',
-        texto: res.respuesta,
-        productos: res.productos ?? [],
-        alertas: res.alertas ?? [],
-        alertasVisibles: res.alertasVisibles ?? false,
-        menuActivo: res.menuActivo ?? 'menu',
-      }])
+      // Intentar WebSocket si está conectado
+      if (transport === 'ws' && wsRef.current?.readyState === WebSocket.OPEN) {
+        const response = await new Promise<{
+          respuesta: string; productos?: ProductoChatbot[]
+          alertas?: AlertaChatbot[]; menuActivo?: string
+        }>((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Timeout WS')), 15000)
+          const handler = (e: MessageEvent) => {
+            try {
+              const msg = JSON.parse(e.data)
+              if (msg.event === 'chatbot:respuesta') {
+                clearTimeout(timeout)
+                wsRef.current?.removeEventListener('message', handler)
+                resolve(msg.data)
+              } else if (msg.event === 'chatbot:error') {
+                clearTimeout(timeout)
+                wsRef.current?.removeEventListener('message', handler)
+                reject(new Error(msg.data?.mensaje || 'Error WS'))
+              }
+            } catch { /* ignorar */ }
+          }
+          wsRef.current?.addEventListener('message', handler)
+          wsRef.current?.send(JSON.stringify({
+            type: 'CHATBOT',
+            mensaje: texto,
+            sessionToken,
+          }))
+        })
+
+        setMensajes(prev => [...prev, {
+          role: 'bot',
+          texto: response.respuesta,
+          productos: response.productos ?? [],
+          alertas: response.alertas ?? [],
+          menuActivo: response.menuActivo ?? 'menu',
+        }])
+      } else {
+        // Fallback a HTTP
+        const res = await chatbotService.enviarMensaje(texto, sessionToken)
+        setMensajes(prev => [...prev, {
+          role: 'bot',
+          texto: res.respuesta,
+          productos: res.productos ?? [],
+          alertas: res.alertas ?? [],
+          alertasVisibles: res.alertasVisibles ?? false,
+          menuActivo: res.menuActivo ?? 'menu',
+        }])
+      }
     } catch {
       setMensajes(prev => [...prev, {
         role: 'bot',
@@ -227,9 +313,9 @@ export function useChatbot() {
     } finally {
       setEscribiendo(false)
     }
-  }, [sessionToken])
+  }, [sessionToken, transport])
 
-  return { mensajes, escribiendo, enviar, sessionToken }
+  return { mensajes, escribiendo, enviar, sessionToken, wsConnected }
 }
 
 // ── useFormateo — helpers de display ─────────────────────

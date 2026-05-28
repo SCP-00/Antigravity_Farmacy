@@ -6,6 +6,7 @@ import express, { Express, raw } from 'express'
 import { Request, Response } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
+import compression from 'compression'
 import passport from 'passport'
 import { env } from './config/env'
 import { configurePassport } from './config/passport'
@@ -43,6 +44,22 @@ export function createApp(): Express {
   // ── Inicialización de Passport OAuth ──────────────────
   configurePassport()
   app.use(passport.initialize())
+
+  // ── Compresión (Brotli automático en Node.js 24) ───
+  // compression v1.8+ usa brotli automáticamente cuando el cliente
+  // lo acepta (br > gzip > deflate). No necesita config adicional.
+  app.use(compression({
+    threshold: 512, // mínimo 512 bytes para comprimir
+    level: 6,       // balance compresión/velocidad (gzip/deflate)
+    filter: (req, res) => {
+      // No comprimir SSE ni WebSocket upgrades
+      // Usar includes() porque accept puede tener múltiples valores: "text/event-stream, text/html"
+      if ((req.headers.accept || '').includes('text/event-stream')) return false
+      if ((req.headers.upgrade || '').toLowerCase() === 'websocket') return false
+      // Usar la función por defecto (comprime si acepta y content-type es texto)
+      return compression.filter(req, res)
+    },
+  }))
 
   // ── Seguridad y parsing ───────────────────────────────
   // crossOriginEmbedderPolicy: false — necesario para cargar recursos cross-origin

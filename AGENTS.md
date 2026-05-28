@@ -53,10 +53,13 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - **Runtime:** Node.js v24.15.0 + pnpm v11.2.2
 - **Backend:** Express 4 + TypeScript 6.0 + Prisma 5.22
 - **Frontend:** React 19 + TypeScript 6.0 + Vite 6.4 + Tailwind CSS 4
-- **Build:** @tailwindcss/vite plugin (reemplaza postcss + autoprefixer)
+- **Build:** @tailwindcss/vite plugin (reemplaza postcss + autoprefixer), Brotli compression via `vite-plugin-compression`
+- **Backend compression:** Express `compression` middleware con soporte Brotli nativo
+- **CDN:** `VITE_CDN_URL` env var para assets estáticos
 - **Testing:** Vitest v3 (521 tests, 95.35% cobertura)
 - **CI/CD:** GitHub Actions (3 workflows)
 - **Monitoreo:** Rutina documentada en `docs/monitoreo.md`
+- **Tiempo real:** WebSocket para POS + chatbot, SSE para dashboard, BullMQ para jobs asíncronos
 
 ## Script entrypoints
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)

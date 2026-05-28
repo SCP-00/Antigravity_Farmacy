@@ -2,6 +2,53 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 19: Polish extendido — Brotli, CDN, WebSocket chatbot, limpieza
+
+**Objetivo:** Cerrar detalles no bloqueantes que elevan la percepción de calidad: compresión Brotli, CDN configurable, WebSocket para chatbot en vivo, y limpieza de archivos muertos.
+
+### Cambios realizados
+
+#### 1. Limpieza de archivos inútiles
+- **Eliminados:** `backend/scripts/test-comprehensive.ts`, `backend/scripts/test-e2e.ts`, `backend/scripts/test-fases-completo.ts` (scripts de test obsoletos)
+- **Eliminado:** `docs/spec/resolver-run-batch-y-migraciones.md` (spec ya resuelto en fases anteriores)
+- **Eliminados:** `e2e/reports/index.html`, `e2e/results/.last-run.json` (artefactos E2E generados)
+- **.gitignore actualizado:** agregadas entradas `e2e/reports/` y `e2e/results/`
+
+#### 2. Compresión Brotli
+- **Vite build:** `vite-plugin-compression` con algoritmo `brotliCompress`, extensión `.br`, threshold 1KB, `deleteOriginFile: false`
+- **Express middleware:** `compression` package con threshold 512 bytes, level 6, filter que excluye SSE y WebSocket upgrades
+
+#### 3. CDN base path configurable
+- `frontend/vite.config.ts`: `base: process.env.VITE_CDN_URL || '/'`
+- En producción, seteando `VITE_CDN_URL=https://cdn.ejemplo.com/`, todos los assets se sirven desde CDN
+
+#### 4. WebSocket para chatbot en vivo
+- **Backend (`websocket.service.ts`):**
+  - Nuevo canal `CHATBOT` en `CANALES`
+  - Nuevo type `CHATBOT` en `MensajeWS`
+  - Handler `procesarChatbot()` que llama a `procesarMensaje()` desde chatbot.routes.ts
+  - Responde con evento `chatbot:respuesta` directamente al cliente
+- **Frontend (`hooks/index.ts`):**
+  - `useChatbot()` ahora acepta `transport: 'http' | 'ws'`
+  - Con `transport='ws'`: conecta WebSocket, autentica con JWT, envía mensajes como `CHATBOT`
+  - Reconexión exponencial (1s→30s, max 20 intentos)
+  - Timeout de 15s por mensaje vía WS con fallback transparente
+  - `wsConnected` como estado reactivo
+
+#### 5. Dependencias agregadas
+| Paquete | Ubicación |
+|---|---|
+| `vite-plugin-compression` | frontend (devDependency) |
+| `compression` + `@types/compression` | backend (dependency) |
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado tras 2 iteraciones de fixes
+
+---
+
 ## 2026-05-28 — Fase 18: CI/CD con GitHub Actions + Monitoreo operativo
 
 **Objetivo:** Automatizar la validación y despliegue mediante GitHub Actions, y definir una rutina operativa de monitoreo con checklist de deploy.
