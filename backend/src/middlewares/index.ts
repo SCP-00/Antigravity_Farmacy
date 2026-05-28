@@ -167,11 +167,10 @@ export function verificarIpPermitida(allowedList: string[]) {
 import RedisStore from 'rate-limit-redis'
 import { redis } from '../config/redis'
 
-// Crea RedisStore de forma segura (fallback a memoria si Redis no está disponible)
-// rate-limit-redis v5 acepta sendCommand(...args) donde args = [cmd, ...params]
-// ioredis v5+ expone call() para comandos raw
-// En modo test se desactiva para evitar errores con mocks de Redis
-function crearRedisStore() {
+// Crea una nueva instancia de RedisStore por cada rate limiter.
+// express-rate-limit v7+ NO permite compartir la misma instancia entre limitadores.
+// Cada store requiere un prefix único.
+function crearRedisStore(prefix: string = 'rl:') {
   if (env.NODE_ENV === 'test') {
     return undefined
   }
@@ -179,7 +178,7 @@ function crearRedisStore() {
   try {
     return new RedisStore({
       sendCommand: (...args: string[]) => (redis as any).call(...args),
-      prefix: 'rl:',
+      prefix,
     })
   } catch {
     logger.warn('[RateLimit] Redis no disponible — rate limiting en memoria (se reinicia al reiniciar el servidor)')
@@ -187,15 +186,14 @@ function crearRedisStore() {
   }
 }
 
-const redisStore = crearRedisStore()
-
 // ── Rate Limiters granulares por endpoint ───────────────────
+// Cada uno con su PROPIA instancia de RedisStore y prefix único
 export const limitarPeticiones: RateLimitRequestHandler = rateLimit({
   windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS),
   max: parseInt(env.RATE_LIMIT_MAX),
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisStore,
+  store: crearRedisStore('rl:'),
   message: { ok: false, error: 'Demasiadas peticiones, intenta más tarde' },
 })
 
@@ -203,7 +201,7 @@ export const limitarLogin: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: parseInt(env.RATE_LIMIT_AUTH_MAX),
   skipSuccessfulRequests: true,
-  store: redisStore,
+  store: crearRedisStore('rl:login:'),
   keyGenerator: (req) => `${req.ip ?? 'unknown'}:${typeof req.body?.email === 'string' ? req.body.email.toLowerCase() : ''}`,
   message: { ok: false, error: 'Demasiados intentos de login. Espera 15 minutos.' },
 })
@@ -214,7 +212,7 @@ export const limitarWebhook: RateLimitRequestHandler = rateLimit({
   max: parseInt(env.RATE_LIMIT_WEBHOOK_MAX),
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisStore,
+  store: crearRedisStore('rl:webhook:'),
   message: { ok: false, error: 'Demasiadas solicitudes de webhook' },
 })
 
@@ -224,7 +222,7 @@ export const limitarCreacion: RateLimitRequestHandler = rateLimit({
   max: parseInt(env.RATE_LIMIT_CREACION_MAX),
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisStore,
+  store: crearRedisStore('rl:creacion:'),
   message: { ok: false, error: 'Demasiadas solicitudes de creación. Intenta más tarde.' },
 })
 
@@ -234,7 +232,7 @@ export const limitarBusqueda: RateLimitRequestHandler = rateLimit({
   max: parseInt(env.RATE_LIMIT_BUSQUEDA_MAX),
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisStore,
+  store: crearRedisStore('rl:busqueda:'),
   message: { ok: false, error: 'Demasiadas búsquedas. Intenta más tarde.' },
 })
 
@@ -246,7 +244,7 @@ export const limitarRegistro: RateLimitRequestHandler = rateLimit({
   skip: () => env.NODE_ENV === 'test',
   standardHeaders: true,
   legacyHeaders: false,
-  store: redisStore,
+  store: crearRedisStore('rl:registro:'),
   message: { ok: false, error: 'Demasiados intentos de registro. Espera 1 hora.' },
 })
 
