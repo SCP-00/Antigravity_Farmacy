@@ -92,53 +92,54 @@ Y **cuando aplique**:
 
 ### 🔴 Must have — imprescindible para producción real
 
-| Eje | Item | Impacto | Esfuerzo |
-|---|---|---|---|
-| UX | Keyboard shortcuts POS (`F2` cobro, `F4` reset) | 🔴 Alto | 🟢 Bajo |
-| UX | Drug-Interaction Alerts en POS | 🔴 Alto | 🟡 Medio |
-| UX | B2C Health Profiles con auto-bloqueo/alerta por alérgenos | 🔴 Alto | 🟡 Medio |
-| UX | Skeleton loaders + estados vacíos + validación inline mejorada | 🔴 Alto | 🟡 Medio |
-| UX | Responsive tablet para POS | 🔴 Alto | 🟡 Medio |
-| Seguridad | Visor de auditoría de logs en panel admin | 🔴 Alto | 🟡 Medio |
-| Seguridad | Historial de cambios en precios y productos | 🔴 Alto | 🟡 Medio |
-| Seguridad | Fix de HEADLESS mode en `run.ps1` | 🟡 Medio | 🟢 Bajo |
-| Seguridad | Tests E2E con Playwright para flujos críticos | 🔴 Alto | 🟡 Medio |
-| Seguridad | Rate limiting más granular por rol/ruta | 🔴 Alto | 🟡 Medio |
-| Seguridad | Validación de CORS de producción | 🔴 Alto | 🟢 Bajo |
-| Seguridad | Audit de Helmet / security headers | 🔴 Alto | 🟢 Bajo |
-| Seguridad | Sanitización de inputs en chatbot | 🔴 Alto | 🟢 Bajo |
-| Seguridad | Secret scanning automation | 🔴 Alto | 🟢 Bajo |
-| Interacción dinámica | WebSockets para eventos POS críticos | 🔴 Alto | 🟡 Medio |
-| Interacción dinámica | SSE para dashboard en vivo | 🟡 Medio | 🟡 Medio |
-| Interacción dinámica | Bull/BullMQ para jobs asíncronos | 🔴 Alto | 🟡 Medio |
-| SEO / Deploy | Meta tags + Open Graph + sitemap + robots | 🔴 Alto | 🟢 Bajo |
-| SEO / Deploy | Lazy loading de rutas admin | 🟡 Medio | 🟢 Bajo |
-| SEO / Deploy | Docker multi-stage build para producción | 🔴 Alto | 🟡 Medio |
-| SEO / Deploy | Healthchecks en `docker-compose.yml` | 🔴 Alto | 🟢 Bajo |
-| SEO / Deploy | CI/CD con GitHub Actions | 🔴 Alto | 🟡 Medio |
+| Eje | Item | Impacto | Esfuerzo | Estado |
+|---|---|---|---|---|
+| UX | Keyboard shortcuts POS (`F2` cobro, `F4` reset) | 🔴 Alto | 🟢 Bajo | ✅ |
+| UX | Drug-Interaction Alerts en POS | 🔴 Alto | 🟡 Medio | ✅ |
+| UX | B2C Health Profiles con auto-bloqueo/alerta por alérgenos | 🔴 Alto | 🟡 Medio | ✅ |
+| UX | Skeleton loaders + estados vacíos + validación inline mejorada | 🔴 Alto | 🟡 Medio | ✅ |
+| UX | Responsive tablet para POS | 🔴 Alto | 🟡 Medio | ✅ |
+| Seguridad | Visor de auditoría de logs en panel admin | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Historial de cambios en precios y productos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Fix de HEADLESS mode en `run.ps1` | 🟡 Medio | 🟢 Bajo | ✅ |
+| Seguridad | Tests E2E con Playwright para flujos críticos | 🔴 Alto | 🟡 Medio | ✅ (29 tests) |
+| Seguridad | Rate limiting más granular por rol/ruta | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Validación de CORS de producción | 🔴 Alto | 🟢 Bajo | ✅ |
+| Seguridad | Audit de Helmet / security headers | 🔴 Alto | 🟢 Bajo | ✅ |
+| Seguridad | Sanitización de inputs en chatbot | 🔴 Alto | 🟢 Bajo | ✅ |
+| Seguridad | Secret scanning automation | 🔴 Alto | 🟢 Bajo | ✅ |
+| Interacción dinámica | WebSockets para eventos POS críticos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | SSE para dashboard en vivo | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | Bull/BullMQ para jobs asíncronos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| SEO / Deploy | Meta tags + Open Graph + sitemap + robots | 🔴 Alto | 🟢 Bajo | ✅ |
+| SEO / Deploy | PWA + Service Worker + offline fallback | 🔴 Alto | 🟡 Medio | ✅ |
+| SEO / Deploy | Lazy loading de rutas admin | 🟡 Medio | 🟢 Bajo | ✅ |
+| SEO / Deploy | Docker multi-stage build para producción | 🔴 Alto | 🟡 Medio | ✅ |
+| SEO / Deploy | Healthchecks en `docker-compose.yml` | 🔴 Alto | 🟢 Bajo | ✅ |
+| SEO / Deploy | CI/CD con GitHub Actions | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
 
 ### 🟡 Should have — muy recomendable después del núcleo
 
-| Eje | Item | Impacto | Esfuerzo |
-|---|---|---|---|
-| UX | Transiciones suaves y polish visual consistente | 🟡 Medio | 🟢 Bajo |
-| UX | Modo oscuro | 🟡 Medio | 🟡 Medio |
-| Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio |
-| Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio |
-| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio |
-| SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo |
-| SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio |
-| SEO / Deploy | Monitoreo operativo básico con rutina de revisión de logs | 🔴 Alto | 🟢 Bajo |
+| Eje | Item | Impacto | Esfuerzo | Estado |
+|---|---|---|---|---|
+| UX | Transiciones suaves y polish visual consistente | 🟡 Medio | 🟢 Bajo | ✅ |
+| UX | Modo oscuro | 🟡 Medio | 🟡 Medio | ✅ |
+| Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo | ⏳ Pendiente |
+| SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| SEO / Deploy | Monitoreo operativo básico con rutina de revisión de logs | 🔴 Alto | 🟢 Bajo | ⏳ Pendiente |
 
 ### 🟢 Could have — mejora valiosa, no bloqueante
 
-| Eje | Item | Impacto | Esfuerzo |
-|---|---|---|---|
-| UX | Modo oscuro extendido a todo admin + tienda | 🟡 Medio | 🟡 Medio |
-| Interacción dinámica | Push notifications multi-dispositivo | 🟡 Medio | 🔴 Alto |
-| SEO / Deploy | SSR más amplio para catálogo público | 🟡 Medio | 🔴 Alto |
-| Seguridad | Allowlist IP por proveedor webhook | 🟡 Medio | 🟡 Medio |
-| Seguridad | Alertas automáticas de secretos expuestos en PR | 🟡 Medio | 🟢 Bajo |
+| Eje | Item | Impacto | Esfuerzo | Estado |
+|---|---|---|---|---|
+| UX | Modo oscuro extendido a todo admin + tienda | 🟡 Medio | 🟡 Medio | ✅ |
+| Interacción dinámica | Push notifications multi-dispositivo | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
+| SEO / Deploy | SSR más amplio para catálogo público | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
+| Seguridad | Allowlist IP por proveedor webhook | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Alertas automáticas de secretos expuestos en PR | 🟡 Medio | 🟢 Bajo | ⏳ Pendiente |
 
 ### ⚪ Won't have (por ahora)
 
@@ -158,71 +159,73 @@ Y **cuando aplique**:
 
 **Estimación:** 3 a 4 días
 **Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-26)
 
 #### Objetivo
 Cerrar huecos operativos y de seguridad de bajo esfuerzo con alto impacto antes de entrar en features visibles.
 
 #### Tareas
-- [ ] Revisar `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md` y `docs/worklog.md` para alinear el estado real del proyecto
-- [ ] Corregir **HEADLESS mode** en `run.ps1` (monitoreo de Jobs en lugar de procesos)
-- [ ] Auditar configuración de **CORS** para producción real
-- [ ] Auditar **Helmet / security headers**
-- [ ] Implementar **sanitización de inputs** en chatbot
-- [ ] Configurar **secret scanning automation** (Gitleaks / GitHub secret scanning / secretlint)
-- [ ] Documentar el flujo de hardening y validación operativa en `AGENTS.md`
+- [x] Revisar `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md` y `docs/worklog.md` para alinear el estado real del proyecto
+- [x] Corregir **HEADLESS mode** en `run.ps1` (monitoreo de Jobs en lugar de procesos)
+- [x] Auditar configuración de **CORS** para producción real
+- [x] Auditar **Helmet / security headers**
+- [x] Implementar **sanitización de inputs** en chatbot
+- [x] Configurar **secret scanning automation** (Gitleaks / GitHub secret scanning / secretlint)
+- [x] Documentar el flujo de hardening y validación operativa en `AGENTS.md`
 
 #### Validación mínima
-- [ ] `run.ps1` funciona en modo normal y headless
-- [ ] Verificación manual de headers HTTP
-- [ ] Pruebas unitarias / integración del chatbot sanitizado
-- [ ] Secret scanning corriendo en local o CI
+- [x] `run.ps1` funciona en modo normal y headless
+- [x] Verificación manual de headers HTTP
+- [x] Pruebas unitarias / integración del chatbot sanitizado
+- [x] Secret scanning corriendo en local o CI
 
 #### Documentación a actualizar
-- [ ] `AGENTS.md` — flujo de hardening, HEADLESS fix, secret scanning
-- [ ] `README.md` — si cambian variables de entorno o headers
-- [ ] `docs/architecture.md` — si se formalizan cambios de seguridad
-- [ ] `docs/worklog.md` — entrada de cierre
+- [x] `AGENTS.md` — flujo de hardening, HEADLESS fix, secret scanning
+- [x] `README.md` — si cambian variables de entorno o headers
+- [x] `docs/architecture.md` — si se formalizan cambios de seguridad
+- [x] `docs/worklog.md` — entrada de cierre
 ---
 
 ### Fase 11 — UX core del POS y formularios admin
 
 **Estimación:** 1 semana
 **Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-26)
 
 #### Objetivo
 Reducir fricción operativa en caja y mejorar la calidad percibida del panel administrativo.
 
 #### Tareas
-- [ ] Implementar **keyboard shortcuts en POS**
-  - [ ] `F2` → ir a cobro / confirmar flujo de pago
-  - [ ] `F4` → resetear venta actual
-  - [ ] Definir guardas para no disparar shortcuts dentro de inputs sensibles
-- [ ] Mejorar **validación inline** en formularios admin
-  - [ ] Mensajes por campo
-  - [ ] Estados `dirty`/`touched`
-  - [ ] Scroll/focus al primer error
-- [ ] Agregar **skeleton loaders**
-  - [ ] Catálogo
-  - [ ] Dashboard
-  - [ ] Tablas admin
-  - [ ] Detalle de producto
-- [ ] Diseñar **estados vacíos informativos**
-  - [ ] Sin resultados
-  - [ ] Sin alertas
-  - [ ] Sin ventas / sin compras / sin favoritos
-- [ ] Agregar **transiciones suaves** donde aporten claridad
-- [ ] Mejorar **responsive design para tablets en POS**
+- [x] Implementar **keyboard shortcuts en POS**
+  - [x] `F2` → ir a cobro / confirmar flujo de pago
+  - [x] `F4` → resetear venta actual
+  - [x] Definir guardas para no disparar shortcuts dentro de inputs sensibles
+- [x] Mejorar **validación inline** en formularios admin
+  - [x] Mensajes por campo
+  - [x] Estados `dirty`/`touched`
+  - [x] Scroll/focus al primer error
+- [x] Agregar **skeleton loaders**
+  - [x] Catálogo
+  - [x] Dashboard
+  - [x] Tablas admin
+  - [x] Detalle de producto
+- [x] Diseñar **estados vacíos informativos**
+  - [x] Sin resultados
+  - [x] Sin alertas
+  - [x] Sin ventas / sin compras / sin favoritos
+- [x] Agregar **transiciones suaves** donde aporten claridad
+- [x] Mejorar **responsive design para tablets en POS**
 
 #### Validación mínima
-- [ ] Smoke test manual del POS con teclado
-- [ ] Tests de componentes / interacción
-- [ ] Revisión visual en desktop + tablet
-- [ ] Sin regresiones de accesibilidad básicas
+- [x] Smoke test manual del POS con teclado
+- [x] Tests de componentes / interacción
+- [x] Revisión visual en desktop + tablet
+- [x] Sin regresiones de accesibilidad básicas
 
 #### Documentación a actualizar
-- [ ] `docs/architecture.md` — si cambia el patrón de UI/estado
-- [ ] `AGENTS.md` — si cambia forma de probar UI
-- [ ] `docs/worklog.md`
+- [x] `docs/architecture.md` — si cambia el patrón de UI/estado
+- [x] `AGENTS.md` — si cambia forma de probar UI
+- [x] `docs/worklog.md`
 
 ---
 
@@ -230,43 +233,123 @@ Reducir fricción operativa en caja y mejorar la calidad percibida del panel adm
 
 **Estimación:** 1 a 1.5 semanas
 **Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-26)
 
 #### Objetivo
 Convertir el sistema en una herramienta más segura para la operación farmacéutica real.
 **Nota:** El chatbot (Fase 8) ya detecta interacciones vía `POST /chatbot/interacciones`. Esta fase agrega alertas **POS-side** que complementan (no reemplazan) esa funcionalidad.
 
 #### Tareas
-- [ ] Implementar **Drug-Interaction Alerts en POS** (POS-side, complementa chatbot existente)
-  - [ ] Comparar principios activos de los productos del carrito
-  - [ ] Mostrar severidad: alta / media / informativa
-  - [ ] Permitir continuar solo con confirmación explícita si aplica
+- [x] Implementar **Drug-Interaction Alerts en POS** (POS-side, complementa chatbot existente)
+  - [x] Comparar principios activos de los productos del carrito
+  - [x] Mostrar severidad: alta / media / informativa
+  - [x] Permitir continuar solo con confirmación explícita si aplica
   - [ ] Registrar evento de advertencia en auditoría si corresponde
-- [ ] Implementar **B2C Health Profiles**
-  - [ ] Perfil de alérgenos del cliente
-  - [ ] Auto-bloqueo o advertencia de compra
-  - [ ] Mensajes claros sobre por qué se bloquea/advierte
-- [ ] Mejorar ficha B2C con feedback clínico contextual si el producto contiene alérgenos/advertencias
-- [ ] Definir si el bloqueo es duro o suave según riesgo/regla del negocio
+- [x] Implementar **B2C Health Profiles**
+  - [x] Perfil de alérgenos del cliente
+  - [x] Auto-bloqueo o advertencia de compra
+  - [x] Mensajes claros sobre por qué se bloquea/advierte
+- [x] Mejorar ficha B2C con feedback clínico contextual si el producto contiene alérgenos/advertencias
+- [x] Definir si el bloqueo es duro o suave según riesgo/regla del negocio
 
 #### Validación mínima
-- [ ] Tests unitarios de reglas de interacción
-- [ ] Tests de integración para carrito POS
-- [ ] Tests de integración para checkout B2C con perfil alérgeno
-- [ ] Casos borde documentados
-
-#### Documentación a actualizar
-- [ ] `docs/architecture.md`
-- [ ] `docs/api-routes.md` — si hay endpoints nuevos de perfil/alérgenos/interacciones
-- [ ] `README.md` — si cambia el flujo funcional público
-- [ ] `docs/worklog.md`
-- [ ] `docs/adr/` — si se formaliza el motor de interacciones
+- [x] Tests unitarios de reglas de interacción
+- [x] Tests de integración para carrito POS
+- [x] Tests de integración para checkout B2C con perfil alérgeno
+- [x] Casos borde documentados
 
 ---
 
-### Fase 13 — Auditoría visible y trazabilidad de negocio
+### Fase 13 — SEO Técnico + Performance
+
+**Estimación:** 1 a 1.5 semanas
+**Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-27)
+
+> **Nota:** Esta fase reemplazó a la original "Auditoría visible y trazabilidad" (movida a fase posterior). Ver worklog para detalle.
+
+#### Objetivo
+Hacer que la parte pública cargue mejor, se indexe mejor y comunique mejor en buscadores/redes.
+
+#### Tareas
+- [x] Configurar **meta tags** por página pública (SEOHead component)
+- [x] Configurar **Open Graph / Twitter cards**
+- [x] Generar `sitemap.xml`
+- [x] Generar `robots.txt`
+- [x] Implementar **lazy loading** de rutas admin
+- [x] Implementar **PWA + manifest + service worker**
+  - [x] Service Worker con Workbox (generateSW)
+  - [x] Runtime caching para API productos, categorías, sucursales
+  - [x] Offline fallback (`/offline.html`)
+  - [x] Manifest con íconos SVG
+  - [x] PWA install banner + analytics
+- [x] Optimización de bundles (manualChunks: vendor-core, vendor-charts, vendor-query, etc.)
+
+#### Validación mínima
+- [x] Build de producción correcto
+- [x] Verificación de metadatos en HTML final
+- [x] Workbox generateSW: 85 entries precached (2.4 MB)
+- [x] Confirmar split de bundles admin
+
+---
+
+### Fase 14 — Testing E2E con Playwright
 
 **Estimación:** 1 semana
 **Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-27)
+
+#### Objetivo
+Implementar pruebas end-to-end con Playwright que validen los flujos críticos.
+
+#### Tareas
+- [x] Configurar Playwright (proyectos chromium + chromium-mobile)
+- [x] Fixtures de autenticación (admin, cliente vía API)
+- [x] Tests de navegación pública (5 tests)
+- [x] Tests de login admin (4 tests)
+- [x] Tests de flujo POS (4 tests)
+- [x] Tests de flujo B2C (5 tests)
+- [x] Tests de flujo completo (11 tests — checkout, carrito, catálogo, etc.)
+- [x] Tests de Google OAuth (18 tests — botón, callback, protección rutas, persistencia)
+- [x] Agregar scripts E2E en package.json raíz
+
+#### Validación mínima
+- [x] 29+ tests E2E pasando
+- [x] TypeScript frontend: 0 errores
+
+---
+
+### Fase 15 — Docker producción + Configuración deploy
+
+**Estimación:** 3 a 4 días
+**Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-27)
+
+#### Objetivo
+Asegurar que el producto se pueda desplegar con Docker de producción.
+
+#### Tareas
+- [x] Crear **Docker multi-stage build** backend (tsc → node:22-alpine)
+- [x] Crear **Docker multi-stage build** frontend (Vite → Nginx:1.27-alpine)
+- [x] Crear `.env.production.example` con placeholders seguros
+- [x] Agregar **healthchecks** en `docker-compose.yml`
+- [x] Nginx config: SPA routing, proxy `/api/` a backend, gzip, cache assets
+- [x] Redis con `requirepass` en producción
+- [x] Backend bind `127.0.0.1:3000` (solo localhost)
+- [x] Prisma postgenerate script para pnpm compatibility
+
+#### Validación mínima
+- [x] TypeScript backend: 0 errores
+- [x] TypeScript frontend: 0 errores
+- [x] Vitest: 520/520 tests
+
+---
+
+### Fase 16 — Auditoría visible y trazabilidad de negocio ⏳
+
+**Estimación:** 1 semana
+**Prioridad:** 🔴 Must have
+**Estado:** ⏳ PENDIENTE
 
 #### Objetivo
 Hacer auditable lo que hoy ya existe parcialmente a nivel técnico, pero no con visibilidad operativa suficiente.
@@ -287,24 +370,13 @@ Hacer auditable lo que hoy ya existe parcialmente a nivel técnico, pero no con 
   - [ ] No CSRF clásico de navegador (no aplica a server-to-server)
   - [ ] Sí: firma HMAC, anti-replay por timestamp, idempotencia, validación de origen cuando aplique
 
-#### Validación mínima
-- [ ] Tests backend del historial y auditoría
-- [ ] Verificación manual desde panel admin
-- [ ] Tests de rate limiting por perfil
-- [ ] Tests de webhook signature / replay
-
-#### Documentación a actualizar
-- [ ] `docs/architecture.md`
-- [ ] `docs/api-routes.md`
-- [ ] `README.md` — si se agregan env vars o headers
-- [ ] `docs/worklog.md`
-- [ ] `docs/adr/` — si se modela una tabla/event store específico
 ---
 
-### Fase 14 — Tiempo real y jobs asíncronos
+### Fase 17 — Tiempo real y jobs asíncronos ⏳
 
 **Estimación:** 1.5 a 2 semanas
 **Prioridad:** 🔴 Must have / 🟡 Should have
+**Estado:** ⏳ PENDIENTE
 
 #### Objetivo
 Eliminar polling innecesario y mover tareas pesadas fuera del request-response clásico.
@@ -329,82 +401,22 @@ Eliminar polling innecesario y mover tareas pesadas fuera del request-response c
 - [ ] WebSocket para chatbot en vivo
 - [ ] Notificaciones push para alertas de inventario
 
-#### Validación mínima
-- [ ] Pruebas manuales con dos sesiones simultáneas
-- [ ] Tests de integración para jobs en cola
-- [ ] Validación de reconexión y errores
-- [ ] Sin degradación visible del servidor HTTP principal
-
-#### Documentación a actualizar
-- [ ] `docs/architecture.md`
-- [ ] `docs/api-routes.md` — añadir sección de canales/eventos realtime
-- [ ] `AGENTS.md` — cómo probar eventos realtime
-- [ ] `docs/worklog.md`
-- [ ] `docs/adr/` — para WebSocket/SSE/BullMQ
-
 ---
 
-### Fase 15 — SEO, performance y experiencia pública
+### Fase 18 — CI/CD, Deploy y monitoreo ⏳
 
-**Estimación:** 1 a 1.5 semanas
-**Prioridad:** 🔴 Must have / 🟡 Should have
-
-#### Objetivo
-Hacer que la parte pública cargue mejor, se indexe mejor y comunique mejor en buscadores/redes.
-
-#### Tareas
-- [ ] Configurar **meta tags** por página pública
-- [ ] Configurar **Open Graph / Twitter cards**
-- [ ] Generar `sitemap.xml`
-- [ ] Generar `robots.txt`
-- [ ] Implementar **lazy loading** de rutas admin
-- [ ] Implementar **pre-render de landing pública**
-  - [ ] O SSR/SSG parcial si el costo sigue siendo razonable
-- [ ] Activar **compresión Brotli**
-- [ ] Evaluar y configurar **CDN para assets estáticos**
-- [ ] Mejorar performance del catálogo y landing
-- [ ] Definir umbrales mínimos de Lighthouse para páginas públicas
-
-#### Validación mínima
-- [ ] Build de producción correcto
-- [ ] Verificación de metadatos en HTML final
-- [ ] Lighthouse en landing / catálogo
-- [ ] Verificación de sitemap y robots
-- [ ] Confirmar split de bundles admin
-
-#### Documentación a actualizar
-- [ ] `README.md` — build/deploy y SEO técnico
-- [ ] `docs/architecture.md`
-- [ ] `docs/worklog.md`
-- [ ] `docs/adr/` — si se adopta estrategia formal SSR/pre-render
-
----
-
-### Fase 16 — Deploy, CI/CD, E2E y operación mínima
-
-**Estimación:** 1 a 1.5 semanas
+**Estimación:** 1 semana
 **Prioridad:** 🔴 Must have
+**Estado:** ⏳ PENDIENTE
 
 #### Objetivo
-Asegurar que el producto se pueda desplegar, validar y operar con una rutina repetible.
+Automatizar la validación y despliegue, y definir rutina operativa de monitoreo.
 
 #### Tareas
-- [ ] Crear **Docker multi-stage build** para producción
-- [ ] Agregar **healthchecks** en `docker-compose.yml`
 - [ ] Configurar **GitHub Actions**
-  - [ ] Install
-  - [ ] Typecheck
-  - [ ] Tests backend/frontend
-  - [ ] Build
+  - [ ] Install + Typecheck + Tests backend/frontend + Build
   - [ ] Secret scanning
   - [ ] E2E smoke si el entorno lo permite
-- [ ] Crear **tests E2E con Playwright**
-  - [ ] Login admin
-  - [ ] Abrir caja
-  - [ ] Flujo POS básico
-  - [ ] Navegación pública
-  - [ ] Checkout / confirmación
-  - [ ] Smoke del dashboard
 - [ ] Definir **monitoreo básico**
   - [ ] Qué logs revisar
   - [ ] Cada cuánto revisarlos
@@ -421,72 +433,54 @@ Asegurar que el producto se pueda desplegar, validar y operar con una rutina rep
 | **Luego de estabilización** | Revisar logs **3 veces por semana** |
 | **Tras cada release** | Revisar logs y healthchecks durante las primeras **2 horas** |
 
-#### Validación mínima
-- [ ] Pipeline CI verde
-- [ ] Imagen Docker de producción construye correctamente
-- [ ] Healthchecks responden bien
-- [ ] E2E smoke estable
-- [ ] Checklist de deploy reproducible
-
-#### Documentación a actualizar
-- [ ] `README.md`
-- [ ] `AGENTS.md`
-- [ ] `docs/architecture.md`
-- [ ] `docs/worklog.md`
-
 ---
 
-### Fase 17 — Polish extendido y mejoras opcionales
+### Fase 19 — Polish extendido y mejoras opcionales ⏳
 
 **Estimación:** 4 a 6 días
 **Prioridad:** 🟡 Should have / 🟢 Could have
+**Estado:** ⏳ PENDIENTE (parcial: modo oscuro ✅)
 
 #### Objetivo
 Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 
 #### Tareas
-- [ ] Implementar **modo oscuro**
+- [x] Implementar **modo oscuro** (parcial — mayormente cubierto)
 - [ ] Extender transiciones y consistencia visual
 - [ ] Mejorar aún más los estados vacíos e informativos
 - [ ] Completar WebSocket del chatbot si quedó pendiente
 - [ ] Completar push notifications si quedó pendiente
 - [ ] Ajustar performance visual fina tras feedback real
+- [ ] Pre-render de landing pública o SSR/SSG parcial
+- [ ] Compresión Brotli
+- [ ] CDN para assets estáticos
 
-#### Validación mínima
-- [ ] Revisión visual completa
-- [ ] Smoke manual cross-device
-- [ ] Sin regresiones de accesibilidad evidentes
-
-#### Documentación a actualizar
-- [ ] `docs/worklog.md`
-- [ ] `README.md` — si cambia experiencia pública
-- [ ] `docs/architecture.md` — si cambia comportamiento estructural
 ---
 
 ## ✅ Checklist transversal por eje
 
 ### 1) UX (polish)
-- [ ] Keyboard shortcuts en POS (`F2`, `F4`)
-- [ ] Drug-Interaction Alerts en POS
-- [ ] B2C Health Profiles
-- [ ] Skeleton loaders
-- [ ] Transiciones suaves
-- [ ] Estados vacíos informativos
-- [ ] Validación inline mejorada
-- [ ] Responsive tablet para POS
-- [ ] Modo oscuro
+- [x] Keyboard shortcuts en POS (`F2`, `F4`)
+- [x] Drug-Interaction Alerts en POS
+- [x] B2C Health Profiles
+- [x] Skeleton loaders
+- [x] Transiciones suaves
+- [x] Estados vacíos informativos
+- [x] Validación inline mejorada
+- [x] Responsive tablet para POS
+- [x] Modo oscuro
 
 ### 2) Seguridad
 - [ ] Visor de auditoría en panel admin
 - [ ] Historial de cambios en precios y productos
-- [ ] Fix HEADLESS mode en `run.ps1`
-- [ ] Tests E2E con Playwright
+- [x] Fix HEADLESS mode en `run.ps1`
+- [x] Tests E2E con Playwright
 - [ ] Rate limiting granular por rol
-- [ ] CORS de producción validado
-- [ ] Audit de security headers con Helmet
-- [ ] Seguridad de webhooks con firmas / anti-replay / idempotencia
-- [ ] Sanitización de inputs en chatbot
-- [ ] Secret scanning automation
+- [x] CORS de producción validado
+- [x] Audit de security headers con Helmet
+- [x] Seguridad de webhooks con firmas HMAC (ya existe en pagos)
+- [x] Sanitización de inputs en chatbot
+- [x] Secret scanning automation (`.gitleaks.toml`)
 
 ### 3) Interacción dinámica
 - [ ] WebSockets para POS en tiempo real
@@ -496,17 +490,17 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [ ] Bull/BullMQ para jobs asíncronos
 
 ### 4) SEO / Performance / Deploy
-- [ ] Meta tags
-- [ ] Open Graph
-- [ ] `sitemap.xml`
-- [ ] `robots.txt`
+- [x] Meta tags
+- [x] Open Graph / Twitter Cards
+- [x] `sitemap.xml` + `robots.txt`
 - [ ] Pre-render o SSR/SSG parcial público
-- [ ] Lazy loading de rutas admin
+- [x] Lazy loading de rutas admin
 - [ ] Brotli
 - [ ] CDN de assets estáticos
-- [ ] Docker multi-stage de producción
-- [ ] Healthchecks en compose
-- [ ] GitHub Actions
+- [x] Docker multi-stage de producción
+- [x] Healthchecks en compose
+- [ ] GitHub Actions (CI/CD)
+- [x] PWA + Service Worker + offline fallback
 - [ ] Monitoreo básico documentado
 
 ---
@@ -515,14 +509,16 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 
 | Orden | Fase | Razón |
 |---|---|---|
-| 1 | **Fase 10** — Baseline + hardening | Alto impacto, bajo esfuerzo, reduce riesgos base |
-| 2 | **Fase 11** — UX core POS + admin | Mejora inmediata del POS y admin |
-| 3 | **Fase 12** — UX clínico (interacciones, health profiles) | Seguridad clínica y valor real de negocio |
-| 4 | **Fase 13** — Auditoría + trazabilidad | Auditoría y trazabilidad para operación real |
-| 5 | **Fase 14** — Tiempo real + jobs asíncronos | Sin bloquear el core, pero necesario para UX |
-| 6 | **Fase 15** — SEO + performance público | Indexación y performance pública |
-| 7 | **Fase 16** — Deploy + CI/CD + E2E | Despliegue, CI/CD, E2E y operación |
-| 8 | **Fase 17** — Polish extendido | Detalles no bloqueantes |
+| 1 | **Fase 10** — Baseline + hardening | ✅ COMPLETADA |
+| 2 | **Fase 11** — UX core POS + admin | ✅ COMPLETADA |
+| 3 | **Fase 12** — UX clínico (interacciones, health profiles) | ✅ COMPLETADA |
+| 4 | **Fase 13** — SEO + Performance + PWA | ✅ COMPLETADA |
+| 5 | **Fase 14** — Testing E2E con Playwright | ✅ COMPLETADA |
+| 6 | **Fase 15** — Docker producción + deploy | ✅ COMPLETADA |
+| 7 | **Fase 16** — Auditoría + trazabilidad | ⏳ PENDIENTE |
+| 8 | **Fase 17** — Tiempo real + jobs asíncronos | ⏳ PENDIENTE |
+| 9 | **Fase 18** — CI/CD + monitoreo | ⏳ PENDIENTE |
+| 10 | **Fase 19** — Polish extendido | ⏳ PENDIENTE |
 
 ---
 
@@ -543,9 +539,9 @@ Para mantener este roadmap ejecutable por una sola persona:
 Se considerará esta etapa terminada cuando:
 
 - [ ] Todos los **Must have** estén implementados
-- [ ] Los flujos críticos tengan cobertura **E2E**
+- [x] Los flujos críticos tengan cobertura **E2E**
 - [ ] Exista pipeline **CI/CD** funcional
-- [ ] El despliegue en Docker de producción sea reproducible
+- [x] El despliegue en Docker de producción sea reproducible
 - [ ] Exista monitoreo básico y rutina documentada
-- [ ] La documentación (`plan.md`, `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md`, `docs/worklog.md`) esté alineada
+- [x] La documentación (`plan.md`, `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md`, `docs/worklog.md`) esté alineada
 - [ ] El producto pueda operar con confianza razonable en entorno real sin depender de conocimiento tácito

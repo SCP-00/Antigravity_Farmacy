@@ -608,6 +608,40 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 
 ---
 
+## 2026-05-27 — Documentación: AGENTS.md browser-use + kill safety, plan.md realineado
+
+**Objetivo:** Completar la documentación siguiendo el step-by-step del plan.md, agregar reglas operativas faltantes en AGENTS.md.
+
+### Cambios en AGENTS.md
+1. **Nueva sección `🧪 Regla: tests de frontend/browser siempre con @browser-use`**
+   - Instrucción explícita: siempre que se realicen tests de frontend o interacción con navegador, usar `@browser-use` como agente
+   - No ejecutar scripts Playwright directos ni basher para tests de navegación
+   - Excepción: si Chrome no está disponible, usar script Playwright como fallback
+
+2. **Sección `🚫⚠️ Regla CRÍTICA: NUNCA matar freebuff.cmd`**
+   - Sección renombrada y reforzada con advertencia explícita
+   - Tabla de comandos prohibidos con explicación de por qué matan freebuff.cmd
+   - Nueva subsección `🔍 Cómo identificar freebuff.cmd` con comandos seguros de solo lectura
+   - Referencia rápida: primera fila `⛔ Matar freebuff.cmd | **NUNCA** — destruye la sesión`
+   - Regla de oro extendida: "Ante la duda, NO mates nada"
+
+### Cambios en plan.md
+- Corregidos checkboxes: Fases 10-12 ✅, Fase 13 (SEO+PWA) ✅, Fase 14 (E2E) ✅, Fase 15 (Docker) ✅
+- Fases pendientes renumeradas (16→19) con su estado real: ⏳ PENDIENTE
+- Tabla MoSCoW actualizada con columna de estado
+- Criterio final de cierre corregido (solo 3/7 cumplidos)
+- Checklist transversal corregido (Interacción dinámica: 0/5, Seguridad: 6/10)
+
+### Archivos modificados
+- `AGENTS.md` — 2 secciones nuevas/mejoradas
+- `plan.md` — Checkboxes realineados con worklog, fases pendientes marcadas
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+
+---
+
 ## 2026-05-27 — Fase 15: Testing E2E con Playwright
 
 **Objetivo:** Implementar pruebas end-to-end con Playwright que validen los flujos críticos de navegación pública, login admin, POS y B2C.
@@ -679,7 +713,7 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 ### Fixes durante implementación
 - **Catálogo test**: Selector `[class*="product"]` no existía — cambiado a `button:has-text("Agregar")`
 - **Búsqueda test**: Form submit usaba `debouncedQ` (300ms debounce) — agregado `waitForTimeout(500)` antes de Enter
-- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`nnnn + " + "prisma generate`" + " + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/nnbackend/scripts/prisma-postgenerate.jsn2.  � predev chain con post-generatennnn--color-dark-text-muted: #718096#7a8ba6n- Eliminados  duplicados (PostCSS warning fix)n### Docker Composen-  eliminado de ambos archivos (docker-compose.yml + docker-compose.dev.yml)n### Validacionesn- ? Frontend TS: 0 erroresn- ? E2E flujo-completo: 11/11 testsn
+- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`nnnn + " + "prisma generate`" + " + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/nnbackend/scripts/prisma-postgenerate.jsn2.  � predev chain con post-generatennnn--color-dark-text-muted: #718096#7a8ba6n- Eliminados  duplicados (PostCSS warning fix)n### Docker Composen-  eliminado de ambos archivos (docker-compose.yml + docker-compose.dev.yml)n### Validacionesn- ? Frontend TS: 0 erroresn- ? E2E flujo-completo: 11/11 testsn
 ---
 ## 2026-05-27 â€” Fase 16: Prisma Client durable fix + Flujo completo E2E (11 tests) + Dark mode WCAG AA
 

@@ -61,6 +61,22 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - Frontend: `frontend/src/main.tsx` (React 18 + QueryClient)
 - Tests: Vitest v3 en `backend/` + `frontend/` (27 archivos, 462 tests, 83.7% cobertura)
 
+## 🧪 Regla: tests de frontend/browser siempre con @browser-use
+
+**Siempre que realices tests de frontend o interacción con el navegador, DEBES usar `@browser-use` como agente.**
+
+No ejecutes scripts Playwright directos ni uses `basher` para correr tests de navegación. El agente `@browser-use`:
+- Automatiza la interacción con la web (clics, formularios, navegación)
+- Reporta resultados y errores de consola
+- Verifica que el renderizado sea correcto
+- Captura lecciones para mejorar ejecuciones futuras
+
+### Excepciones
+- Si Chrome no está disponible (System Info reporta `Chrome: not found`), usa el script Playwright directo como fallback (ver sección abajo)
+- Tests unitarios y de integración (Vitest) NO necesitan browser-use
+
+---
+
 ## Uso de browser-use (Playwright) — solo pnpm
 
 Este proyecto **NO usa npm**. Solo `pnpm` está instalado y disponible.
@@ -166,16 +182,19 @@ powershell -NoProfile -File run.ps1
 
 ---
 
-## ⚠️ Cuidado con procesos (kill safety)
+## 🚫⚠️ Regla CRÍTICA: NUNCA matar freebuff.cmd
 
-**NUNCA** uses estos comandos, porque pueden matar `freebuff.cmd` y otros procesos del entorno:
+**`freebuff.cmd` es el proceso que ejecuta Codebuff. Si se cae, la sesión actual se pierde por completo — no hay recuperación.**
 
-| ❌ Comando peligroso | Riesgo |
+### 🛑 Prohibido terminantemente
+
+| ❌ Lo que NUNCA debes hacer | Por qué |
 |---|---|
-| `taskkill /F /IM node.exe` | Mata **todos** los procesos Node.js, incluyendo freebuff.cmd u otros asistentes |
-| `Get-Process node \| Stop-Process` | Igual que arriba — mata todo proceso Node.js |
-| `Stop-Process -Name "node"` | Mata TODOS los Node.js sin filtrar |
-| `taskkill /F /FI "IMAGENAME eq node*"` | Igual — filtro demasiado amplio |
+| `taskkill /F /IM node.exe` | Mata TODOS los Node.js, incluyendo freebuff.cmd |
+| `Get-Process node \| Stop-Process` | Igual — mata todo proceso Node.js sin discriminar |
+| `Stop-Process -Name "node"` | Mata TODOS los Node.js incluyendo freebuff.cmd |
+| `taskkill /F /FI "IMAGENAME eq node*"` | Cualquier filtro por nombre de proceso es peligroso |
+| `Get-Process node \| Where-Object ...` | A menos que filtres POR PID, es inseguro |
 
 ### ✅ Forma segura de detener servidores
 
@@ -196,17 +215,31 @@ $pidOnPort = (Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
 if ($pidOnPort) { Stop-Process -Id $pidOnPort -Force }
 ```
 
+### 🔍 Cómo identificar freebuff.cmd
+
+Si necesitas verificar qué procesos están corriendo sin riesgo:
+```powershell
+# Listar procesos Node.js con su PID y línea de comandos (seguro — solo lectura)
+Get-Process node | Select-Object Id, ProcessName, StartTime
+
+# Ver procesos en un puerto específico (seguro)
+netstat -ano | findstr :3000
+```
+
+**NUNCA** uses el PID de `freebuff.cmd` en un `Stop-Process`. Si no estás seguro de qué PID matar, no mates nada y consulta al usuario.
+
 ### Referencia rápida de comandos seguros
 
 | Acción | Comando seguro |
 |---|---|
+| ⛔ Matar freebuff.cmd | **NUNCA** — destruye la sesión |
 | Detener backend por PID | `Stop-Process -Id $BACKEND_PID -Force` |
 | Detener frontend por PID | `Stop-Process -Id $FRONTEND_PID -Force` |
 | Liberar puerto 3000 | `Get-NetTCPConnection -LocalPort 3000 \| Stop-Process` |
 | Verificar qué ocupa un puerto | `netstat -ano \| findstr :3000` |
 | Dejar Docker intacto | **No tocar** `docker` ni contenedores |
 
-> **Regla de oro:** Nunca uses `taskkill /F /IM` ni filtres por nombre de proceso. Siempre usa el PID específico.
+> **Regla de oro:** Nunca uses `taskkill /F /IM` ni filtres por nombre de proceso. Siempre usa el PID específico. Y ante la duda, NO mates nada.
 
 ---
 
