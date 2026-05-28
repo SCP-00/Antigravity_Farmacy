@@ -2,6 +2,51 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 26: Dark mode rediseñado (paleta gris carbón profesional) + Deploy guide completa + documentación
+
+**Objetivo:** Rediseñar dark mode de alto contraste a paleta gris carbón profesional (VS Code/Slack inspirado), y crear guía paso a paso para deploy en VPS con Docker.
+
+### Dark mode — Paleta rediseñada
+
+| Variable | Antes (alto contraste) | Ahora (profesional) |
+|---|---|---|
+| `dark-bg` | `#0A0F1A` (azul muy oscuro) | `#1e1e1e` (VS Code neutral gray) |
+| `dark-surface` | `#131826` | `#252526` |
+| `dark-surface-elevated` | `#1C2233` | `#2d2d2d` |
+| `dark-text` | `#E8EDF5` | `#d4d4d4` (11.8:1 contraste) |
+| `dark-text-muted` | `#64748B` | `#868686` (4.58:1 WCAG AA) |
+| `dark-hover` | rgba(148,163,184,0.12) | rgba(255,255,255,0.07) |
+
+Body gradient: `linear-gradient(#1e1e1e, #252526)`
+Hero-panel: `linear-gradient(135deg, #1a1a2e, #16213e)`
+
+### 7 componentes actualizados con dark mode consistente
+- `CarritoDrawer.tsx`, `ProductCard.tsx`, `Dashboard.tsx` (chart grid), `PuntoVenta.tsx` (panel derecho), `ListaProductos.tsx`, `ListaClientes.tsx`
+
+### Deploy guide
+- `docs/deploy-guide.md` (NUEVO) — Guía completa paso a paso para deploy en VPS con Docker
+  - Incluye: prerrequisitos, clonado, .env, Docker, Caddy SSL, healthchecks, monitoring, backup
+
+### Archivos modificados
+- `frontend/src/index.css` — Paleta dark mode completa
+- `frontend/src/components/tienda/CarritoDrawer.tsx`
+- `frontend/src/components/tienda/ProductCard.tsx`
+- `frontend/src/pages/admin/Dashboard.tsx`
+- `frontend/src/pages/admin/caja/PuntoVenta.tsx`
+- `frontend/src/pages/admin/inventario/ListaProductos.tsx`
+- `frontend/src/pages/admin/clientes/ListaClientes.tsx`
+- `docs/deploy-guide.md` (NUEVO)
+- `README.md` — Enlace a deploy-guide.md
+- `docs/worklog.md` — Esta entrada
+
+### Validaciones
+- ✅ TypeScript frontend: 0 errores
+- ✅ TypeScript backend: 0 errores
+- ✅ APIs: health (200), categorías (8), productos (57), sucursales (2)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-28 — Fase 25: Backup Dockerizado + resource limits review + documentación de progreso
 
 **Objetivo:** Integrar backup automático de PostgreSQL en Docker, evaluar resource limits contra estándares de industria, y documentar el estado completo del proyecto.

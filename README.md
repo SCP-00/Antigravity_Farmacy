@@ -269,6 +269,7 @@ cd frontend && pnpm run dev
 | [docs/features/b2c.md](docs/features/b2c.md) | B2C, persistencia, puntos de fidelidad |
 | [docs/features/payments.md](docs/features/payments.md) | Pasarelas de pago, efectivo, contra entrega |
 | [docs/security/compliance.md](docs/security/compliance.md) | Pentest, seguridad, INVIMA, persistencia DB |
+| [docs/deploy-guide.md](docs/deploy-guide.md) | Guía paso a paso para deploy en VPS con Docker |
 | [docs/worklog.md](docs/worklog.md) | Bitácora de cambios |
 | [plan.md](plan.md) | Roadmap de desarrollo |
 | [AGENTS.md](AGENTS.md) | Guía para desarrolladores IA |
