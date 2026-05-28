@@ -1,15 +1,18 @@
 # ══════════════════════════════════════════════════════════
 #  FARMACY — Docker Compose PRODUCCIÓN
-#  Levanta toda la aplicación: backend, frontend, BD, Redis
 #
-#  Uso:
-#    docker compose up -d --build
-#    docker compose down
-#    docker compose logs -f backend
+#  Requisitos:
+#    1. cp .env.production.example .env
+#    2. nano .env   # rellena TODOS los valores
+#    3. docker compose up -d --build
+#
+#  ⚠️  NUNCA comitees .env con valores reales.
+#      .env está en .gitignore por seguridad.
 # ══════════════════════════════════════════════════════════
 
 services:
 
+  # ── PostgreSQL 15 ──────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: farmacy_postgres
@@ -17,32 +20,40 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-farmacy_db}
       POSTGRES_USER: ${POSTGRES_USER:-farmacy_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es requerida}
       TZ: America/Bogota
     volumes:
       - farmacy_pg_data:/var/lib/postgresql/data
     networks:
       - farmacy_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farmacy_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farmacy_user} -d ${POSTGRES_DB:-farmacy_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
+  # ── Redis 7 ────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     container_name: farmacy_redis
     restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD es requerida}
     volumes:
       - farmacy_redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     networks:
       - farmacy_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ── Backend (Express + TypeScript) ────────────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: farmacy_backend
     restart: always
     env_file: .env
@@ -52,31 +63,50 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - farmacy_network
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
+  # ── Frontend (Vite + Nginx) ────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_APP_NAME: ${VITE_APP_NAME}
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL es requerida}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Farmacy}
     container_name: farmacy_frontend
     restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - farmacy_network
     ports:
       - "80:80"
-    depends_on:
-      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
 
 volumes:
   farmacy_pg_data:
+    name: farmacy_pg_data_prod
   farmacy_redis_data:
+    name: farmacy_redis_data_prod
 
 networks:
   farmacy_network:
     name: farmacy_prod_network
+    driver: bridge
