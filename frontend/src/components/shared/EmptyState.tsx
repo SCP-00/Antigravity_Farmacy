@@ -1,5 +1,19 @@
 import { LucideIcon } from 'lucide-react'
 
+/**
+ * Estado vacío con icono, título, descripción y acción opcional.
+ * Usado en listas sin datos, búsquedas sin resultados, etc.
+ *
+ * @example
+ * ```tsx
+ * <EmptyState
+ *   icon={Package}
+ *   title="No hay productos"
+ *   description="Agrega productos al catálogo para empezar"
+ *   action={{ label: "Agregar", onClick: () => {} }}
+ * />
+ * ```
+ */
 interface EmptyStateProps {
   icon: LucideIcon
   title?: string

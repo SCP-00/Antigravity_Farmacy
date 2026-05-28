@@ -1,3 +1,8 @@
+/**
+ * Catálogo mock de productos, categorías y sedes para desarrollo y testing.
+ * Reemplazado por datos reales de la API en producción.
+ */
+
 import type { ProductoCatalogo, CategoriaCatalogo, SedeCatalogo } from '@/types/producto.types'
 
 const normalizar = (valor: string) =>
@@ -86,6 +91,7 @@ export const mockProductos: ProductoCatalogo[] = [
   },
 ]
 
+/** Filtros de búsqueda para el catálogo de productos. */
 export interface FiltrosCatalogo {
   q?: string
   categoria?: string
@@ -100,6 +106,12 @@ export interface FiltrosCatalogo {
   limite?: number
 }
 
+/**
+ * Filtra, ordena y pagina productos mock del catálogo.
+ * Simula el comportamiento del endpoint real de la API.
+ *
+ * @returns `{ data: ProductoCatalogo[], meta: { total, totalPaginas, pagina, limite } }`
+ */
 export function filtrarCatalogo(filtros: FiltrosCatalogo = {}) {
   const pagina = Math.max(1, filtros.pagina ?? 1)
   const limite = Math.max(1, filtros.limite ?? 12)

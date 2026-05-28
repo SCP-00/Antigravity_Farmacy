@@ -4,7 +4,16 @@ import { useAuthClienteStore } from '@/store/authStore'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
-// ── Instancia para EMPLEADOS ──────────────────────────────
+/**
+ * Cliente axios autenticado para empleados (admin/farmaceuta/auxiliar).
+ * Incluye interceptor de refresh token automático en 401.
+ *
+ * @example
+ * ```ts
+ * import { api } from '@/config/api'
+ * const { data } = await api.get('/categorias')
+ * ```
+ */
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -38,7 +47,10 @@ api.interceptors.response.use(
   }
 )
 
-// ── Instancia para CLIENTES (tienda web) ──────────────────
+/**
+ * Cliente axios autenticado para clientes de la tienda web.
+ * Usa el token de `useAuthClienteStore`. En 401 cierra sesión automáticamente.
+ */
 export const apiCliente = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
@@ -61,7 +73,10 @@ apiCliente.interceptors.response.use(
   }
 )
 
-// ── Instancia pública (sin auth) ──────────────────────────
+/**
+ * Cliente axios público sin autenticación.
+ * Para consultas abiertas como catálogo, sucursales, etc.
+ */
 export const apiPublica = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },

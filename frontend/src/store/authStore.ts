@@ -4,7 +4,11 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// ── Empleado store ────────────────────────────────────────
+/** Estado y acciones del store de autenticación de empleados (admin).
+ * - Almacena token JWT, refresh token y datos del empleado
+ * - Persiste en localStorage via Zustand `persist` middleware
+ * - Provee helpers `estaLogueado()` y `tieneRol()` para control de acceso
+ */
 interface EmpleadoState {
   token:        string | null
   refreshToken: string | null
@@ -51,7 +55,11 @@ export const useAuthStore = create<EmpleadoState>()(
   )
 )
 
-// ── Cliente store (tienda web) ────────────────────────────
+/** Estado y acciones del store de autenticación de clientes (B2C).
+ * - Almacena token JWT y datos del cliente
+ * - Persiste en localStorage via Zustand `persist` middleware
+ * - Provee `actualizarPuntos()` para actualizar puntos de fidelidad
+ */
 interface ClienteState {
   token:    string | null
   cliente: {

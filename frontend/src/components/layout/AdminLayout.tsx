@@ -19,6 +19,26 @@ interface NavItem {
   visible: boolean
 }
 
+/**
+ * Layout principal del panel administrativo (dashboard).
+ * Incluye sidebar colapsable con navegación por roles, topbar con
+ * alertas de inventario, toggle de tema oscuro, notificaciones push,
+ * y selector de perfil de usuario.
+ *
+ * - Sidebar: colapsable (expandido/contraído), navegación por permisos
+ * - Topbar: alertas de stock, push notifications, theme toggle
+ * - Contenido: `<Outlet />` de React Router para páginas hijas
+ *
+ * @example
+ * ```tsx
+ * <Route element={<ProtectedRoute tipo="empleado" />}>
+ *   <Route element={<AdminLayout />}>
+ *     <Route path="/admin" element={<Dashboard />} />
+ *     <Route path="/admin/caja/*" element={<CajaPages />} />
+ *   </Route>
+ * </Route>
+ * ```
+ */
 export default function AdminLayout() {
   const { empleado, logout } = useAuth()
   const permisos = usePermisos()

@@ -44,6 +44,10 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray
 }
 
+/**
+ * Estado y acciones del hook de notificaciones push.
+ * Maneja el ciclo completo: permiso → suscripción VAPID → backend.
+ */
 export interface PushState {
   /** ¿El browser soporta Push API? */
   supported: boolean
@@ -59,6 +63,23 @@ export interface PushState {
   unsubscribe: () => Promise<void>
 }
 
+/**
+ * Hook para manejar notificaciones push Web Push API.
+ *
+ * - Solicita permiso de notificaciones al usuario
+ * - Obtiene clave VAPID pública desde el backend (con cache en localStorage)
+ * - Suscribe/desuscribe al empleado logueado via PushManager API
+ * - Detecta cambios de permiso en tiempo real
+ * - Reconexión automática: detecta suscripciones existentes
+ *
+ * @example
+ * ```tsx
+ * const { supported, subscribed, subscribe, unsubscribe } = usePushNotifications()
+ * if (supported && !subscribed) {
+ *   return <button onClick={subscribe}>Activar notificaciones</button>
+ * }
+ * ```
+ */
 export function usePushNotifications(): PushState {
   const { token, empleado } = useAuthStore()
   const [subscribed, setSubscribed] = useState(false)

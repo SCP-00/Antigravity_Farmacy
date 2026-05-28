@@ -1,10 +1,18 @@
-﻿export interface CategoriaCatalogo {
+﻿/**
+ * Categoría de producto en el catálogo (ej: Analgésicos, Vitaminas).
+ * Incluye margen de ganancia configurable por categoría.
+ */
+export interface CategoriaCatalogo {
 	id: string
 	nombre: string
 	slug: string
 	margen_ganancia_porcentaje: number
 }
 
+/**
+ * Sucursal física de Farmacy.
+ * Incluye código de habilitación INVIMA para farmacias colombianas.
+ */
 export interface SedeCatalogo {
 	id: string
 	nombre: string
@@ -13,6 +21,14 @@ export interface SedeCatalogo {
 	telefono?: string
 }
 
+/**
+ * Producto completo del catálogo con todos los campos INVIMA.
+ * Incluye datos regulatorios colombianos (CUM, Registro INVIMA,
+ * principio activo, ATC, forma farmacéutica, etc.).
+ *
+ * Los campos marcados con `?` pueden ser null para medicamentos
+ * sin registro completo o productos OTC.
+ */
 export interface ProductoCatalogo {
 	id: string
 	cum: string
@@ -60,6 +76,10 @@ export interface ProductoCatalogo {
 	ium?: string | null
 }
 
+/**
+ * Producto dentro del carrito de compras.
+ * Extiende los datos necesarios para checkout sin depender del servidor.
+ */
 export interface CarritoProducto {
 	productoId: string
 	nombre: string

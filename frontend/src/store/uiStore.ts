@@ -1,5 +1,9 @@
 import { create } from 'zustand'
 
+/**
+ * Estado global de la UI (tema, modales, sidebar, carrito, chatbot).
+ * No persiste en localStorage (excepto darkMode manualmente).
+ */
 interface UiState {
   sidebarAbierto:  boolean
   carritoAbierto:  boolean

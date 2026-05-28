@@ -2,6 +2,19 @@ import { Outlet, Link } from 'react-router-dom'
 import { useUiStore } from '@/store/uiStore'
 import ThemeToggle from '@/components/shared/ThemeToggle'
 
+/**
+ * Layout de autenticación con diseño centrado, fondo degradado,
+ * logo de Farmacy y tarjeta de contenido.
+ * Usado para login, registro, recuperación de contraseña, etc.
+ *
+ * @example
+ * ```tsx
+ * <Route element={<AuthLayout />}>
+ *   <Route path="/login" element={<LoginAdmin />} />
+ *   <Route path="/admin/login" element={<LoginAdmin />} />
+ * </Route>
+ * ```
+ */
 export default function AuthLayout() {
   const { darkMode } = useUiStore()
 

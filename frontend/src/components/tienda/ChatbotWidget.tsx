@@ -109,6 +109,21 @@ function AlertaBanner({ count }: { count: number }) {
 }
 
 // ── ChatbotWidget ─────────────────────────────────────────
+/**
+ * Widget de chatbot flotante (FarmaBot).
+ * - FAB (Floating Action Button) en la esquina inferior derecha
+ * - Panel deslizable con historial de mensajes
+ * - Soporta acciones rápidas (buscar, interacciones, sedes, etc.)
+ * - Muestra tarjetas de producto y alertas de seguridad integradas
+ * - Persiste sesión por `sessionToken` generado aleatoriamente
+ * - Cierre con tecla Escape
+ *
+ * @example
+ * ```tsx
+ * // Se usa automáticamente en PublicLayout
+ * <ChatbotWidget />
+ * ```
+ */
 export default function ChatbotWidget() {
   const { chatbotAbierto, toggleChatbot, darkMode } = useUiStore()
   const { mensajes, escribiendo, enviar } = useChatbot()

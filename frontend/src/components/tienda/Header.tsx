@@ -4,6 +4,23 @@ import { ShoppingCart, Search, Menu, X, Heart, User, LogOut } from 'lucide-react
 import { useCarritoStore } from '@/store/carritoStore'
 import { useAuthClienteStore } from '@/store/authStore'
 
+/**
+ * Header principal de la tienda B2C con navegación, búsqueda, favoritos,
+ * carrito, menú de usuario y categorías.
+ *
+ * Incluye:
+ * - Topbar promocional (envío gratis)
+ * - Barra de búsqueda con submit a `/catalogo?q=...`
+ * - Navegación por categorías
+ * - Menú responsive (mobile + desktop)
+ * - Indicador de cantidad en carrito
+ * - Botón de favoritos y cuenta de usuario
+ *
+ * @example
+ * ```tsx
+ * <Header />
+ * ```
+ */
 export function Header() {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [busquedaAbierta, setBusquedaAbierta] = useState(false)

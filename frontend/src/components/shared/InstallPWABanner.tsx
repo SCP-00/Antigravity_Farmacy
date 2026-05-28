@@ -8,6 +8,14 @@ import { useEffect, useRef } from 'react'
 import { X, Download } from 'lucide-react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 
+/**
+ * Banner de instalación PWA que aparece como slide-up cuando `beforeinstallprompt`
+ * está disponible. Usa el hook `usePWAInstall` para manejar el ciclo de vida.
+ *
+ * - Se muestra automáticamente cuando el navegador emite `beforeinstallprompt`
+ * - Desaparece al instalar, descartar o si la app ya está instalada
+ * - Incluye animación slide-up con transición suave
+ */
 export default function InstallPWABanner() {
   const { isInstallable, isInstalled, install, dismiss, markBannerShown } =
     usePWAInstall()

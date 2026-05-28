@@ -8,10 +8,18 @@ interface AlertaInteraccion {
   severidad: 'ALTA' | 'MEDIA' | 'BAJA' | 'INFO'
 }
 
+/**
+ * Props del modal de alertas de interacciones medicamentosas.
+ * Muestra alertas clínicas al agregar productos al carrito.
+ */
 interface InteractionAlertModalProps {
+  /** Lista de alertas detectadas (vacía = sin alertas) */
   alertas: AlertaInteraccion[]
+  /** Callback al confirmar (continuar con la venta) */
   onConfirm: () => void
+  /** Callback al cancelar (revisar carrito) */
   onCancel: () => void
+  /** Estado de carga mientras se procesa */
   loading: boolean
 }
 
@@ -52,6 +60,24 @@ function parseDescripcion(desc: string): string {
     .replace(/\n/g, '<br/>')
 }
 
+/**
+ * Modal de alertas clínicas para interacciones medicamentosas (FEFO/INVIMA).
+ * Agrupa las alertas por severidad (ALTA > MEDIA > BAJA > INFO)
+ * y permite al usuario continuar o revisar el carrito.
+ *
+ * @example
+ * ```tsx
+ * <InteractionAlertModal
+ *   alertas={[
+ *     { tipo: 'INTERACCION_MEDICAMENTOSA', productoA: 'Ibuprofeno', productoB: 'Warfarina',
+ *       descripcion: 'Riesgo de sangrado', severidad: 'ALTA' }
+ *   ]}
+ *   onConfirm={() => procesarVenta()}
+ *   onCancel={() => setShowModal(false)}
+ *   loading={false}
+ * />
+ * ```
+ */
 export default function InteractionAlertModal({ alertas, onConfirm, onCancel, loading }: InteractionAlertModalProps) {
   const severidadMaxima = alertas.reduce((max, a) => {
     const orden = { ALTA: 3, MEDIA: 2, BAJA: 1, INFO: 0 }

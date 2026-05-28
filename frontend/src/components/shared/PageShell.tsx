@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
 
+/**
+ * Página genérica con encabezado decorativo, descripción y acción.
+ * Usada como placeholder para páginas en construcción o como base de páginas estáticas.
+ */
 interface Props {
   eyebrow?: string
   title: string

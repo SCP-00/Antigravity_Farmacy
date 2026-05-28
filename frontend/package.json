@@ -10,7 +10,10 @@
     "build:seo": "tsc && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
-    "test": "vitest"
+    "test": "vitest",
+    "docs": "typedoc",
+    "docs:serve": "typedoc --watch"
+
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -52,6 +55,7 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "playwright": "^1.60.0",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.0",
     "vite": "^6.4.2",
     "vite-plugin-compression": "^0.5.1",

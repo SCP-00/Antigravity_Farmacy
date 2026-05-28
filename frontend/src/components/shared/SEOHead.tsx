@@ -4,6 +4,10 @@
 // ══════════════════════════════════════════════════════════
 import { Helmet } from 'react-helmet-async'
 
+/**
+ * Props para el componente de meta tags SEO.
+ * Todos los campos son opcionales con defaults sensibles.
+ */
 interface SEOHeadProps {
   /** Título de la página (se le agrega " | Farmacy" automáticamente) */
   title?: string
@@ -29,6 +33,20 @@ const DEFAULT_DESCRIPTION =
   'Farmacy — Tu farmacia digital de confianza en Pereira. Explora medicamentos, cuidado personal y vitaminas con inventario en tiempo real y método FEFO.'
 const DEFAULT_IMAGE = 'https://farmacy.co/og-default.jpg'
 
+/**
+ * Componente SEO que inyecta meta tags, Open Graph, Twitter Card y JSON-LD Schema.org.
+ * Usa react-helmet-async para manejar los tags en el `<head>`.
+ *
+ * @example
+ * ```tsx
+ * <SEOHead
+ *   title="Catálogo de Medicamentos"
+ *   description="Explora nuestro catálogo completo de medicamentos INVIMA"
+ *   path="/productos"
+ *   image="/og-catalogo.jpg"
+ * />
+ * ```
+ */
 export default function SEOHead({
   title,
   description = DEFAULT_DESCRIPTION,

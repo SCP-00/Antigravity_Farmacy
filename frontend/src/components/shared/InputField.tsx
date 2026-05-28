@@ -3,6 +3,10 @@ import { AlertCircle } from 'lucide-react'
 
 // ── InputError ────────────────────────────────────────────────
 
+/**
+ * Componente para mostrar errores de validación asociados a un campo.
+ * Renderiza un texto en rojo con icono de alerta si hay error.
+ */
 export function InputError({ error, id }: { error?: string; id?: string }) {
   if (!error) return null
   return (
@@ -13,8 +17,7 @@ export function InputError({ error, id }: { error?: string; id?: string }) {
   )
 }
 
-// ── InputField (text/email/number/password) ───────────────────
-
+/** Props para el campo de texto InputField */
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   error?: string
@@ -23,6 +26,22 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   helperText?: string
 }
 
+/**
+ * Campo de texto/formulario reutilizable con label, error, helper text y estado touched.
+ * Soporta modo oscuro, estados disabled, y validación ARIA.
+ *
+ * @example
+ * ```tsx
+ * <InputField
+ *   label="Correo electrónico"
+ *   name="email"
+ *   type="email"
+ *   required
+ *   error={errors.email}
+ *   touched={touched.email}
+ * />
+ * ```
+ */
 export function InputField({ label, error, touched, required, helperText, className = '', id, ...props }: InputFieldProps) {
   const fieldId = id || props.name || `field-${label.toLowerCase().replace(/\s+/g, '-')}`
   const errorId = `${fieldId}-error`
@@ -58,6 +77,7 @@ export function InputField({ label, error, touched, required, helperText, classN
 
 // ── SelectField ───────────────────────────────────────────────
 
+/** Props para el campo de selección SelectField */
 interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label: string
   error?: string
@@ -67,6 +87,10 @@ interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string
 }
 
+/**
+ * Selector desplegable reutilizable con label, error y placeholder.
+ * Soporta modo oscuro y validación ARIA.
+ */
 export function SelectField({ label, error, touched, required, children, placeholder, className = '', id, ...props }: SelectFieldProps) {
   const fieldId = id || props.name || `field-${label.toLowerCase().replace(/\s+/g, '-')}`
   const errorId = `${fieldId}-error`
@@ -102,6 +126,7 @@ export function SelectField({ label, error, touched, required, children, placeho
 
 // ── TextAreaField ─────────────────────────────────────────────
 
+/** Props para el área de texto TextAreaField */
 interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string
   error?: string
@@ -109,6 +134,10 @@ interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement>
   required?: boolean
 }
 
+/**
+ * Área de texto reutilizable con label opcional, error y validación.
+ * Ideal para campos de descripción, notas, etc.
+ */
 export function TextAreaField({ label, error, touched, required, className = '', id, ...props }: TextAreaFieldProps) {
   const fieldId = id || props.name || `field-${Math.random().toString(36).slice(2, 8)}`
   const errorId = `${fieldId}-error`

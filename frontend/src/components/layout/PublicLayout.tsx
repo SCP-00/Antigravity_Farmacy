@@ -8,6 +8,25 @@ import ThemeToggle from '@/components/shared/ThemeToggle'
 import InstallPWABanner from '@/components/shared/InstallPWABanner'
 import ChatbotWidget from '@/components/tienda/ChatbotWidget'
 
+/**
+ * Layout público de la tienda B2C.
+ * Incluye topbar informativa, header con buscador, navegación de categorías
+ * con menú desplegable, menú de usuario, carrito, favoritos, footer,
+ * chatbot widget y banner de instalación PWA.
+ *
+ * - Soporte completo para modo oscuro
+ * - Mobile responsive con menú hamburguesa
+ * - Categorías con iconos desde `CATEGORIAS_ICONOS`
+ * - Búsqueda con debounce de 300ms
+ *
+ * @example
+ * ```tsx
+ * <Route element={<PublicLayout />}>
+ *   <Route path="/" element={<Inicio />} />
+ *   <Route path="/productos" element={<Catalogo />} />
+ * </Route>
+ * ```
+ */
 export default function PublicLayout() {
   const { estaLogueado, cliente, cerrarSesion } = useAuthCliente()
   const { data: categorias } = useCategorias()

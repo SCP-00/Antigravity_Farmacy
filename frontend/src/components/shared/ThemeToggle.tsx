@@ -1,12 +1,20 @@
 import { Moon, Sun } from 'lucide-react'
 import { useUiStore } from '@/store/uiStore'
 
-interface Props {
+/** Props para el botón de cambio de tema claro/oscuro. */
+interface ThemeToggleProps {
+  /** Clases CSS adicionales */
   className?: string
+  /** Modo compacto sin label textual */
   compact?: boolean
 }
 
-export default function ThemeToggle({ className = '', compact = false }: Props) {
+/**
+ * Botón de cambio entre tema claro y oscuro.
+ * Usa `useUiStore` para el estado global del tema.
+ * Soporta animación de rotación entre iconos Sun/Moon.
+ */
+export default function ThemeToggle({ className = '', compact = false }: ThemeToggleProps) {
   const { darkMode, toggleDarkMode } = useUiStore()
 
   return (

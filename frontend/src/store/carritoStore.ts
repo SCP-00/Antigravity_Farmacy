@@ -2,6 +2,14 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CarritoProducto, ProductoCatalogo } from '@/types/producto.types'
 
+/**
+ * Estado y acciones del carrito de compras (B2C).
+ * - Persiste en localStorage via Zustand `persist` middleware
+ * - Maneja agregar/quitar/cambiar cantidad de productos
+ * - Sincroniza stock máximo con datos del servidor
+ * - Calcula totalItems, subtotal, total
+ * - Detecta si hay productos que requieren receta médica (Rx)
+ */
 interface CarritoState {
 	items: CarritoProducto[]
 	agregar: (producto: Omit<CarritoProducto, 'cantidad'> & { cantidad?: number }) => void

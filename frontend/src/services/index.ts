@@ -6,7 +6,7 @@
 import { api, apiCliente, apiPublica } from '@/config/api'
 import { filtrarCatalogo, mockCategorias, mockSedes } from '@/data/catalogo'
 
-// ── AUTH EMPLEADOS ────────────────────────────────────────
+/** Autenticación de empleados (admin panel). Login, refresh token, logout. */
 export const authService = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }).then(r => r.data.data),
@@ -21,7 +21,7 @@ export const authService = {
     api.post('/auth/logout').then(r => r.data),
 }
 
-// ── AUTH CLIENTES ─────────────────────────────────────────
+/** Autenticación de clientes (B2C web). Registro, login, OAuth Google, verificación email. */
 export const authClienteService = {
   registro: (data: {
     nombre: string; apellido: string; email: string
@@ -56,7 +56,7 @@ export const authClienteService = {
   },
 }
 
-// ── PRODUCTOS ─────────────────────────────────────────────
+/** Gestión de productos del catálogo. Búsqueda pública, CRUD para admin. */
 export const productosService = {
   // Público — tienda web
   buscar: async (params: {
@@ -89,7 +89,7 @@ export const productosService = {
     api.delete(`/productos/${id}`).then(r => r.data),
 }
 
-// ── CATEGORÍAS ────────────────────────────────────────────
+/** Categorías de productos. Consulta pública con fallback a datos mock. */
 export const categoriasService = {
   listar: async () => {
     try {
@@ -101,7 +101,7 @@ export const categoriasService = {
   },
 }
 
-// ── INVENTARIO / LOTES ────────────────────────────────────
+/** Inventario y lotes FEFO. Gestión de lotes, ajustes de stock, movimientos, alertas. */
 export const inventarioService = {
   listarLotes: (params?: Record<string, unknown>) =>
     api.get('/lotes', { params }).then(r => r.data),
@@ -119,7 +119,7 @@ export const inventarioService = {
     api.get(`/inventario/alertas${query}`).then(r => r.data.data),
 }
 
-// ── PROVEEDORES ───────────────────────────────────────────
+/** Proveedores. CRUD completo para gestión de proveedores. */
 export const proveedoresService = {
   listar: (params?: Record<string, unknown>) =>
     api.get('/proveedores', { params }).then(r => r.data),
@@ -134,7 +134,7 @@ export const proveedoresService = {
     api.patch(`/proveedores/${id}`, data).then(r => r.data.data),
 }
 
-// ── COMPRAS ───────────────────────────────────────────────
+/** Órdenes de compra. Creación, recepción de mercancía, listado. */
 export const comprasService = {
   listarOrdenes: (params?: Record<string, unknown>) =>
     api.get('/compras', { params }).then(r => r.data),
@@ -149,7 +149,7 @@ export const comprasService = {
     api.post(`/compras/${ordenId}/recibir`, data).then(r => r.data),
 }
 
-// ── VENTAS ────────────────────────────────────────────────
+/** Ventas POS. Registro, listado, dashboard, devoluciones. */
 export const ventasService = {
   registrar: (data: Record<string, unknown>) =>
     api.post('/ventas', data).then(r => r.data.data),
@@ -164,7 +164,7 @@ export const ventasService = {
     api.post(`/ventas/${ventaId}/devolucion`, data).then(r => r.data),
 }
 
-// ── CAJA ──────────────────────────────────────────────────
+/** Caja POS. Apertura/cierre, estado actual, historial. */
 export const cajaService = {
   abrirCaja: (data: { sucursalId: number; montoApertura: number }) =>
     api.post('/caja/abrir', data).then(r => r.data.data),
@@ -179,7 +179,7 @@ export const cajaService = {
     api.get('/caja/historial', { params }).then(r => r.data.data),
 }
 
-// ── CLIENTES ──────────────────────────────────────────────
+/** Gestión de clientes (empleados) y perfil de cliente (B2C). Carrito, favoritos, pedidos, salud. */
 export const clientesService = {
   listar: (params?: Record<string, unknown>) =>
     api.get('/clientes', { params }).then(r => r.data),
@@ -215,7 +215,7 @@ export const clientesService = {
     apiCliente.patch('/clientes/auth/salud', data).then(r => r.data.data),
 }
 
-// ── EMPLEADOS ─────────────────────────────────────────────
+/** Gestión de empleados. CRUD y cambio de estado activo/inactivo. */
 export const empleadosService = {
   listar: (params?: Record<string, unknown>) =>
     api.get('/empleados', { params }).then(r => r.data),
@@ -230,7 +230,7 @@ export const empleadosService = {
     api.patch(`/empleados/${id}/estado`, { activo }).then(r => r.data),
 }
 
-// ── SUCURSALES ────────────────────────────────────────────
+/** Sucursales físicas. Consulta pública con fallback a datos mock. */
 export const sucursalesService = {
   listar: async () => {
     try {
@@ -242,7 +242,7 @@ export const sucursalesService = {
   },
 }
 
-// ── REPORTES ──────────────────────────────────────────────
+/** Reportes de ventas, inventario, compras. Exportación CSV. */
 export const reportesService = {
   ventas: (params: { desde: string; hasta: string; sucursalId?: number }) =>
     api.get('/reportes/ventas', { params }).then(r => r.data.data),
@@ -257,7 +257,7 @@ export const reportesService = {
     api.get(`/reportes/${tipo}/csv`, { params, responseType: 'blob' }).then(r => r.data),
 }
 
-// ── AUDITORÍA ────────────────────────────────────────────
+/** Auditoría de acciones. Logs de actividad e historial de cambios en productos. */
 export const auditoriaService = {
   listarLogs: (params?: Record<string, unknown>) =>
     api.get('/auditoria/logs-actividad', { params }).then(r => r.data),
@@ -269,7 +269,7 @@ export const auditoriaService = {
     api.get(`/auditoria/productos/${productoId}/historial-cambios`, { params }).then(r => r.data),
 }
 
-// ── CHATBOT ───────────────────────────────────────────────
+/** Chatbot FarmaBot. Envío de mensajes, verificación horario, interacciones medicamentosas. */
 export const chatbotService = {
   enviarMensaje: (mensaje: string, sessionToken: string) =>
     apiPublica.post('/chatbot', { mensaje, sessionToken }).then(r => r.data.data),
@@ -284,7 +284,7 @@ export const chatbotService = {
     apiPublica.get(`/chatbot/producto/${productoId}`).then(r => r.data.data),
 }
 
-// ── PUSH ───────────────────────────────────────────────────
+/** Push notifications Web Push API. VAPID keys, suscripción, dispositivos. */
 export const pushService = {
   getVapidKey: () =>
     api.get('/push/vapid-public-key').then(r => r.data.data.publicKey),
@@ -302,7 +302,7 @@ export const pushService = {
     api.delete(`/push/subscribir/${id}`).then(r => r.data),
 }
 
-// ── PAGOS ─────────────────────────────────────────────────
+/** Pasarelas de pago. Wompi, Stripe, MercadoPago, efectivo. */
 export const pagosService = {
   crearWompi: (pedidoId: string, monto: number) =>
     apiCliente.post('/pagos/wompi/crear', { pedidoId, monto }).then(r => r.data.data),

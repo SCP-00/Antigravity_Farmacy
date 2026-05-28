@@ -1,6 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Mail, Phone, MapPin } from 'lucide-react'
 
+/**
+ * Footer de la tienda B2C con enlaces rápidos, información de contacto,
+ * redes sociales, medios de pago y copyright.
+ *
+ * @example
+ * ```tsx
+ * <Footer />
+ * ```
+ */
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 mt-16">

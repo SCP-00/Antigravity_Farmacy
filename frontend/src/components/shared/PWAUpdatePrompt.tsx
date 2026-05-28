@@ -8,8 +8,17 @@ import { useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
 /**
- * Registra el Service Worker y maneja actualizaciones.
- * Se renderiza una sola vez en main.tsx.
+ * Componente que registra el Service Worker y muestra notificaciones toast
+ * cuando hay una nueva versión disponible o la app está lista para offline.
+ *
+ * - No renderiza nada visible (return null)
+ * - Importa dinámicamente `virtual:pwa-register` de vite-plugin-pwa
+ * - Se renderiza una sola vez en `main.tsx`
+ *
+ * @example
+ * ```tsx
+ * <PWAUpdatePrompt />
+ * ```
  */
 export function PWAUpdatePrompt() {
   const handleUpdate = useCallback(() => {

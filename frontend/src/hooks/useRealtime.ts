@@ -10,19 +10,41 @@ import { useAuthStore } from '@/store/authStore'
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 // ── useSSE — Dashboard en vivo (fetch-based SSE) ──────────
+/**
+ * Evento SSE recibido desde el servidor.
+ * Contiene el tipo de evento, los datos y el timestamp del servidor.
+ */
 export interface SSEEvent {
   tipo: string
   data: Record<string, unknown>
   timestamp: string
 }
 
+/** Opciones para configurar la conexión SSE. */
 interface UseSSEOptions {
+  /** Lista de tipos de eventos a filtrar */
   eventos?: string[]
+  /** Callback por cada evento recibido */
   onEvent?: (event: SSEEvent) => void
+  /** Callback cuando la conexión se establece */
   onConnected?: () => void
+  /** Habilitar/deshabilitar la conexión */
   enabled?: boolean
 }
 
+/**
+ * Hook para conexión SSE (Server-Sent Events) para dashboard en vivo.
+ * Usa `fetch` + `ReadableStream` para poder enviar headers JWT.
+ * Incluye reconexión exponencial (hasta 20 intentos, max 30s).
+ *
+ * @example
+ * ```tsx
+ * const { conectado, ultimoEvento } = useSSE({
+ *   eventos: ['nueva-venta', 'stock-critico'],
+ *   onEvent: (ev) => console.log('Evento:', ev),
+ * })
+ * ```
+ */
 export function useSSE(options: UseSSEOptions = {}) {
   const { eventos, onEvent, onConnected, enabled = true } = options
   const { token } = useAuthStore()
@@ -129,18 +151,39 @@ export function useSSE(options: UseSSEOptions = {}) {
 }
 
 // ── useWS — WebSocket para POS ─────────────────────────────
+/**
+ * Evento WebSocket recibido desde el servidor.
+ */
 export interface WSEvent {
   event: string
   data: Record<string, unknown>
   timestamp: string
 }
 
+/** Opciones para configurar la conexión WebSocket. */
 interface UseWSOptions {
+  /** Callback por cada evento recibido */
   onEvent?: (event: WSEvent) => void
+  /** Callback cuando la conexión se establece */
   onConnected?: () => void
+  /** Habilitar/deshabilitar la conexión */
   enabled?: boolean
 }
 
+/**
+ * Hook para conexión WebSocket para eventos POS en tiempo real.
+ * Incluye heartbeat cada 30s, reconexión exponencial (hasta 20 intentos, max 30s),
+ * y función `enviar()` para enviar mensajes al servidor.
+ *
+ * @example
+ * ```tsx
+ * const { conectado, enviar } = useWS({
+ *   onEvent: (ev) => {
+ *     if (ev.event === 'nueva-venta') mostrarNotificacion(ev.data)
+ *   },
+ * })
+ * ```
+ */
 export function useWS(options: UseWSOptions = {}) {
   const { onEvent, onConnected, enabled = true } = options
   const { token } = useAuthStore()

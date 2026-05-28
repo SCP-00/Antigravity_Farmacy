@@ -4,13 +4,32 @@
 // ══════════════════════════════════════════════════════════
 import { useState, useRef, useEffect, type ImgHTMLAttributes } from 'react'
 
+/**
+ * Props para el componente de imagen con carga diferida.
+ * Extiende los atributos nativos de `<img>`.
+ */
 type LazyImageProps = ImgHTMLAttributes<HTMLImageElement> & {
-  /** Clases para el placeholder mientras carga */
+  /** Clases CSS para el placeholder/skeleton mientras carga */
   placeholderClassName?: string
-  /** Root margin para IntersectionObserver (default: 200px) */
+  /** Root margin para IntersectionObserver (default: '200px') */
   rootMargin?: string
 }
 
+/**
+ * Imagen con carga diferida (lazy loading) usando IntersectionObserver.
+ * Muestra un placeholder animado mientras la imagen no está en viewport o no ha cargado.
+ * La imagen solo se descarga cuando está cerca del viewport (configurable via rootMargin).
+ *
+ * @example
+ * ```tsx
+ * <LazyImage
+ *   src="/productos/ibuprofeno.jpg"
+ *   alt="Ibuprofeno 400mg"
+ *   className="w-full h-48 rounded-xl"
+ *   rootMargin="100px"
+ * />
+ * ```
+ */
 export default function LazyImage({
   src,
   alt = '',

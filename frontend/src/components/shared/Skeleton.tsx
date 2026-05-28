@@ -1,4 +1,16 @@
-/** Componentes reutilizables de Skeleton loaders */
+/**
+ * Componentes de Skeleton loader para estados de carga.
+ * Muestran un placeholder animado (pulse) mientras se cargan los datos reales.
+ *
+ * @example
+ * ```tsx
+ * <SkeletonText className="w-3/4" />
+ * <SkeletonBlock className="h-48" />
+ * <SkeletonCard lines={4} />
+ * <SkeletonTable rows={5} columns={4} />
+ * <SkeletonChart />
+ * ```
+ */
 
 interface SkeletonProps {
   className?: string

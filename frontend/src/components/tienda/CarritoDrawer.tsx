@@ -2,9 +2,31 @@ import { Link } from 'react-router-dom'
 import { X, ShoppingBag, Trash2, Plus, Minus, AlertTriangle } from 'lucide-react'
 import { useCarrito, useFormateo, useAuthCliente } from '@/hooks'
 
-interface Props { open: boolean; onClose: () => void }
+/**
+ * Props del drawer lateral del carrito de compras.
+ */
+interface CarritoDrawerProps {
+  /** Controlar visibilidad del drawer */
+  open: boolean
+  /** Callback al cerrar el drawer */
+  onClose: () => void
+}
 
-export default function CarritoDrawer({ open, onClose }: Props) {
+/**
+ * Drawer lateral del carrito de compras (slide-in desde la derecha).
+ * Muestra productos agregados, controles de cantidad, subtotal,
+ * advertencia de receta médica, y opciones de checkout.
+ *
+ * - Persiste en `useCarritoStore` (Zustand + localStorage)
+ * - Detecta productos que requieren receta (Rx)
+ * - Muestra CTAs de login/registro si el usuario no está autenticado
+ *
+ * @example
+ * ```tsx
+ * <CarritoDrawer open={isOpen} onClose={() => setIsOpen(false)} />
+ * ```
+ */
+export default function CarritoDrawer({ open, onClose }: CarritoDrawerProps) {
   const { items, totalItems, total, agregar, quitar, cambiarCantidad, tieneRx } = useCarrito()
   const { estaLogueado } = useAuthCliente()
   const { cop } = useFormateo()

@@ -22,6 +22,9 @@ dev-dist/
 backend/coverage/
 backend/coverage.json
 
+# ── Documentación generada ──────────────────────────────
+frontend/docs/api/
+
 # ── Temp ──────────────────────────────────────────────────
 frontend/outdated.json
 nul
@@ -29,6 +32,8 @@ nul
 # ── Playwright / E2E ─────────────────────────────────────
 e2e/reports/
 e2e/results/
+test-screenshots/
+test-e2e-*.log
 
 # ── Tools (binarios grandes, no el script) ───────────────────
 .agents/

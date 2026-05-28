@@ -3,6 +3,19 @@ import { useEffect, useCallback, useRef } from 'react'
 /**
  * Hook para detectar lecturas de un escáner de códigos de barras USB/Bluetooth.
  * El escáner emula un teclado rápido que termina con la tecla 'Enter'.
+ *
+ * - Ignora campos `type="number"` para no interferir con inputs de descuento
+ * - Usa un buffer interno que se limpia si la entrada es más lenta que 50ms entre teclas
+ * - Requiere al menos 4 caracteres para considerar la entrada como escáner
+ *
+ * @param onScan - Callback invocado con el código de barras escaneado
+ *
+ * @example
+ * ```tsx
+ * useScanner((barcode) => {
+ *   buscarProducto(barcode)
+ * })
+ * ```
  */
 export function useScanner(onScan: (barcode: string) => void) {
   const barcodeBuffer = useRef('')

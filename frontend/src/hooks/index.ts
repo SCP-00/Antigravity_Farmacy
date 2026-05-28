@@ -12,7 +12,15 @@ import { useCarritoStore }  from '@/store/carritoStore'
 import { authService, authClienteService, productosService, chatbotService } from '@/services'
 import { RUTA_POR_ROL, type RolEmpleado } from '@/config/constants'
 
-// ── useDebounce ───────────────────────────────────────────
+/**
+ * Hook para debounce genérico con delay configurable (default 400ms).
+ * Útil para búsquedas, inputs que requieren esperar antes de disparar una acción.
+ *
+ * @example
+ * ```tsx
+ * const debouncedValue = useDebounce(searchTerm, 500)
+ * ```
+ */
 export function useDebounce<T>(value: T, delay = 400): T {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
@@ -22,7 +30,13 @@ export function useDebounce<T>(value: T, delay = 400): T {
   return debounced
 }
 
-// ── useAuth (empleados) ───────────────────────────────────
+/**
+ * Hook de autenticación para empleados (admin/farmaceuta/auxiliar).
+ * Envuelve `useAuthStore` + react-query mutation con toast de feedback.
+ * Redirige según el rol del empleado al hacer login.
+ *
+ * @returns `{ empleado, token, estaLogueado, tieneRol, login, loginLoading, logout }`
+ */
 export function useAuth() {
   const store    = useAuthStore()
   const navigate = useNavigate()
@@ -58,7 +72,13 @@ export function useAuth() {
   }
 }
 
-// ── useAuthCliente (tienda web) ───────────────────────────
+/**
+ * Hook de autenticación para clientes (tienda web público).
+ * Incluye login y registro con feedback visual mediante toast.
+ * Invalida la query de carrito al iniciar sesión.
+ *
+ * @returns `{ cliente, estaLogueado, login, registro, cerrarSesion, googleUrl }`
+ */
 export function useAuthCliente() {
   const store    = useAuthClienteStore()
   const navigate = useNavigate()
@@ -103,7 +123,12 @@ export function useAuthCliente() {
   }
 }
 
-// ── usePermisos ───────────────────────────────────────────
+/**
+ * Hook que expone permisos booleanos según el rol del empleado autenticado.
+ * Facilita el renderizado condicional de módulos en la UI.
+ *
+ * @returns `{ puedeVerCaja, puedeVerInventario, puedeVerCompras, …, esAdmin, esFarmaceuta, esAuxiliar }`
+ */
 export function usePermisos() {
   const { tieneRol } = useAuthStore()
   return {
@@ -120,7 +145,22 @@ export function usePermisos() {
   }
 }
 
-// ── useProductos (tienda pública) ─────────────────────────
+/**
+ * Búsqueda de productos con debounce (400ms) para el catálogo público.
+ * Cachea resultados con `placeholderData` para evitar flickers.
+ *
+ * @param params.q - Texto de búsqueda
+ * @param params.categoria - Filtrar por categoría
+ * @param params.marca - Filtrar por marca
+ * @param params.rx - Solo recetados (true) o solo OTC (false)
+ * @param params.precioMin - Precio mínimo
+ * @param params.precioMax - Precio máximo
+ * @param params.envio - Solo productos con envío disponible
+ * @param params.tienda - Solo productos en tienda física
+ * @param params.ordenar - Criterio de ordenamiento
+ * @param params.pagina - Número de página
+ * @param params.limite - Resultados por página
+ */
 export function useProductosBusqueda(params: {
   q?: string; categoria?: string; marca?: string; rx?: boolean; precioMin?: number; precioMax?: number; envio?: boolean; tienda?: boolean; ordenar?: string; pagina?: number; limite?: number
 }) {
@@ -133,7 +173,10 @@ export function useProductosBusqueda(params: {
   })
 }
 
-// ── useCategorias ─────────────────────────────────────────
+/**
+ * Categorías de productos con staleTime de 30 minutos.
+ * Las categorías cambian poco, por lo que se cachean agresivamente.
+ */
 export function useCategorias() {
   return useQuery({
     queryKey: ['categorias'],
@@ -142,7 +185,15 @@ export function useCategorias() {
   })
 }
 
-// ── useCarrito ────────────────────────────────────────────
+/**
+ * Hook del carrito de compras con toast de confirmación al agregar.
+ * Envuelve `useCarritoStore` y agrega feedback visual.
+ *
+ * @example
+ * ```tsx
+ * const { items, total, agregar, limpiar } = useCarrito()
+ * ```
+ */
 export function useCarrito() {
   const store = useCarritoStore()
   const { estaLogueado } = useAuthClienteStore()
@@ -166,7 +217,7 @@ export function useCarrito() {
   }
 }
 
-// ── useChatbot ────────────────────────────────────────────
+/** Producto sugerido por el chatbot con información clave para el usuario. */
 export interface ProductoChatbot {
   id: string
   nombre: string
@@ -179,6 +230,7 @@ export interface ProductoChatbot {
   stockTotal: number
 }
 
+/** Alerta de seguridad/interacción farmacológica generada por el chatbot. */
 export interface AlertaChatbot {
   tipo: string
   productoA: string
@@ -187,6 +239,10 @@ export interface AlertaChatbot {
   severidad: string
 }
 
+/**
+ * Mensaje individual del chat (usuario o bot).
+ * Puede incluir productos y alertas de seguridad embebidas.
+ */
 export interface MensajeChat {
   role: 'user' | 'bot'
   texto: string
@@ -318,7 +374,16 @@ export function useChatbot(transport: 'http' | 'ws' = 'http') {
   return { mensajes, escribiendo, enviar, sessionToken, wsConnected }
 }
 
-// ── useFormateo — helpers de display ─────────────────────
+/**
+ * Helpers de formateo para display: moneda COP, fechas y horas.
+ *
+ * @example
+ * ```tsx
+ * const { cop, fecha, fechaCorta, fechaHora } = useFormateo()
+ * cop(15000) // → "$15.000"
+ * fecha(new Date()) // → "28 de mayo de 2026"
+ * ```
+ */
 export function useFormateo() {
   const cop = (n: number) =>
     new Intl.NumberFormat('es-CO', {
@@ -342,7 +407,10 @@ export function useFormateo() {
   return { cop, fecha, fechaCorta, fechaHora }
 }
 
-// ── useLocalStorage ───────────────────────────────────────
+/**
+ * Hook para leer/escribir valores en localStorage con tipo genérico.
+ * Similar a `useState` pero persiste en localStorage.
+ */
 export function useLocalStorage<T>(key: string, defaultValue: T) {
   const [value, setValue] = useState<T>(() => {
     try {

@@ -6,6 +6,18 @@ import { useAuthCliente } from '@/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { clientesService } from '@/services'
 
+/**
+ * Tarjeta de producto para el catálogo B2C.
+ * Soporta dos variantes: `grid` (card) y `list` (fila horizontal).
+ * Incluye botón de agregar al carrito, badge de descuento simulado,
+ * indicador de stock, y botón de favoritos (solo para clientes logueados).
+ *
+ * @example
+ * ```tsx
+ * <ProductCard producto={producto} variant="grid" />
+ * <ProductCard producto={producto} variant="list" />
+ * ```
+ */
 export function ProductCard({ producto, variant = 'grid' }: any) {
   const agregarCarrito = useCarritoStore((state) => state.agregar)
   const { estaLogueado } = useAuthCliente()
