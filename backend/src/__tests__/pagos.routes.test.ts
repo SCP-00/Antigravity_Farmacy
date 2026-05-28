@@ -183,6 +183,12 @@ describe('POST /pagos/wompi/webhook', () => {
     expect(res.status).toBe(200)
   })
 
+  it('retorna 200 si no hay data', async () => {
+    const res = await supertest(app).post(`${apiPrefix}/pagos/wompi/webhook`)
+      .send({})
+    expect(res.status).toBe(200)
+  })
+
   it('retorna 200 y actualiza estado a APROBADO', async () => {
     // La firma no matchea (en test el checksum no coincide con HMAC),
     // pero el catch de firma inválida retorna 401 antes.
@@ -196,12 +202,12 @@ describe('POST /pagos/wompi/webhook', () => {
     mockPrisma.pedidoOnline.update.mockResolvedValue({})
 
     const res = await supertest(app).post(`${apiPrefix}/pagos/wompi/webhook`)
-      .send({ data: { transaction: { status: 'APPROVED', reference: 'REF-001' } } })
+      .send({ data: { transaction: { id: 'tx-001', status: 'APPROVED', reference: 'REF-001' } } })
 
     expect(res.status).toBe(200)
     expect(mockPrisma.pagoTransaccion.updateMany).toHaveBeenCalledWith({
       where: { referenciaExterna: 'REF-001' },
-      data: { estado: 'APROBADO', respuestaPasarela: { data: { transaction: { status: 'APPROVED', reference: 'REF-001' } } } },
+      data: { estado: 'APROBADO', respuestaPasarela: { data: { transaction: { id: 'tx-001', status: 'APPROVED', reference: 'REF-001' } } } },
     })
     expect(mockPrisma.pagoTransaccion.findFirst).toHaveBeenCalled()
     expect(mockPrisma.pedidoOnline.update).toHaveBeenCalled()
@@ -211,19 +217,19 @@ describe('POST /pagos/wompi/webhook', () => {
     mockPrisma.pagoTransaccion.updateMany.mockResolvedValue({ count: 1 })
 
     const res = await supertest(app).post(`${apiPrefix}/pagos/wompi/webhook`)
-      .send({ data: { transaction: { status: 'DECLINED', reference: 'REF-002' } } })
+      .send({ data: { transaction: { id: 'tx-002', status: 'DECLINED', reference: 'REF-002' } } })
 
     expect(res.status).toBe(200)
     expect(mockPrisma.pagoTransaccion.updateMany).toHaveBeenCalledWith({
       where: { referenciaExterna: 'REF-002' },
-      data: { estado: 'RECHAZADO', respuestaPasarela: { data: { transaction: { status: 'DECLINED', reference: 'REF-002' } } } },
+      data: { estado: 'RECHAZADO', respuestaPasarela: { data: { transaction: { id: 'tx-002', status: 'DECLINED', reference: 'REF-002' } } } },
     })
   })
 
   it('maneja error con 500', async () => {
     mockPrisma.pagoTransaccion.updateMany.mockRejectedValue(new Error('DB error'))
     const res = await supertest(app).post(`${apiPrefix}/pagos/wompi/webhook`)
-      .send({ data: { transaction: { status: 'APPROVED', reference: 'REF-003' } } })
+      .send({ data: { transaction: { id: 'tx-003', status: 'APPROVED', reference: 'REF-003' } } })
     expect(res.status).toBe(500)
   })
 })

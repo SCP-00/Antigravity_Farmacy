@@ -43,6 +43,7 @@ const mockPrisma = vi.hoisted(() => ({
   pago: { findMany: vi.fn(), create: vi.fn(), count: vi.fn() },
   reporte: { findMany: vi.fn() },
   logActividad: { create: vi.fn().mockResolvedValue({}) },
+  historialCambio: { createMany: vi.fn().mockResolvedValue({ count: 0 }) },
   chatbotSesion: { findUnique: vi.fn().mockResolvedValue(null), upsert: vi.fn().mockResolvedValue({}) },
   alertaInventario: { findMany: vi.fn(), create: vi.fn(), deleteMany: vi.fn(), update: vi.fn(), count: vi.fn() },
   loteVenta: { create: vi.fn(), createMany: vi.fn() },
@@ -306,6 +307,7 @@ describe('Productos Routes - PATCH /productos/:id (admin)', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
   it('actualiza producto exitosamente', async () => {
+    mockPrisma.producto.findUnique.mockResolvedValue(createMockProducto({ precioVenta: 2500 }))
     mockPrisma.producto.update.mockResolvedValue(createMockProducto({ precioVenta: 3000 }))
     const res = await supertest(app).patch(`${apiPrefix}/productos/prod-1`)
       .set('Authorization', 'Bearer valid-admin-token')

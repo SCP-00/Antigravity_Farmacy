@@ -316,6 +316,7 @@ describe('MercadoPago configurado — POST /pagos/mercadopago/webhook', () => {
   it('procesa payment aprobado y actualiza estado', async () => {
     // Mock fetch to return a mock MP API response
     const mockFetchResponse = {
+      ok: true,
       json: vi.fn().mockResolvedValue({
         status: 'approved',
         external_reference: '11111111-1111-4111-1111-111111111111',
@@ -339,6 +340,7 @@ describe('MercadoPago configurado — POST /pagos/mercadopago/webhook', () => {
 
   it('procesa payment rechazado sin actualizar pedido', async () => {
     const mockFetchResponse = {
+      ok: true,
       json: vi.fn().mockResolvedValue({
         status: 'rejected',
         external_reference: '11111111-1111-4111-1111-111111111111',

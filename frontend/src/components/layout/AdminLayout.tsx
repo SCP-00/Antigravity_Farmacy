@@ -3,6 +3,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Truck, Users,
   BarChart3, Settings, LogOut, Bell,
   ChevronRight, CreditCard, UserCheck, PanelRightClose, PanelRightOpen,
+  Shield,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -41,6 +42,7 @@ export default function AdminLayout() {
     { label: 'Empleados', href: '/admin/empleados', icon: <Users size={17} />, visible: permisos.puedeVerEmpleados },
     { label: 'Reportes', href: '/admin/reportes/ventas', icon: <BarChart3 size={17} />, visible: permisos.puedeVerReportes },
     { label: 'Configuración', href: '/admin/configuracion', icon: <Settings size={17} />, visible: permisos.puedeVerConfig },
+    { label: 'Auditoría', href: '/admin/configuracion/auditoria', icon: <Shield size={17} />, visible: permisos.puedeVerConfig },
   ]
 
   const initials = empleado?.nombre

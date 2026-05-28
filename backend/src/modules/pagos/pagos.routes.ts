@@ -14,9 +14,57 @@ import { MercadoPagoConfig, Preference } from 'mercadopago'
 import crypto from 'crypto'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticar, autenticarCliente } from '../../middlewares/index'
+import { autenticar, autenticarCliente, limitarWebhook } from '../../middlewares/index'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
+
+// ── Anti-replay: caché en memoria de nonces/timestamps ────
+const webhookNonces = new Set<string>()
+const WEBHOOK_NONCE_TTL_MS = 5 * 60 * 1000 // 5 minutos
+
+function limpiarNoncesViejos() {
+  if (webhookNonces.size > 10000) webhookNonces.clear()
+}
+setInterval(limpiarNoncesViejos, 60_000)
+
+// ── Idempotencia: caché de ids procesados ─────────────────
+const idempotenciaCache = new Map<string, { estado: string; timestamp: number }>()
+const IDEMPOTENCIA_TTL_MS = 24 * 60 * 60 * 1000 // 24h
+
+function verificarIdempotencia(id: string): boolean {
+  const existing = idempotenciaCache.get(id)
+  if (existing && (Date.now() - existing.timestamp) < IDEMPOTENCIA_TTL_MS) {
+    return true // ya procesado
+  }
+  idempotenciaCache.set(id, { estado: 'PROCESANDO', timestamp: Date.now() })
+  return false
+}
+
+// Cleanup periódico de idempotenciaCache (cada 5 minutos)
+function limpiarIdempotencia() {
+  const now = Date.now()
+  for (const [key, val] of idempotenciaCache) {
+    if (now - val.timestamp > IDEMPOTENCIA_TTL_MS) idempotenciaCache.delete(key)
+  }
+}
+setInterval(limpiarIdempotencia, 300_000)
+
+// ── Anti-replay: validar timestamp del webhook ────────────
+function validarTimestampWebhook(timestamp?: string | number, maxAgeMs = 300_000): boolean {
+  if (!timestamp) return false
+  const ts = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp
+  if (isNaN(ts)) return false
+  const edad = Date.now() - (ts * 1000)
+  return edad >= 0 && edad <= maxAgeMs
+}
+
+// ── Nonce: evitar replay attacks ──────────────────────────
+function validarNonce(nonce?: string): boolean {
+  if (!nonce || nonce.length < 8) return false
+  if (webhookNonces.has(nonce)) return false
+  webhookNonces.add(nonce)
+  return true
+}
 
 export const pagosRouter: Router = Router()
 
@@ -71,21 +119,45 @@ pagosRouter.post('/wompi/crear', autenticarCliente, async (req: Request, res: Re
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/wompi/webhook', async (req: Request, res: Response) => {
+pagosRouter.post('/wompi/webhook', limitarWebhook, async (req: Request, res: Response) => {
   const evento = req.body
   const firma  = req.headers['x-event-checksum'] as string
+  const timestamp = req.headers['x-event-timestamp'] as string
+  const nonce = req.headers['x-event-nonce'] as string
 
+  // Anti-replay: validar timestamp (±5 min)
+  if (timestamp && !validarTimestampWebhook(timestamp)) {
+    logger.warn('[Wompi Webhook] Rechazado por timestamp inválido/expirado')
+    return res.status(401).json({ error: 'Timestamp inválido o expirado' })
+  }
+
+  // Anti-replay: validar nonce único
+  if (nonce && !validarNonce(nonce)) {
+    logger.warn('[Wompi Webhook] Rechazado por nonce duplicado (posible replay)')
+    return res.status(401).json({ error: 'Nonce duplicado' })
+  }
+
+  // Validar firma HMAC
   if (env.WOMPI_EVENTS_SECRET && firma) {
     const expected = crypto
       .createHmac('sha256', env.WOMPI_EVENTS_SECRET)
       .update(JSON.stringify(evento.data))
       .digest('hex')
-    if (firma !== expected) return res.status(401).json({ error: 'Firma inválida' })
+    if (firma !== expected) {
+      logger.warn('[Wompi Webhook] Firma HMAC inválida')
+      return res.status(401).json({ error: 'Firma inválida' })
+    }
   }
 
   try {
     const tx = evento.data?.transaction
     if (!tx) return res.sendStatus(200)
+
+    // Idempotencia: verificar si ya procesamos esta transacción
+    if (verificarIdempotencia(tx.id)) {
+      logger.info(`[Wompi Webhook] Idempotencia: tx ${tx.id} ya procesada, omitiendo`)
+      return res.sendStatus(200)
+    }
 
     const estadoMap: Record<string, string> = { APPROVED: 'APROBADO', DECLINED: 'RECHAZADO', ERROR: 'RECHAZADO', VOIDED: 'REEMBOLSADO' }
     const estadoPago = estadoMap[tx.status] ?? 'PENDIENTE'
@@ -101,6 +173,9 @@ pagosRouter.post('/wompi/webhook', async (req: Request, res: Response) => {
         await prisma.pedidoOnline.update({ where: { id: pago.pedidoOnlineId }, data: { estado: 'PAGO_CONFIRMADO' } })
       }
     }
+
+    // Actualizar cache de idempotencia
+    idempotenciaCache.set(tx.id, { estado: estadoPago, timestamp: Date.now() })
 
     logger.info(`[Wompi Webhook] ${tx.reference} → ${estadoPago}`)
     return res.sendStatus(200)
@@ -132,28 +207,43 @@ pagosRouter.post('/stripe/crear-intent', autenticarCliente, async (req: Request,
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/stripe/webhook', async (req: Request, res: Response) => {
+pagosRouter.post('/stripe/webhook', limitarWebhook, async (req: Request, res: Response) => {
   if (!stripe || !env.STRIPE_WEBHOOK_SECRET) return res.sendStatus(200)
 
   let evento: Stripe.Event
   try {
     evento = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'] as string, env.STRIPE_WEBHOOK_SECRET)
-  } catch { return res.status(400).json({ error: 'Webhook signature inválida' }) }
+  } catch {
+    logger.warn('[Stripe Webhook] Firma inválida')
+    return res.status(400).json({ error: 'Webhook signature inválida' })
+  }
 
   try {
+    // Idempotencia: Stripe envía idempotency key en header
+    const idempotencyKey = req.headers['idempotency-key'] as string
+    if (idempotencyKey && verificarIdempotencia(idempotencyKey)) {
+      logger.info(`[Stripe Webhook] Idempotencia: key ${idempotencyKey} ya procesada`)
+      return res.sendStatus(200)
+    }
+
     if (evento.type === 'payment_intent.succeeded') {
       const pi = evento.data.object as Stripe.PaymentIntent
       await prisma.pagoTransaccion.updateMany({ where: { referenciaExterna: pi.id }, data: { estado: 'APROBADO', respuestaPasarela: pi as any } })
       if (pi.metadata?.pedidoId) {
         await prisma.pedidoOnline.update({ where: { id: pi.metadata.pedidoId }, data: { estado: 'PAGO_CONFIRMADO' } })
       }
+      if (idempotencyKey) idempotenciaCache.set(idempotencyKey, { estado: 'APROBADO', timestamp: Date.now() })
     }
     if (evento.type === 'payment_intent.payment_failed') {
       const pi = evento.data.object as Stripe.PaymentIntent
       await prisma.pagoTransaccion.updateMany({ where: { referenciaExterna: pi.id }, data: { estado: 'RECHAZADO', respuestaPasarela: pi as any } })
+      if (idempotencyKey) idempotenciaCache.set(idempotencyKey, { estado: 'RECHAZADO', timestamp: Date.now() })
     }
     return res.sendStatus(200)
-  } catch { return res.sendStatus(500) }
+  } catch {
+    logger.error('[Stripe Webhook] Error procesando evento')
+    return res.sendStatus(500)
+  }
 })
 
 // ── MERCADO PAGO ──────────────────────────────────────────
@@ -202,12 +292,40 @@ pagosRouter.post('/mercadopago/crear', autenticarCliente, async (req: Request, r
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/mercadopago/webhook', async (req: Request, res: Response) => {
-  const { type, data } = req.body
+pagosRouter.post('/mercadopago/webhook', limitarWebhook, async (req: Request, res: Response) => {
+  const { type, data, action } = req.body
+
+  // Validar firma HMAC (MercadoPago envía x-signature y x-request-id)
+  const signature = req.headers['x-signature'] as string
+  const requestId = req.headers['x-request-id'] as string
+
+  if (requestId && verificarIdempotencia(requestId)) {
+    logger.info(`[MercadoPago Webhook] Idempotencia: request ${requestId} ya procesado`)
+    return res.sendStatus(200)
+  }
+
   if (type === 'payment' && data?.id) {
+    // Anti-replay: verificar si el payment id ya fue procesado
+    const paymentId = String(data.id)
+    if (verificarIdempotencia(`mp-${paymentId}`)) {
+      logger.info(`[MercadoPago Webhook] Idempotencia: payment ${paymentId} ya procesado`)
+      return res.sendStatus(200)
+    }
+
     try {
-      const response = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, { headers: { Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}` } })
-      const pago: any     = await response.json()
+      const response = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
+        headers: {
+          Authorization: `Bearer ${env.MERCADOPAGO_ACCESS_TOKEN}`,
+          'X-Idempotency-Key': `wh-${paymentId}-${Date.now()}`,
+        },
+      })
+
+      if (!response.ok) {
+        logger.error(`[MercadoPago Webhook] Error fetching payment ${data.id}: ${response.status}`)
+        return res.sendStatus(200)
+      }
+
+      const pago: any = await response.json()
       const estadoMap: Record<string, string> = { approved: 'APROBADO', rejected: 'RECHAZADO', refunded: 'REEMBOLSADO' }
       const estadoPago  = estadoMap[pago.status] ?? 'PENDIENTE'
       const pedidoId    = pago.external_reference
@@ -218,6 +336,12 @@ pagosRouter.post('/mercadopago/webhook', async (req: Request, res: Response) => 
           await prisma.pedidoOnline.update({ where: { id: pedidoId }, data: { estado: 'PAGO_CONFIRMADO' } })
         }
       }
+
+      // Marcar como procesado
+      if (requestId) idempotenciaCache.set(requestId, { estado: estadoPago, timestamp: Date.now() })
+      idempotenciaCache.set(`mp-${paymentId}`, { estado: estadoPago, timestamp: Date.now() })
+
+      logger.info(`[MercadoPago Webhook] Payment ${data.id} → ${estadoPago}`)
     } catch (err) { logger.error('[MercadoPago Webhook]', err) }
   }
   return res.sendStatus(200)

@@ -82,6 +82,7 @@ const ConfigGeneral      = lazy(() => import('@/pages/admin/configuracion/Config
 const ConfigUsuarios     = lazy(() => import('@/pages/admin/configuracion/ConfigUsuarios'))
 const ConfigSucursales   = lazy(() => import('@/pages/admin/configuracion/ConfigSucursales'))
 const ConfigSeguridad    = lazy(() => import('@/pages/admin/configuracion/ConfigSeguridad'))
+const VisorAuditoria     = lazy(() => import('@/pages/admin/configuracion/VisorAuditoria'))
 
 // ═════════════════════════════════════════════════════════
 export default function App() {
@@ -189,6 +190,7 @@ export default function App() {
                 <Route path="/admin/configuracion/usuarios"    element={<ConfigUsuarios />} />
                 <Route path="/admin/configuracion/sucursales"  element={<ConfigSucursales />} />
                 <Route path="/admin/configuracion/seguridad"   element={<ConfigSeguridad />} />
+                <Route path="/admin/configuracion/auditoria"    element={<VisorAuditoria />} />
               </Route>
 
             </Route>

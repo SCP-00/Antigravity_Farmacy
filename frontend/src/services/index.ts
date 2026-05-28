@@ -257,6 +257,18 @@ export const reportesService = {
     api.get(`/reportes/${tipo}/csv`, { params, responseType: 'blob' }).then(r => r.data),
 }
 
+// ── AUDITORÍA ────────────────────────────────────────────
+export const auditoriaService = {
+  listarLogs: (params?: Record<string, unknown>) =>
+    api.get('/auditoria/logs-actividad', { params }).then(r => r.data),
+
+  listarAcciones: () =>
+    api.get('/auditoria/logs-actividad/acciones').then(r => r.data),
+
+  historialCambios: (productoId: string, params?: Record<string, unknown>) =>
+    api.get(`/auditoria/productos/${productoId}/historial-cambios`, { params }).then(r => r.data),
+}
+
 // ── CHATBOT ───────────────────────────────────────────────
 export const chatbotService = {
   enviarMensaje: (mensaje: string, sessionToken: string) =>

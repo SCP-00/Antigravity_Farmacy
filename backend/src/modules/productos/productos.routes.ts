@@ -204,12 +204,43 @@ productosRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), as
 })
 
 // ── PATCH /:id ────────────────────────────────────────────
+// Registra automáticamente cambios en precio + campos críticos en HistorialCambio
+const CAMPOS_TRACKING = ['precioVenta', 'precioPromedio', 'stockMinimo', 'nombre', 'requiereRx', 'activo', 'laboratorio', 'presentacion', 'concentracion', 'descripcion']
+
 productosRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), async (req: Request, res: Response) => {
   try {
+    const anterior = await prisma.producto.findUnique({
+      where: { id: req.params.id },
+      select: Object.fromEntries(CAMPOS_TRACKING.map(c => [c, true])) as any,
+    })
+
+    if (!anterior) return responder.noEncontrado(res, 'Producto')
+
     const producto = await prisma.producto.update({
       where: { id: req.params.id },
       data: req.body,
     })
+
+    // Registrar cambios en HistorialCambio
+    const cambios: Array<{ empleadoId: string; productoId: string; campo: string; valorAnterior: string; valorNuevo: string }> = []
+    for (const campo of CAMPOS_TRACKING) {
+      const oldVal = String(anterior[campo as keyof typeof anterior] ?? '')
+      const newVal = String(req.body[campo] ?? '')
+      if (campo in req.body && oldVal !== newVal) {
+        cambios.push({
+          empleadoId: req.empleado!.id,
+          productoId: req.params.id,
+          campo,
+          valorAnterior: oldVal,
+          valorNuevo: newVal,
+        })
+      }
+    }
+
+    if (cambios.length > 0) {
+      await prisma.historialCambio.createMany({ data: cambios })
+    }
+
     await cache.delPattern('productos:buscar:*')
     return responder.ok(res, producto, 'Producto actualizado')
   } catch (err) {

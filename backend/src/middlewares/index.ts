@@ -114,6 +114,7 @@ export function manejarErrores(err: Error, req: Request, res: Response, _next: N
   return responder.serverError(res, err)
 }
 
+// ── Rate Limiters granulares por rol ────────────────────────
 export const limitarPeticiones: RateLimitRequestHandler = rateLimit({
   windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS),
   max: parseInt(env.RATE_LIMIT_MAX),
@@ -128,6 +129,15 @@ export const limitarLogin: RateLimitRequestHandler = rateLimit({
   skipSuccessfulRequests: true,
   keyGenerator: (req) => `${req.ip ?? 'unknown'}:${typeof req.body?.email === 'string' ? req.body.email.toLowerCase() : ''}`,
   message: { ok: false, error: 'Demasiados intentos de login. Espera 15 minutos.' },
+})
+
+// Rate limiter para webhooks (alta frecuencia permitida, pero controlada)
+export const limitarWebhook: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Demasiadas solicitudes de webhook' },
 })
 
 export function loggerHttp(req: Request, _res: Response, next: NextFunction) {

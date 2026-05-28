@@ -2,6 +2,79 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-27 — Fase 16: Auditoría visible y trazabilidad de negocio
+
+**Objetivo:** Implementar auditoría visible con historial de cambios en productos, visor de logs de actividad, rate limiting granular por rol y endurecimiento de webhooks (anti-replay, idempotencia).
+
+### Cambios realizados
+
+#### 1. Modelo HistorialCambio (Prisma)
+- `database/prisma/schema.prisma` — Nuevo modelo `HistorialCambio` con:
+  - Campos: `id` (UUID), `empleadoId` (FK → Empleado), `productoId` (FK → Producto), `campo`, `valorAnterior`, `valorNuevo`, `creadoEn`
+  - Relaciones inversas en `Empleado` (`historialCambios`) y `Producto` (`historialCambios`)
+  - Index compuesto por `(productoId, creadoEn)` para consultas eficientes
+- Migración ejecutada vía `prisma db push`
+
+#### 2. Endpoints de auditoría backend
+- `backend/src/modules/auditoria/auditoria.routes.ts` (NUEVO):
+  - `GET /logs-actividad` — Logs paginados con filtros: `desde`, `hasta`, `accion`, `modulo`, `empleadoId`, `ip`, `q` (búsqueda libre OR por ip/accion/modulo/email)
+  - `GET /logs-actividad/acciones` — GroupBy de acciones disponibles para dropdowns del frontend
+  - `GET /productos/:id/historial-cambios` — Historial de cambios de un producto específico
+- `backend/src/app.ts` — Registro del router de auditoría
+
+#### 3. Tracking de cambios en productos
+- `backend/src/modules/productos/productos.routes.ts` — PATCH `/:id` modificado para:
+  - Leer el producto ANTES de actualizar (consulta previa)
+  - Comparar valores en 10 campos trackeados: `precioVenta`, `precioPromedio`, `stockMinimo`, `nombre`, `requiereRx`, `activo`, `laboratorio`, `presentacion`, `concentracion`, `descripcion`
+  - Crear registros en `HistorialCambio` via `createMany` solo si hay cambios reales
+  - No interfiere con la respuesta normal del PATCH
+
+#### 4. Rate limiting granular por rol
+- `backend/src/middlewares/index.ts`:
+  - `limitarWebhook` — 60 req/min para endpoints de webhook (aplicado en pagos)
+  - `limitarAdmin` y `limitarEscritura` fueron definidos pero eliminados por no ser aplicados a rutas específicas (código muerto)
+
+#### 5. Webhooks hardening
+- `backend/src/modules/pagos/pagos.routes.ts`:
+  - **Anti-replay Wompi:** Validación de timestamp (±5 min), nonce único en memoria con cleanup cada 60s
+  - **Idempotencia Wompi/Stripe/MercadoPago:** Caché en memoria con TTL 24h, cleanup automático cada 5 min
+  - **Validación HMAC Wompi:** Firma SHA-256 con events secret
+  - **MercadoPago:** Validación `response.ok` al consultar API de pagos (requirió `ok: true` en tests mock)
+  - Rate limiter `limitarWebhook` aplicado a los 3 webhooks
+
+#### 6. Visor de Auditoría (frontend)
+- `frontend/src/pages/admin/configuracion/VisorAuditoria.tsx` (NUEVO):
+  - Tabla paginada con logs de actividad
+  - Filtros combinables: rango de fecha (desde/hasta), acción, módulo, búsqueda libre
+  - Exportación a CSV de los registros visibles
+  - Loading skeleton, empty state, dark mode completo
+  - Paginación cliente-side + límite de 50 registros por página
+- `frontend/src/services/index.ts` — `auditoriaService` con método `listarLogs()`
+- `frontend/src/app.tsx` — Ruta `/admin/configuracion/auditoria`
+- `frontend/src/components/layout/AdminLayout.tsx` — Nav item "Auditoría" con icono Shield
+
+#### 7. Historial de cambios en DetalleProductoAdmin
+- `frontend/src/pages/admin/inventario/DetalleProductoAdmin.tsx`:
+  - Nuevo componente `HistorialCambios` que carga y muestra cambios del producto
+  - Timeline visual con iconos por tipo de cambio
+  - Muestra: empleado, campo modificado, valor anterior → nuevo, timestamp
+  - Estado vacío cuando no hay cambios registrados
+  - Dark mode completo
+
+#### 8. Correcciones técnicas
+- `backend/vitest.config.ts` — Alias `@prisma/client` cambiado de `.prisma/client` (directorio corrupto) a `@prisma/client` (symlink al pnpm store)
+- `backend/src/__tests__/productos.routes.test.ts` — Mocks actualizados para `historialCambio.createMany` y `findUnique` previo al PATCH
+- `backend/src/__tests__/pagos-pasarelas.routes.test.ts` — Agregado `ok: true` a mock fetch de MercadoPago para pasar validación de hardening
+- `backend/src/middlewares/index.ts` — `limitarAdmin` y `limitarEscritura` eliminados (código muerto)
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-26 — Fase 10: Baseline de producción — CORS, Helmet, sanitización chatbot, secret scanning
 
 **Objetivo:** Cerrar huecos operativos y de seguridad de bajo esfuerzo con alto impacto.
@@ -713,25 +786,27 @@ Se actualizaron las dependencias principales del proyecto en el branch `deps-upg
 ### Fixes durante implementación
 - **Catálogo test**: Selector `[class*="product"]` no existía — cambiado a `button:has-text("Agregar")`
 - **Búsqueda test**: Form submit usaba `debouncedQ` (300ms debounce) — agregado `waitForTimeout(500)` antes de Enter
-- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/`nnnn + " + "prisma generate`" + " + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/nnbackend/scripts/prisma-postgenerate.jsn2.  � predev chain con post-generatennnn--color-dark-text-muted: #718096#7a8ba6n- Eliminados  duplicados (PostCSS warning fix)n### Docker Composen-  eliminado de ambos archivos (docker-compose.yml + docker-compose.dev.yml)n### Validacionesn- ? Frontend TS: 0 erroresn- ? E2E flujo-completo: 11/11 testsn
+- **Prisma query engine**: Engine faltante en pnpm — copiado manualmente del pnpm store a `backend/node_modules/.prisma/client/` + `prisma generate` + node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/backend/node_modules/.prisma/client/
+
 ---
-## 2026-05-27 â€” Fase 16: Prisma Client durable fix + Flujo completo E2E (11 tests) + Dark mode WCAG AA
 
-**Objetivo:** Hacer durable la generaciÃ³n de Prisma Client con pnpm, agregar test E2E integral de 11 escenarios, y mejorar accesibilidad de dark mode.
+## 2026-05-27 — Fase 15.5: Prisma Client durable fix + Flujo completo E2E (11 tests) + Dark mode WCAG AA
 
-### Problema raÃ­z: Prisma Client con pnpm
+**Objetivo:** Hacer durable la generación de Prisma Client con pnpm, agregar test E2E integral de 11 escenarios, y mejorar accesibilidad de dark mode.
+
+### Problema raíz: Prisma Client con pnpm
 
 En pnpm, `prisma generate` escribe los archivos generados en `node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/`, NO en `backend/node_modules/.prisma/client/`. Como el tsconfig del backend mapea `@prisma/client -> ./node_modules/.prisma/client`, TypeScript no encontraba los nuevos campos `condiciones` y `alergenos`.
 
 ### Fix durable
 
-1. `backend/scripts/prisma-postgenerate.js` â€” Script Node.js nativo (fs.cpSync, sin PowerShell)
-2. `backend/package.json` â€” predev ejecuta post-generate tras cada `prisma generate`
+1. `backend/scripts/prisma-postgenerate.js` — Script Node.js nativo (fs.cpSync, sin PowerShell)
+2. `backend/package.json` — predev ejecuta post-generate tras cada `prisma generate`
 3. Prisma Client regenerado + copiado (1.58 MB)
 
 ### Test E2E: flujo-completo.spec.ts (11 tests)
 
-Tests: Home carga, CatÃ¡logo, Login cliente, Producto detalle INVIMA, Carrito, Checkout Efectivo, Login admin, NavegaciÃ³n admin, 404, RedirecciÃ³n sin sesiÃ³n, Login farmaceuta.
+Tests: Home carga, Catálogo, Login cliente, Producto detalle INVIMA, Carrito, Checkout Efectivo, Login admin, Navegación admin, 404, Redirección sin sesión, Login farmaceuta.
 
 ### Dark mode WCAG AA
 

@@ -3,10 +3,85 @@ import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft, FileText, AlertTriangle, Info, ShieldAlert,
   Pill, FlaskConical, Eye, Scale, CalendarDays, Building2,
-  Hash, Activity, Ban, ScrollText, Syringe, Package
+  Hash, Activity, Ban, ScrollText, Syringe, Package,
+  History, RotateCcw, Clock,
 } from 'lucide-react'
-import { productosService } from '@/services'
+import { productosService, auditoriaService } from '@/services'
 import { useFormateo } from '@/hooks'
+
+// ── Subcomponente: Historial de Cambios ─────────────────
+function HistorialCambios({ productoId }: { productoId: string }) {
+  const { fechaHora } = useFormateo()
+
+  const { data: cambiosData, isLoading } = useQuery({
+    queryKey: ['admin', 'producto', productoId, 'historial-cambios'],
+    queryFn: () => auditoriaService.historialCambios(productoId),
+    enabled: !!productoId,
+  })
+
+  const cambios = (cambiosData as any)?.data ?? []
+
+  const CAMPOS_LABELS: Record<string, string> = {
+    precioVenta: 'Precio Venta',
+    precioPromedio: 'Precio Promedio',
+    stockMinimo: 'Stock Mínimo',
+    nombre: 'Nombre',
+    requiereRx: 'Requiere RX',
+    activo: 'Activo',
+    laboratorio: 'Laboratorio',
+    presentacion: 'Presentación',
+    concentracion: 'Concentración',
+    descripcion: 'Descripción',
+  }
+
+  return (
+    <div className="card p-5">
+      <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+        <History size={15} className="text-teal-700" /> Historial de Cambios
+      </h2>
+
+      {isLoading ? (
+        <div className="py-4 flex justify-center">
+          <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : !cambios.length ? (
+        <div className="py-4 text-center text-xs text-gray-400">
+          <RotateCcw size={24} className="mx-auto mb-2 text-gray-200" />
+          <p>No hay cambios registrados para este producto.</p>
+        </div>
+      ) : (
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {cambios.slice(0, 20).map((c: any) => (
+            <div key={c.id} className="bg-slate-50 rounded-lg p-3 text-xs space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-700">
+                  {CAMPOS_LABELS[c.campo] ?? c.campo}
+                </span>
+                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                  <Clock size={9} />{fechaHora(c.creadoEn)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="text-red-600 line-through bg-red-50 px-1.5 py-0.5 rounded">
+                  {c.valorAnterior || '(vacío)'}
+                </span>
+                <span className="text-gray-400">→</span>
+                <span className="text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                  {c.valorNuevo || '(vacío)'}
+                </span>
+              </div>
+              {c.empleado && (
+                <p className="text-[10px] text-gray-400">
+                  por {c.empleado.nombre} {c.empleado.apellido}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function DetalleProductoAdmin() {
   const { id } = useParams()
@@ -353,6 +428,9 @@ export default function DetalleProductoAdmin() {
               </div>
             </div>
           )}
+
+          {/* Historial de Cambios */}
+          <HistorialCambios productoId={producto.id} />
 
           {/* Metadatos */}
           <div className="card p-5">

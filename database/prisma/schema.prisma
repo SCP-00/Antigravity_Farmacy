@@ -39,6 +39,7 @@ model Empleado {
   ultimoAcceso         DateTime?              @map("ultimo_acceso")
   sucursal             Sucursal               @relation(fields: [sucursalId], references: [id])
   logsActividad        LogActividad[]
+  historialCambios     HistorialCambio[]
   cajas                Caja[]
   ventas               Venta[]
   ordenesCompra        OrdenCompra[]
@@ -123,6 +124,7 @@ model Producto {
   categoria         Categoria            @relation(fields: [categoriaId], references: [id])
   lotes             Lote[]
   favoritos         Favorito[]
+  historialCambios  HistorialCambio[]
   detallesVenta     DetalleVenta[]
   detallesCompra    DetalleOrdenCompra[]
   @@index([principioActivo])
@@ -384,4 +386,18 @@ model CodigoDescuento {
   fechaFin        DateTime? @map("fecha_fin")
   creadoEn        DateTime  @default(now()) @map("creado_en")
   @@map("codigos_descuento")
+}
+
+model HistorialCambio {
+  id            String   @id @default(uuid()) @db.Uuid
+  empleadoId    String   @map("empleado_id") @db.Uuid
+  productoId    String   @map("producto_id") @db.Uuid
+  campo         String   @db.VarChar(50)
+  valorAnterior String   @map("valor_anterior") @db.Text
+  valorNuevo    String   @map("valor_nuevo") @db.Text
+  creadoEn      DateTime @default(now()) @map("creado_en")
+  empleado      Empleado @relation(fields: [empleadoId], references: [id])
+  producto      Producto @relation(fields: [productoId], references: [id])
+  @@index([productoId, creadoEn])
+  @@map("historial_cambios")
 }
