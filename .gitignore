@@ -23,6 +23,7 @@ backend/coverage/
 backend/coverage.json
 
 # ── Documentación generada ──────────────────────────────
+backend/docs/api/
 frontend/docs/api/
 
 # ── Temp ──────────────────────────────────────────────────
