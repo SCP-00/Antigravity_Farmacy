@@ -4,6 +4,7 @@ import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
 import { registrarVentaSchema } from '../../schemas/ventas.schema'
 import { VentasService } from '../../services/ventas.service'
+import { eventBus, Eventos } from '../../services/eventbus.service'
 
 export const ventasRouter: Router = Router()
 
@@ -97,6 +98,17 @@ ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
       const venta = await VentasService.registrarVenta({
         ...req.body,
         empleadoId: req.empleado!.id
+      })
+
+      // Emitir evento de venta registrada (para SSE + WS)
+      eventBus.emit(Eventos.VENTA_REGISTRADA, {
+        ventaId: venta.id,
+        numero: venta.numero,
+        total: venta.total,
+        empleadoId: req.empleado!.id,
+        sucursalId: req.body.sucursalId,
+        metodoPago: req.body.metodoPago,
+        itemsCount: req.body.items?.length ?? 0,
       })
 
       return responder.creado(res, {

@@ -5,6 +5,7 @@ import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
 import { autenticar, autorizar } from '../../middlewares/index'
+import { eventBus, Eventos } from '../../services/eventbus.service'
 
 export const cajaRouter: Router = Router()
 
@@ -32,6 +33,16 @@ cajaRouter.post('/abrir', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA'),
       const caja = await prisma.caja.create({
         data: { sucursalId, empleadoId: req.empleado!.id, montoApertura },
       })
+
+      // Emitir evento de caja abierta
+      eventBus.emit(Eventos.CAJA_ABIERTA, {
+        cajaId: caja.id,
+        empleadoId: req.empleado!.id,
+        sucursalId,
+        montoApertura,
+        abiertaEn: caja.abiertaEn.toISOString(),
+      })
+
       return responder.creado(res, caja, 'Caja abierta')
     } catch (err) { return responder.serverError(res, err) }
   }
@@ -65,6 +76,14 @@ cajaRouter.post('/:id/cerrar', autenticar, autorizar('ADMINISTRADOR','FARMACEUTA
           cerradaEn: new Date(),
         },
       })
+      // Emitir evento de caja cerrada
+      eventBus.emit(Eventos.CAJA_CERRADA, {
+        cajaId: caja.id,
+        empleadoId: req.empleado!.id,
+        total,
+        diferencia,
+      })
+
       return responder.ok(res, caja, 'Caja cerrada exitosamente')
     } catch (err) { return responder.serverError(res, err) }
   }

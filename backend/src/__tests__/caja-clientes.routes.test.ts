@@ -121,7 +121,7 @@ describe('Caja Routes - GET /caja/actual', () => {
 
   it('retorna caja abierta cuando existe', async () => {
     mockPrisma.caja.findFirst.mockResolvedValue({
-      id: 'caja-1', empleadoId: '1', montoApertura: 500000, cerradaEn: null,
+      id: 'caja-1', empleadoId: '1', montoApertura: 500000, cerradaEn: null, abiertaEn: new Date(),
       sucursal: { nombre: 'Principal' },
     })
     const res = await supertest(app).get(`${apiPrefix}/caja/actual`)
@@ -166,7 +166,7 @@ describe('Caja Routes - POST /caja/abrir', () => {
 
   it('abre caja exitosamente', async () => {
     mockPrisma.caja.findFirst.mockResolvedValue(null)
-    mockPrisma.caja.create.mockResolvedValue({ id: 'caja-nueva', montoApertura: 500000 })
+    mockPrisma.caja.create.mockResolvedValue({ id: 'caja-nueva', montoApertura: 500000, abiertaEn: new Date() })
     const res = await supertest(app).post(`${apiPrefix}/caja/abrir`)
       .set('Authorization', 'Bearer valid-admin-token')
       .send({ sucursalId: 1, montoApertura: 500000 })

@@ -2,6 +2,114 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-27 — Fase 17: Tiempo real y jobs asíncronos
+
+**Objetivo:** Eliminar polling innecesario y mover tareas pesadas fuera del request-response clásico mediante EventBus, SSE, WebSockets y BullMQ.
+
+### Cambios realizados
+
+#### 1. EventBus (`backend/src/services/eventbus.service.ts` — NUEVO)
+- Singleton con `EventEmitter` para eventos de dominio
+- 8 eventos tipados:
+  - `dashboard:kpis-update`, `inventario:alerta` (dashboard)
+  - `caja:abierta`, `caja:cerrada`, `venta:registrada` (POS)
+  - `inventario:stock-critico`, `inventario:stock-ajustado` (inventario)
+  - `job:completado`, `job:error` (jobs asíncronos)
+- `PayloadEvento` con tipo, data y timestamp
+- Métodos `emit()`, `on()`, `once()`, `removeAll()`, `stats()`
+- Límite de listeners: 30 (default 10)
+
+#### 2. SSE Service (`backend/src/services/sse.service.ts` — NUEVO)
+- Distribuye eventos del EventBus a clientes SSE
+- Filtro opcional por tipo de evento (via query param `?eventos=...`)
+- Heartbeat cada 30s para mantener conexión viva
+- Cleanup de clientes desconectados en cada heartbeat
+- `sseManager.init()` escucha todos los eventos del EventBus
+
+#### 3. WebSocket Manager (`backend/src/services/websocket.service.ts` — NUEVO)
+- `ws` nativo sobre el mismo server HTTP, path `/ws`
+- Autenticación JWT vía query param `?token=...`
+- 4 canales tipados: `pos:caja`, `pos:ventas`, `pos:stock`, `admin:alertas`
+- Suscripción por defecto según rol (ADMINISTRADOR recibe `admin:alertas`)
+- Suscripción dinámica vía mensajes `SUBSCRIBE`/`UNSUBSCRIBE`
+- Heartbeat ping cada 30s con auto-cleanup
+- `broadcast()` a todos los clientes suscritos a un canal
+- `destroy()` con cleanup completo (unsubscribes, close clients, limpiar mapa)
+
+#### 4. BullMQ Queue + Workers (`backend/src/jobs/queue.ts` — NUEVO)
+- 2 colas: `csv-export` y `emails` (emails está definida pero sin worker aún)
+- Conexión Redis parseada desde `REDIS_URL` (compatible con formato `redis://...`)
+- Configuración de retry: 3 intentos (csv), 5 (emails), backoff exponencial
+- `removeOnComplete`: 7 días (csv), 1 día (emails)
+- `removeOnFail`: 30 días (csv), 7 días (emails)
+- Worker CSV con concurrencia 2, rate limiter 5/min
+- Resultados persistidos en Redis (expiran 1 hora)
+- Eventos JOB_COMPLETADO/JOB_ERROR emitidos al EventBus
+- `obliterate` explícitamente eliminado (riesgo de borrar jobs pendientes)
+
+#### 5. CSV Export Job (`backend/src/jobs/csv-export.job.ts` — NUEVO)
+- Lógica extraída para exportar ventas/compras/inventario a CSV
+- Usada por BullMQ worker y exportable para uso síncrono directo
+- `obtenerCSVResultado()` para descarga async desde Redis
+
+#### 6. SSE Route (`backend/src/modules/reportes/reportes.sse.ts` — NUEVO)
+- `GET /reportes/stream` con autenticación y autorización ADMIN/FARMACEUTA
+- Filtro opcional `?eventos=tipo1,tipo2` para que el cliente elija qué recibir
+
+#### 7. Event Wiring en rutas existentes
+- `backend/src/modules/ventas/ventas.routes.ts` — Emite `VentaRegistrada` tras POST /
+- `backend/src/modules/caja/caja.routes.ts` — Emite `CajaAbierta` y `CajaCerrada` en POST /abrir y POST /:id/cerrar
+- `backend/src/modules/inventario/inventario.routes.ts` — Emite `StockAjustado` en POST /ajuste, y `StockCritico` si stock ≤ 10
+
+#### 8. server.ts — Inicialización ordenada
+- `backend/src/server.ts`: DB → Redis → Express → SSE → HTTP → WS → Workers
+- Orden correcto: iniciar SSE manager ANTES de levantar HTTP (no necesita server)
+- Iniciar WS manager DESPUÉS de `app.listen()` (necesita el server HTTP)
+- Iniciar Workers DESPUÉS de WS
+- Cleanup en SIGTERM/SIGINT: WS → SSE → Workers → HTTP → DB
+
+#### 9. app.ts — Mount
+- `backend/src/app.ts`: Importado `sseRouter` y montado en `${prefix}/reportes`
+
+#### 10. Frontend — Hooks `useRealtime` (`frontend/src/hooks/useRealtime.ts` — NUEVO)
+- `useSSE()`:
+  - Conexión fetch-based con `ReadableStream` (permite header Authorization)
+  - Parseo de frames SSE: `event:`, `data:`, línea vacía = fin de frame
+  - Reconexión automática con backoff exponencial (1s→30s, max 20 intentos)
+  - Filtro opcional `eventos` para seleccionar qué eventos recibir
+  - Retorna `{ conectado, ultimoEvento }`
+- `useWS()`:
+  - WebSocket con JWT en query param
+  - Heartbeat PING cada 30s
+  - Reconexión automática con backoff exponencial
+  - Método `enviar(type, channel)` para SUBSCRIBE/UNSUBSCRIBE/PING
+  - Retorna `{ conectado, ultimoEvento, enviar }`
+- Exportados desde `frontend/src/hooks/index.ts`
+
+#### 11. Dashboard actualizado con SSE (`frontend/src/pages/admin/Dashboard.tsx`)
+- `useSSE` conectado para recibir eventos en vivo
+- Callback `onEvent` refresca KPIs cuando llega `dashboard:kpis-update`
+- Callback `onConnected` refresca datos iniciales al reconectar
+
+#### 12. PuntoVenta actualizado con WebSocket (`frontend/src/pages/admin/caja/PuntoVenta.tsx`)
+- `useWS` conectado para eventos POS
+- Callback `onEvent` procesa eventos de stock crítico, caja abierta/cerrada
+- Cleanup de conexión al desmontar componente
+
+#### 13. Fixes aplicados
+- `backend/src/__tests__/caja-clientes.routes.test.ts`: Agregado `abiertaEn: new Date()` a mock de `caja.create` (el nuevo evento `CAJA_ABIERTA` lee `caja.abiertaEn.toISOString()`)
+- `backend/src/jobs/queue.ts`: `crearConexion()` ahora parsea `REDIS_URL` con `new URL()` en lugar de env vars separadas (compatible con el formato usado por el resto del proyecto)
+- `backend/src/jobs/queue.ts`: `obliterate` eliminado (código peligroso que borraba permanentemente todos los jobs)
+- `frontend/src/hooks/useRealtime.ts`: `AbortController` tipado para React 19 strict
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-27 — Fase 16: Auditoría visible y trazabilidad de negocio
 
 **Objetivo:** Implementar auditoría visible con historial de cambios en productos, visor de logs de actividad, rate limiting granular por rol y endurecimiento de webhooks (anti-replay, idempotencia).

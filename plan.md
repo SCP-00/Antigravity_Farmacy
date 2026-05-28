@@ -345,61 +345,60 @@ Asegurar que el producto se pueda desplegar con Docker de producción.
 
 ---
 
-### Fase 16 — Auditoría visible y trazabilidad de negocio ⏳
+### Fase 16 — Auditoría visible y trazabilidad de negocio ✅
 
 **Estimación:** 1 semana
 **Prioridad:** 🔴 Must have
-**Estado:** ⏳ PENDIENTE
+**Estado:** ✅ COMPLETADA (2026-05-27)
 
 #### Objetivo
 Hacer auditable lo que hoy ya existe parcialmente a nivel técnico, pero no con visibilidad operativa suficiente.
 
 #### Tareas
-- [ ] Crear **visor de auditoría de logs** en panel admin
-  - [ ] Filtros por fecha, usuario, módulo, acción, severidad
-  - [ ] Vista detalle
-  - [ ] Paginación y búsqueda
-- [ ] Implementar **historial de cambios en precios y productos**
-  - [ ] Quién cambió
-  - [ ] Qué cambió (antes / después)
-  - [ ] Cuándo cambió
-- [ ] Ajustar **rate limiting granular por rol**
-  - [ ] Más estricto en auth, chatbot y rutas públicas
-  - [ ] Más flexible para usuarios internos autenticados según rol
-- [ ] Endurecer seguridad de webhooks
-  - [ ] No CSRF clásico de navegador (no aplica a server-to-server)
-  - [ ] Sí: firma HMAC, anti-replay por timestamp, idempotencia, validación de origen cuando aplique
+- [x] Crear **visor de auditoría de logs** en panel admin
+  - [x] Filtros por fecha, usuario, módulo, acción, severidad
+  - [x] Vista detalle
+  - [x] Paginación y búsqueda
+- [x] Implementar **historial de cambios en precios y productos**
+  - [x] Quién cambió
+  - [x] Qué cambió (antes / después)
+  - [x] Cuándo cambió
+- [x] Ajustar **rate limiting granular por rol**
+  - [x] Más estricto en auth, chatbot y rutas públicas
+  - [x] Más flexible para usuarios internos autenticados según rol
+- [x] Endurecer seguridad de webhooks
+  - [x] Firma HMAC, anti-replay por timestamp, idempotencia, validación de origen
 
 ---
 
-### Fase 17 — Tiempo real y jobs asíncronos ⏳
+### Fase 17 — Tiempo real y jobs asíncronos ✅
 
 **Estimación:** 1.5 a 2 semanas
 **Prioridad:** 🔴 Must have / 🟡 Should have
-**Estado:** ⏳ PENDIENTE
+**Estado:** ✅ COMPLETADA (2026-05-27)
 
 #### Objetivo
-Eliminar polling innecesario y mover tareas pesadas fuera del request-response clásico.
+Eliminar polling innecesario y mover tareas pesadas fuera del request-response clásico mediante EventBus, SSE, WebSockets y BullMQ.
 
 #### Tareas
-- [ ] Implementar **WebSockets para POS**
-  - [ ] Notificar apertura/cierre de caja a otros empleados
-  - [ ] Notificar stock crítico en vivo
-  - [ ] Sincronizar eventos relevantes entre sesiones
-- [ ] Implementar **SSE para dashboard en vivo**
-  - [ ] Métricas operativas
-  - [ ] Alertas recientes
-  - [ ] Estado de caja / stock crítico
-- [ ] Integrar **Bull/BullMQ** sobre Redis ya existente
-  - [ ] Exportación CSV asíncrona
-  - [ ] Envío masivo de emails
-  - [ ] Reintentos controlados
-  - [ ] Trazabilidad de jobs
-- [ ] Diseñar contrato de eventos y política de reconexión
+- [x] Implementar **WebSockets para POS**
+  - [x] Notificar apertura/cierre de caja a otros empleados
+  - [x] Notificar stock crítico en vivo
+  - [x] Sincronizar eventos relevantes entre sesiones
+- [x] Implementar **SSE para dashboard en vivo**
+  - [x] Métricas operativas
+  - [x] Alertas recientes
+  - [x] Estado de caja / stock crítico
+- [x] Integrar **Bull/BullMQ** sobre Redis ya existente
+  - [x] Exportación CSV asíncrona
+  - [x] Envío masivo de emails (queue definida, worker futuro)
+  - [x] Reintentos controlados
+  - [x] Trazabilidad de jobs
+- [x] Diseñar contrato de eventos y política de reconexión
 
 #### Tareas opcionales de la fase
-- [ ] WebSocket para chatbot en vivo
-- [ ] Notificaciones push para alertas de inventario
+- [ ] WebSocket para chatbot en vivo (pendiente)
+- [ ] Notificaciones push para alertas de inventario (pendiente)
 
 ---
 
@@ -471,23 +470,23 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [x] Modo oscuro
 
 ### 2) Seguridad
-- [ ] Visor de auditoría en panel admin
-- [ ] Historial de cambios en precios y productos
+- [x] Visor de auditoría en panel admin
+- [x] Historial de cambios en precios y productos
 - [x] Fix HEADLESS mode en `run.ps1`
 - [x] Tests E2E con Playwright
-- [ ] Rate limiting granular por rol
+- [x] Rate limiting granular por rol
 - [x] CORS de producción validado
 - [x] Audit de security headers con Helmet
-- [x] Seguridad de webhooks con firmas HMAC (ya existe en pagos)
+- [x] Seguridad de webhooks con firmas HMAC + anti-replay + idempotencia
 - [x] Sanitización de inputs en chatbot
 - [x] Secret scanning automation (`.gitleaks.toml`)
 
 ### 3) Interacción dinámica
-- [ ] WebSockets para POS en tiempo real
-- [ ] SSE para dashboard en vivo
+- [x] WebSockets para POS en tiempo real
+- [x] SSE para dashboard en vivo
 - [ ] WebSocket para chatbot en vivo
 - [ ] Push notifications para inventario
-- [ ] Bull/BullMQ para jobs asíncronos
+- [x] Bull/BullMQ para jobs asíncronos
 
 ### 4) SEO / Performance / Deploy
 - [x] Meta tags
@@ -515,8 +514,8 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 | 4 | **Fase 13** — SEO + Performance + PWA | ✅ COMPLETADA |
 | 5 | **Fase 14** — Testing E2E con Playwright | ✅ COMPLETADA |
 | 6 | **Fase 15** — Docker producción + deploy | ✅ COMPLETADA |
-| 7 | **Fase 16** — Auditoría + trazabilidad | ⏳ PENDIENTE |
-| 8 | **Fase 17** — Tiempo real + jobs asíncronos | ⏳ PENDIENTE |
+| 7 | **Fase 16** — Auditoría + trazabilidad | ✅ COMPLETADA |
+| 8 | **Fase 17** — Tiempo real + jobs asíncronos | ✅ COMPLETADA |
 | 9 | **Fase 18** — CI/CD + monitoreo | ⏳ PENDIENTE |
 | 10 | **Fase 19** — Polish extendido | ⏳ PENDIENTE |
 

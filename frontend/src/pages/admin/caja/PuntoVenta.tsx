@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, Scan, Plus, Minus, Trash2, Receipt, X, Keyboard } from 'lucide-react'
+import { Search, Scan, Plus, Minus, Trash2, Receipt, X, Keyboard, Wifi, WifiOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { productosService, ventasService, cajaService, chatbotService } from '@/services'
-import { useFormateo, useDebounce, useScanner } from '@/hooks'
+import { useFormateo, useDebounce, useScanner, useWS } from '@/hooks'
+import type { WSEvent } from '@/hooks'
 import { CATEGORIAS_ICONOS, METODO_PAGO_LABEL } from '@/config/constants'
 import { useAuthStore } from '@/store/authStore'
 import { fuzzyFilterProductos } from '@/utils/fuzzySearch'
@@ -41,9 +42,33 @@ export default function PuntoVenta() {
   const cobrarRef = useRef<HTMLButtonElement>(null)
   const debouncedQ = useDebounce(busqueda, 300)
 
+  // ── WebSocket para eventos en vivo del POS ──────────────
+  const handleWSEvent = useCallback((event: WSEvent) => {
+    switch (event.event) {
+      case 'caja:abierta':
+        // Otro empleado abrió caja — refrescar
+        qc.invalidateQueries({ queryKey: ['caja', 'actual'] })
+        break
+      case 'caja:cerrada':
+        // Nuestra caja fue cerrada por otro?
+        qc.invalidateQueries({ queryKey: ['caja', 'actual'] })
+        toast('Caja cerrada en otra sesión', { icon: '🔒' })
+        break
+      case 'stock:critico':
+        toast('Stock crítico detectado', { icon: '⚠️' })
+        break
+      case 'venta:registrada':
+        qc.invalidateQueries({ queryKey: ['dashboard'] })
+        break
+    }
+  }, [qc])
+
+  const { conectado: wsConectado } = useWS({ onEvent: handleWSEvent })
+
   const { data: cajaActual } = useQuery({
     queryKey: ['caja', 'actual'],
     queryFn: cajaService.estadoActual,
+    // Sin refetchInterval — WebSocket actualiza en vivo
   })
   useEffect(() => { if (cajaActual?.id) setCajaId(cajaActual.id) }, [cajaActual])
 
@@ -228,8 +253,13 @@ export default function PuntoVenta() {
         />
       )}
 
-      {/* Shortcuts hint (solo desktop) */}
+      {/* Shortcuts hint + WS status (solo desktop) */}
       <div className="hidden md:flex items-center gap-2 mb-2 text-[10px] text-gray-400 dark:text-dark-text/40 px-1">
+        {wsConectado ? (
+          <span className="inline-flex items-center gap-1 text-teal-600 mr-1"><Wifi size={10} />En vivo</span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-amber-600 mr-1"><WifiOff size={10} />Reconectando...</span>
+        )}
         <Keyboard size={10} />
         <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F2</kbd> Cobrar
         <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-dark-surface rounded text-[9px] font-mono border border-gray-200 dark:border-dark-border">F4</kbd> Limpiar

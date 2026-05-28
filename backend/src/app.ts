@@ -33,6 +33,7 @@ import { clientesAdminRouter } from './modules/clientes/clientes.admin.routes'
 import { empleadosRouter } from './modules/empleados/empleados.routes'
 import { sucursalesRouter } from './modules/sucursales/sucursales.routes'
 import { reportesRouter } from './modules/reportes/reportes.routes'
+import { sseRouter } from './modules/reportes/reportes.sse'
 import { auditoriaRouter } from './modules/auditoria/auditoria.routes'
 
 export function createApp(): Express {
@@ -126,6 +127,7 @@ export function createApp(): Express {
   app.use(`${prefix}/proveedores`, proveedoresRouter)
   app.use(`${prefix}/compras`, comprasRouter)
   app.use(`${prefix}/reportes`, reportesRouter)
+  app.use(`${prefix}/reportes`, sseRouter)  // SSE endpoint
   app.use(`${prefix}/auditoria`, auditoriaRouter)
   app.use(`${prefix}/pagos`, pagosRouter)
 

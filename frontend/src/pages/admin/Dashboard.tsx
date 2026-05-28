@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, AlertTriangle, Calendar as CalendarIcon, BarChart3 } from 'lucide-react'
 import { ventasService, inventarioService, reportesService } from '@/services'
-import { useFormateo } from '@/hooks'
+import { useFormateo, useSSE } from '@/hooks'
+import type { SSEEvent } from '@/hooks'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts'
 import { subDays, subMonths, subYears } from 'date-fns'
 import { SkeletonBlock, SkeletonChart } from '@/components/shared/Skeleton'
@@ -45,7 +46,20 @@ function KpiCard({ label, value, sub, icon: Icon, color, loading }: any) {
 
 export default function Dashboard() {
   const { cop, fechaCorta } = useFormateo()
+  const qc = useQueryClient()
   const [rango, setRango] = useState<'SEMANA' | 'MES' | 'AÑO'>('SEMANA')
+
+  // SSE: refetch automático cuando llegan eventos en vivo
+  const handleSSEEvent = useCallback((event: SSEEvent) => {
+    if (event.tipo === 'venta:registrada' || event.tipo === 'dashboard:kpis-update') {
+      qc.invalidateQueries({ queryKey: ['dashboard', 'kpis'] })
+    }
+    if (event.tipo === 'inventario:alerta' || event.tipo === 'inventario:stock-critico') {
+      qc.invalidateQueries({ queryKey: ['inventario', 'alertas'] })
+    }
+  }, [qc])
+
+  const { conectado: sseConectado } = useSSE({ onEvent: handleSSEEvent })
 
   // Calcular fechas según rango
   const fechasRango = useMemo(() => {
@@ -60,7 +74,7 @@ export default function Dashboard() {
   const { data: kpis, isLoading: kpisLoading } = useQuery({
     queryKey: ['dashboard', 'kpis'],
     queryFn: ventasService.dashboard,
-    refetchInterval: 60_000,
+    // Sin polling — SSE actualiza en vivo
   })
 
   const { data: alertas } = useQuery({
@@ -89,7 +103,9 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Panel de Control</h1>
-          <p className="text-sm text-gray-500 dark:text-dark-text/60 mt-1">Resumen general y métricas de rentabilidad</p>
+          <p className="text-sm text-gray-500 dark:text-dark-text/60 mt-1">Resumen general y métricas de rentabilidad
+            {sseConectado && <span className="inline-flex items-center gap-1 ml-2 text-[10px] text-teal-600 font-medium"><span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />En vivo</span>}
+          </p>
         </div>
         <div className="flex bg-gray-100 dark:bg-dark-surface p-1 rounded-lg">
           {['SEMANA', 'MES', 'AÑO'].map((r) => (

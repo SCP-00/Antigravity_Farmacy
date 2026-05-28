@@ -276,3 +276,5 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
 export * from './useScanner'
 export { usePWAInstall } from './usePWAInstall'
 export type { PWAInstallAnalytics } from './usePWAInstall'
+export { useSSE, useWS } from './useRealtime'
+export type { SSEEvent, WSEvent } from './useRealtime'

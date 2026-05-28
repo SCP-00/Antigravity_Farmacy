@@ -3,6 +3,7 @@ import { ajusteInventarioSchema } from '../../schemas/inventario.schema'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
 import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
+import { eventBus, Eventos } from '../../services/eventbus.service'
 
 export const inventarioRouter: Router = Router()
 
@@ -30,6 +31,35 @@ inventarioRouter.post('/ajuste', autenticar, autorizar('ADMINISTRADOR','AUXILIAR
           data: { loteId, tipo, cantidad, motivo, descripcion, empleadoId: req.empleado!.id },
         }),
       ])
+
+      // Emitir evento de ajuste de stock
+      eventBus.emit(Eventos.STOCK_AJUSTADO, {
+        loteId,
+        tipo,
+        cantidad,
+        nuevaCantidad,
+        empleadoId: req.empleado!.id,
+        motivo: motivo ?? 'Sin motivo',
+      })
+
+      // Si el nuevo stock es crítico, emitir alerta
+      if (tipo === 'AJUSTE_NEGATIVO' && nuevaCantidad <= 10) {
+        const producto = await prisma.lote.findUnique({
+          where: { id: loteId },
+          select: {
+            producto: { select: { nombre: true, stockMinimo: true } },
+          },
+        }).catch(() => null)
+
+        if (producto?.producto) {
+          eventBus.emit(Eventos.STOCK_CRITICO, {
+            loteId,
+            productoNombre: producto.producto.nombre,
+            stockActual: nuevaCantidad,
+            stockMinimo: producto.producto.stockMinimo,
+          })
+        }
+      }
 
       return responder.ok(res, { nuevaCantidad }, 'Ajuste registrado')
     } catch (err) { return responder.serverError(res, err) }
