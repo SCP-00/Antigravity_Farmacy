@@ -58,8 +58,9 @@ if ! command -v pnpm &>/dev/null; then
     echo "  [INFO] pnpm no encontrado. Instalando via corepack..."
     corepack enable pnpm
     if ! command -v pnpm &>/dev/null; then
-        echo "  [ERROR] No se pudo instalar pnpm via corepack."
-        echo "  Instalalo manualmente: npm install -g pnpm"
+        echo "  [ERROR] No se pudo activar pnpm via corepack."
+        echo "  Ejecuta manualmente: corepack enable pnpm"
+        echo "  Mas info: https://pnpm.io/installation"
         exit 1
     fi
 fi

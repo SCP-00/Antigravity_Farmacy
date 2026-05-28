@@ -1,5 +1,7 @@
 # Documentation module
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm`. NO uses `npm` ni `yarn`. Todo: instalación, scripts, workspace monorepo, CI/CD.
+
 This folder is the living documentation hub for Farmacy (SGF).
 
 ## How to use

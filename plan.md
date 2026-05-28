@@ -1,5 +1,7 @@
 # Roadmap plan — Hacia producción real
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm`. NO uses `npm` ni `yarn`. Todo: instalación, scripts, workspace, CI/CD. Si no lo tienes: `corepack enable pnpm`.
+
 > **📍 Mapa de rutas completo:** [docs/api-routes.md](docs/api-routes.md) — 72 endpoints REST, 40+ páginas frontend y matriz RBAC
 > **🏗️ Arquitectura actual:** [docs/architecture.md](docs/architecture.md)
 > **🤖 Guía operativa para agentes/devs:** [AGENTS.md](AGENTS.md)

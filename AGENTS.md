@@ -1,9 +1,11 @@
 # FARMACY — AGENTS.md
 
+> 🚨 **pnpm-only.** Este proyecto SOLO funciona con `pnpm`. NO uses `npm` ni `yarn`. Todo: instalación, scripts, workspace monorepo, CI/CD — todo es `pnpm`.
+
 Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 
 ## Quick start (Windows)
-1. `setup.bat` — Instala deps, genera Prisma Client, hace db push, corre seeds
+1. `setup.bat` — Instala deps, genera Prisma Client, ejecuta migraciones, corre seeds (usa `pnpm`)
 2. `.\run.ps1` — Inicia Docker (Postgres + Redis), backend (nodemon :3000), frontend (Vite 6 :5173)
    - Ejecutar directamente desde PowerShell
 3. Alternativa manual: `docker compose -f docker-compose.dev.yml up -d` + `cd backend && pnpm run dev` + `cd frontend && pnpm run dev`
@@ -50,7 +52,7 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - `MERCADOPAGO_*` — MercadoPago (opcional)
 
 ## Tech stack
-- **Runtime:** Node.js v24.15.0 + pnpm v11.2.2
+- **Runtime:** Node.js v24.15.0 + **pnpm v11.2.2** (único gestor de paquetes — no usar npm ni yarn)
 - **Backend:** Express 4 + TypeScript 6.0 + Prisma 5.22
 - **Frontend:** React 19 + TypeScript 6.0 + Vite 6.4 + Tailwind CSS 4
 - **Build:** @tailwindcss/vite plugin (reemplaza postcss + autoprefixer), Brotli compression via `vite-plugin-compression`

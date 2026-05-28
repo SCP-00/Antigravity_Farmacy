@@ -1,5 +1,7 @@
 # 📍 Mapa de Rutas — Antigravity Farmacy
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm`. NO uses `npm` ni `yarn`.
+
 > **Última actualización:** 2026-05-26
 > **API Prefix:** `/api/v1`
 > **Frontend:** `http://localhost:5173`

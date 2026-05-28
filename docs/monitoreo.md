@@ -1,5 +1,7 @@
 # Rutina de monitoreo operativo
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm`. NO uses `npm` ni `yarn`.
+
 > **Documento:** `docs/monitoreo.md`
 > **Propósito:** Definir qué logs revisar, cada cuánto, qué errores son críticos y qué alertas requieren acción manual.
 

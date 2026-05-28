@@ -1,5 +1,7 @@
 ﻿# Architecture overview
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm` como gestor de paquetes. No usar `npm` ni `yarn`. El workspace monorepo está configurado con pnpm workspaces.
+
 ## Monorepo layout
 - \backend/: Express + TypeScript API, Prisma ORM, auth, POS, inventory, payments. Capas separadas de schemas y services.
 - \frontend/: React + Vite + Tailwind UI for B2C store and admin console.

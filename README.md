@@ -1,5 +1,7 @@
 # 🌿 Farmacy — Sistema de Gestión de Farmacias (SGF)
 
+> 🚨 **Este proyecto SOLO usa `pnpm` como gestor de paquetes.** No uses `npm` ni `yarn` — los lockfiles no existen, los scripts fallarán, y el workspace monorepo no funcionará. Todo está configurado y verificado con `pnpm`. Si no lo tienes instalado: `corepack enable pnpm`.
+
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-blue)](https://reactjs.org/)
 [![Express](https://img.shields.io/badge/Express-4.18-green)](https://expressjs.com/)

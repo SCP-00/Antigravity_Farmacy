@@ -2,6 +2,8 @@
 #  FARMACY — Gestión de Secretos y Seguridad
 # ══════════════════════════════════════════════════════════
 
+> 🚨 **pnpm-only.** Este proyecto SOLO usa `pnpm`. NO uses `npm` ni `yarn`.
+
 ## 📋 Variables de Entorno Sensibles
 
 | Variable | Propósito | Producción |
