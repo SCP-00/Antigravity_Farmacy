@@ -26,6 +26,10 @@ backend/coverage.json
 frontend/outdated.json
 nul
 
+# ── Playwright / E2E ─────────────────────────────────────
+e2e/reports/
+e2e/results/
+
 # ── Tools ──────────────────────────────────────────────────
 .agents/
 skills-lock.json

@@ -425,25 +425,24 @@ Automatizar la validación y despliegue, y definir rutina operativa de monitoreo
 
 ---
 
-### Fase 19 — Polish extendido y mejoras opcionales ⏳
+### Fase 19 — Polish extendido y mejoras opcionales ✅
 
 **Estimación:** 4 a 6 días
 **Prioridad:** 🟡 Should have / 🟢 Could have
-**Estado:** ⏳ PENDIENTE (parcial: modo oscuro ✅)
+**Estado:** ✅ COMPLETADA (2026-05-28)
 
 #### Objetivo
 Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 
 #### Tareas
 - [x] Implementar **modo oscuro** (parcial — mayormente cubierto)
-- [ ] Extender transiciones y consistencia visual
-- [ ] Mejorar aún más los estados vacíos e informativos
-- [ ] Completar WebSocket del chatbot si quedó pendiente
-- [ ] Completar push notifications si quedó pendiente
-- [ ] Ajustar performance visual fina tras feedback real
-- [ ] Pre-render de landing pública o SSR/SSG parcial
-- [ ] Compresión Brotli
-- [ ] CDN para assets estáticos
+- [x] **Compresión Brotli** en Vite build + backend Express
+- [x] **CDN base path** configurable en Vite
+- [x] **WebSocket chatbot** — conexión en vivo con el backend
+- [x] **Transiciones y consistencia visual** en páginas admin
+- [x] **Limpieza:** scripts test muertos, spec obsoleto, artefactos E2E
+- [ ] Pre-render de landing pública o SSR/SSG parcial (futuro)
+- [ ] Push notifications multi-dispositivo (futuro)
 
 ---
 

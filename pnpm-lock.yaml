@@ -25,12 +25,18 @@ importers:
       '@playwright/test':
         specifier: ^1.60.0
         version: 1.60.0
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       csv-parse:
         specifier: ^6.2.1
         version: 6.2.1
       csv-stringify:
         specifier: ^6.7.0
         version: 6.7.0
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
       playwright:
         specifier: ^1.60.0
         version: 1.60.0
@@ -2016,6 +2022,9 @@ packages:
 
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
+
+  '@types/js-yaml@4.0.9':
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
@@ -6489,6 +6498,8 @@ snapshots:
       '@types/serve-static': 2.2.0
 
   '@types/http-errors@2.0.5': {}
+
+  '@types/js-yaml@4.0.9': {}
 
   '@types/jsonwebtoken@9.0.10':
     dependencies:

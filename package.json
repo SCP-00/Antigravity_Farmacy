@@ -8,8 +8,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/js-yaml": "^4.0.9",
     "csv-parse": "^6.2.1",
     "csv-stringify": "^6.7.0",
+    "js-yaml": "^4.1.1",
     "playwright": "^1.60.0",
     "prisma": "^5.22.0"
   },
