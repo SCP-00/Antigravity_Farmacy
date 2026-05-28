@@ -1,0 +1,51 @@
+# ══════════════════════════════════════════════════════════
+#  FARMACY — Caddyfile (reverse proxy + SSL automático)
+#
+#  ⚠️  Configura SERVER_NAME en .env (o variables de entorno)
+#      antes de desplegar. Caddy obtendrá certificados
+#      Let's Encrypt automáticamente.
+#
+#      Valores válidos:
+#        - Un dominio real:  ejemplo.com
+#        - Local (sin SSL):  localhost
+#        - Desarrollo local: "http://localhost" (quita SSL)
+#
+#  Uso:
+#    docker compose up -d
+# ══════════════════════════════════════════════════════════
+
+# ── Proxy principal con SSL automático ──────────────────
+{$SERVER_NAME:localhost} {
+    # Reverse proxy al frontend (Nginx)
+    reverse_proxy frontend:80 {
+        # Health check pasivo
+        health_uri /health
+        health_interval 30s
+        health_timeout 5s
+    }
+
+    # Security headers globales
+    header {
+        # HSTS (1 año, incluye subdominios, preload) — solo en HTTPS
+        @https {
+            expression {scheme} == "https"
+        }
+        header @https Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Evitar que Caddy sobreescriba headers de Nginx
+        -Server
+    }
+
+    # Logging de acceso
+    log {
+        output file /data/logs/access.log {
+            roll_size 10mb
+            roll_keep 3
+        }
+        format json
+    }
+}
+
+# ── Redirección HTTP → HTTPS (solo para el dominio) ────
+http://{$SERVER_NAME} {
+    redir https://{$SERVER_NAME}{uri} permanent
+}

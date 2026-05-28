@@ -1,14 +1,32 @@
 # ══════════════════════════════════════════════════════════
-#  FARMACY — Docker Compose PRODUCCIÓN
+#  FARMACY — Docker Compose PRODUCCIÓN (hardened)
 #
 #  Requisitos:
 #    1. cp .env.production.example .env
-#    2. nano .env   # rellena TODOS los valores
-#    3. docker compose up -d --build
+#    2. nano .env                   # rellena TODOS los valores
+#    3. nano Caddyfile              # reemplaza TU_DOMINIO
+#    4. docker compose up -d --build
 #
 #  ⚠️  NUNCA comitees .env con valores reales.
 #      .env está en .gitignore por seguridad.
 # ══════════════════════════════════════════════════════════
+
+# ── Logging con rotación (anchor reutilizable) ──────────
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# ── Resource limits (anchor reutilizable) ───────────────
+x-resources: &default-resources
+  resources:
+    limits:
+      cpus: "0.5"
+      memory: 512M
+    reservations:
+      cpus: "0.1"
+      memory: 128M
 
 services:
 
@@ -16,7 +34,8 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: farmacy_postgres
-    restart: always
+    restart: unless-stopped
+    stop_grace_period: 60s
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-farmacy_db}
       POSTGRES_USER: ${POSTGRES_USER:-farmacy_user}
@@ -26,6 +45,15 @@ services:
       - farmacy_pg_data:/var/lib/postgresql/data
     networks:
       - farmacy_network
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-farmacy_user} -d ${POSTGRES_DB:-farmacy_db}"]
       interval: 10s
@@ -37,17 +65,28 @@ services:
   redis:
     image: redis:7-alpine
     container_name: farmacy_redis
-    restart: always
+    restart: unless-stopped
+    stop_grace_period: 30s
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD es requerida}
     volumes:
       - farmacy_redis_data:/data
     networks:
       - farmacy_network
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   # ── Backend (Express + TypeScript) ────────────────────
   backend:
@@ -55,11 +94,14 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     container_name: farmacy_backend
-    restart: always
+    restart: unless-stopped
+    stop_grace_period: 30s
+    init: true
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,14 +109,20 @@ services:
         condition: service_healthy
     networks:
       - farmacy_network
-    ports:
-      - "127.0.0.1:3000:3000"
+    logging: *default-logging
+    deploy: *default-resources
+    # No exponer puertos públicos — todo entra vía Caddy → Nginx
+    expose:
+      - "3000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    # read_only: true    # Opcional: requiere tmpfs para /tmp y logs
 
   # ── Frontend (Vite + Nginx) ────────────────────────────
   frontend:
@@ -84,27 +132,74 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL:?VITE_API_URL es requerida}
         VITE_APP_NAME: ${VITE_APP_NAME:-Farmacy}
+        VITE_CDN_URL: ${VITE_CDN_URL:-}
     container_name: farmacy_frontend
-    restart: always
+    restart: unless-stopped
+    stop_grace_period: 10s
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - farmacy_network
-    ports:
-      - "80:80"
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+    expose:
+      - "80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 10s
+
+  # ── Caddy — Reverse Proxy + SSL automático ─────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: farmacy_caddy
+    restart: unless-stopped
+    stop_grace_period: 10s
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - farmacy_caddy_data:/data
+      - farmacy_caddy_config:/config
+    networks:
+      - farmacy_network
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.05"
+          memory: 32M
+    depends_on:
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   farmacy_pg_data:
     name: farmacy_pg_data_prod
   farmacy_redis_data:
     name: farmacy_redis_data_prod
+  farmacy_caddy_data:
+    name: farmacy_caddy_data_prod
+  farmacy_caddy_config:
+    name: farmacy_caddy_config_prod
 
 networks:
   farmacy_network:

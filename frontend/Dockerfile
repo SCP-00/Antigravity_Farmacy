@@ -44,58 +44,7 @@ RUN apk add --no-cache curl
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Config Nginx optimizada para SPA + SSG pre-renderizado
-COPY <<'EOF' /etc/nginx/conf.d/default.conf
-server {
-    listen       80;
-    server_name  _;
-    root         /usr/share/nginx/html;
-    index        index.html;
-
-    # Gzip dinámico
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/html;
-    gzip_min_length 256;
-    gzip_vary on;
-
-    # Seguridad headers básicos
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # SPA + SSG: intenta archivo .html (pre-renderizado), luego directorio, luego SPA fallback
-    location / {
-        try_files $uri.html $uri $uri/ /index.html;
-        add_header Cache-Control "no-cache, no-store, must-revalidate";
-    }
-
-    # Assets compilados con hashes → cache largo
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Archivos pre-renderizados estáticos (caché moderado)
-    location ~* \.html$ {
-        expires 1h;
-        add_header Cache-Control "public, must-revalidate";
-    }
-
-    # Proxy inverso al backend
-    location /api/ {
-        proxy_pass http://backend:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Health check
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-    }
-}
-EOF
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

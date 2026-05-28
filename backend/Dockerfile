@@ -28,6 +28,10 @@ RUN cd backend && pnpm run build
 FROM node:22-alpine AS runner
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Herramientas para healthchecks
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 ENV NODE_ENV=production
