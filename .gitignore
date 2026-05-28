@@ -30,13 +30,28 @@ nul
 e2e/reports/
 e2e/results/
 
-# ── Tools ──────────────────────────────────────────────────
+# ── Tools (binarios grandes, no el script) ───────────────────
 .agents/
 skills-lock.json
+scripts/tools/ZAP/
+scripts/tools/*.tar.gz
+scripts/tools/*.zip
+sessionZAP*
+
+# ── ZAP session files ────────────────────────────────────────
+session*
+*.session
+
 
 # ── Logs ──────────────────────────────────────────────────
 logs/
 *.log
+
+# ── Archivos comprimidos ─────────────────────────────────────
+*.tar.gz
+*.zip
+*.gz
+
 npm-debug.log*
 yarn-debug.log*
 

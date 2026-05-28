@@ -17,6 +17,11 @@ This folder is the living documentation hub for Farmacy (SGF).
   - [ADR-0003](adr/0001-env-source-of-truth-and-ports.md#adr-0003-payment-gateways-wompi-stripe-mercadopago): Payment gateways (Wompi, Stripe, MercadoPago).
 - Phase tracking: [docs/phase-0-checklist.md](phase-0-checklist.md)
 - Work log: [docs/worklog.md](worklog.md)
+- 🌐 **Features**:
+  - [B2C — Tienda en Línea](features/b2c.md) — Catálogo, autenticación, persistencia, puntos de fidelidad
+  - [💳 Pagos — Pasarelas y Efectivo](features/payments.md) — Wompi, Stripe, MercadoPago, efectivo, puntos, contra entrega
+- 🔒 **Security**:
+  - [Seguridad y Compliance](security/compliance.md) — Pentest, medidas, INVIMA, persistencia DB
 
 ## Estado del proyecto (2026-05-26)
 

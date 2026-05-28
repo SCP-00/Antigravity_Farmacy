@@ -2,6 +2,53 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 24: Documentación completa + persistencia DB + puntos cash + cleanup repo
+
+**Objetivo:** Responder a todas las preguntas del usuario sobre persistencia de datos, asignación de puntos en efectivo, validación de compras, seguridad, y limpiar el repo para entrega pública.
+
+### Cambios realizados
+
+#### 1. Documentación nueva
+- `docs/features/payments.md` (NUEVO) — Documentación completa del módulo de pagos:
+  - 4 pasarelas: Wompi (Colombia), Stripe, MercadoPago, Efectivo
+  - Flujo completo de pago en efectivo contra entrega
+  - ✅ Validación de compras reales (empleado autenticado + PagoTransaccion + webhooks)
+  - 🔴 Solución: cómo asignar puntos a clientes que pagan en efectivo (seleccionar cliente en POS antes de cobrar)
+  - Seguridad webhooks: anti-replay (nonce + timestamp), HMAC, IP allowlist, idempotencia
+  - Programa de puntos/fidelidad: 1 punto por cada $100 COP, canje 1:1, expiración 1 año
+  - Persistencia: PostgreSQL + Docker volume — no se pierde al reiniciar
+
+- `docs/security/compliance.md` (NUEVO) — Documentación de seguridad:
+  - Resultados de pentest: 109 tests (88 PASS, 0 vulnerabilidades reales)
+  - OWASP ZAP passive scan: 0 alertas High/Medium/Low
+  - Medidas de seguridad implementadas: JWT + refresh rotation, RBAC, rate limiting, bcryptjs, Helmet, CORS
+  - Compliance colombiano INVIMA: 35+ campos regulatorios, CUM único, muestras médicas bloqueadas
+  - Persistencia DB: volúmenes Docker en disco del host, verificación post-reinicio
+  - Secret scanning: Gitleaks en todos los PRs
+
+#### 2. Documentación actualizada
+- `README.md` — Reescribido completamente:
+  - Nueva sección 💾 **Persistencia de Datos**: tabla de capas (PostgreSQL/Redis/Carrito), verificación post-caída, advertencia `docker compose down -v`
+  - Nueva sección 💰 **Programa de Puntos/Fidelidad**: tabla de concepto/valor, cómo asignar puntos en efectivo paso a paso, cómo validar compras
+  - Nueva sección 🔐 **Seguridad y ofuscación — para repositorio público**: secret rotation, verificación de historial git, configuración Google OAuth
+  - Variables REQUERIDAS y OPCIONALES en tabla clara
+  - Enlaces a toda la documentación (features/, security/)
+- `docs/index.md` — Mapa actualizado con enlaces a:
+  - `features/b2c.md` (B2C, persistencia, puntos)
+  - `features/payments.md` (Pagos, efectivo, contra entrega)
+  - `security/compliance.md` (Pentest, seguridad, INVIMA, persistencia DB)
+
+#### 3. Repo cleanup
+- `.gitignore` — Excluidos: `scripts/tools/` (ZAP ~268MB), `sessionZAP*`, `*.tar.gz`, `*.zip`, `scripts/descargar-zap.ps1`
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 536/536 pasan (28 archivos)
+- ✅ Code review: aprobado (fixes menores aplicados)
+
+---
+
 ## 2026-05-28 — Fase 23b: 3 Could-have completados — push multi-dispositivo, SSR ampliado, secret scanning en todos los PRs
 
 **Objetivo:** Completar los 3 items Could-have pendientes del roadmap: gestión de dispositivos push, SSR ampliado a top 100 + categorías, y secret scanning en todos los PRs.

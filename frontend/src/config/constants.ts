@@ -54,5 +54,5 @@ export const CATEGORIAS_ICONOS: Record<string, string> = {
   'Cuidado Personal':'🪥',
 }
 
-export const PUNTOS_POR_PESO = 0.001   // 1 punto por cada $1,000 COP gastados
+export const PUNTOS_POR_PESO = 0.01   // 1 punto por cada $100 COP
 export const DIAS_VENCIMIENTO_ALERTA = 30
