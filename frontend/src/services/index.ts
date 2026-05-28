@@ -284,6 +284,24 @@ export const chatbotService = {
     apiPublica.get(`/chatbot/producto/${productoId}`).then(r => r.data.data),
 }
 
+// ── PUSH ───────────────────────────────────────────────────
+export const pushService = {
+  getVapidKey: () =>
+    api.get('/push/vapid-public-key').then(r => r.data.data.publicKey),
+
+  subscribir: (subscription: Record<string, unknown>, userAgent?: string) =>
+    api.post('/push/subscribir', { subscription, userAgent }).then(r => r.data),
+
+  desubscribir: (endpoint?: string) =>
+    api.delete('/push/subscribir', { data: { endpoint } }).then(r => r.data),
+
+  listarDispositivos: () =>
+    api.get('/push/dispositivos').then(r => r.data.data),
+
+  eliminarDispositivo: (id: string) =>
+    api.delete(`/push/subscribir/${id}`).then(r => r.data),
+}
+
 // ── PAGOS ─────────────────────────────────────────────────
 export const pagosService = {
   crearWompi: (pedidoId: string, monto: number) =>

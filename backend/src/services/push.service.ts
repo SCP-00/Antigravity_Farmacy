@@ -41,6 +41,29 @@ export interface PushSubscriptionData {
   }
 }
 
+/** Listar dispositivos de un empleado */
+export async function listarDispositivos(empleadoId: string): Promise<Array<{
+  id: string
+  endpoint: string
+  userAgent: string | null
+  creadoEn: Date
+}>> {
+  return await prisma.pushSubscription.findMany({
+    where: { empleadoId },
+    select: { id: true, endpoint: true, userAgent: true, creadoEn: true },
+    orderBy: { creadoEn: 'desc' },
+  })
+}
+
+/** Eliminar un dispositivo por ID (verificando propiedad) */
+export async function eliminarDispositivoPorId(id: string, empleadoId: string): Promise<boolean> {
+  const sub = await prisma.pushSubscription.findUnique({ where: { id } })
+  if (!sub || sub.empleadoId !== empleadoId) return false
+  await prisma.pushSubscription.delete({ where: { id } })
+  logger.debug(`[Push] Dispositivo ${id} eliminado`)
+  return true
+}
+
 /** Guardar suscripción de un empleado */
 export async function guardarSuscripcion(
   empleadoId: string,

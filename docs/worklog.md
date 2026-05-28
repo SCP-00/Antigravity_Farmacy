@@ -2,6 +2,46 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 23b: 3 Could-have completados — push multi-dispositivo, SSR ampliado, secret scanning en todos los PRs
+
+**Objetivo:** Completar los 3 items Could-have pendientes del roadmap: gestión de dispositivos push, SSR ampliado a top 100 + categorías, y secret scanning en todos los PRs.
+
+### Cambios realizados
+
+#### 1. Push multi-dispositivo — UI de gestión en panel admin
+- `backend/src/services/push.service.ts`: Agregadas funciones `listarDispositivos()` y `eliminarDispositivoPorId()`
+- `backend/src/modules/push/push.routes.ts`: Nuevos endpoints `GET /push/dispositivos` y `DELETE /push/subscribir/:id`
+- `frontend/src/services/index.ts`: Agregados `pushService.listarDispositivos()` y `pushService.eliminarDispositivo()`
+- `frontend/src/pages/admin/configuracion/ConfigSeguridad.tsx`: Nuevo componente `DispositivosPush` con:
+  - Lista de dispositivos registrados con ícono según User-Agent (Mobile/Tablet/Desktop)
+  - Eliminación individual con confirmación
+  - Estados: loading spinner, error con mensaje, empty state con instrucciones
+  - Fecha de registro formateada
+  - Dark mode completo
+
+#### 2. SSR ampliado — Top 100 productos + categorías populares
+- `frontend/scripts/prerender.mjs`:
+  - Top 20 → **Top 100** productos pre-renderizados
+  - Nuevo bloque de **categorías populares** (top 15): página `categoria/<slug>/index.html`
+  - Fix de ReferenceError: variables `cantidadProductos`/`cantidadCategorias` declaradas en scope de `main()`
+  - Log final con desglose: estáticas + productos + categorías
+
+#### 3. Secret scanning en todos los PRs
+- `.github/workflows/secret-scanning.yml`: Trigger `pull_request:` sin `branches:` para activar en **todos los PRs** (no solo a main)
+
+### Documentación actualizada
+- `plan.md`: 3 items Could-have marcados ✅, Fase 21 actualizada (top 100 + categorías)
+- `docs/worklog.md`: Esta entrada
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 536/536 pasan (28 archivos)
+- ✅ Code review: aprobado (bug de ReferenceError en prerender corregido)
+
+---
+
+
 ## 2026-05-28 — Fase 23a: Rate limiting faltante + fortalecimiento NoSQL injection
 
 **Objetivo:** Cerrar endpoints sin rate limiting (auth, registro cliente, catálogo público) y fortalecer defensa contra NoSQL injection en chatbot, búsquedas y endpoints con `contains` de Prisma.

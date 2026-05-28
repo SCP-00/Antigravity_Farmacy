@@ -149,11 +149,14 @@ async function main() {
     }
   }
 
-  // 5. (Opcional) Pre-renderizar productos populares si hay API disponible
+  // 5. (Opcional) Pre-renderizar productos populares + categorías si hay API disponible
   // NOTA: Durante Docker build (sin backend), este bloque falla gracefulmente via try/catch.
   //       Solo productos estáticos se pre-renderizan en la imagen Docker.
   //       Para deploy manual, generar sitemap + prerender productos ejecutando:
   //       node scripts/prerender.mjs --base https://farmacy.co
+  let cantidadProductos = 0
+  let cantidadCategorias = 0
+
   try {
     const apiUrl = `${BASE_URL.replace(/:\d+$/, ':3000')}/api/v1/productos/buscar?limite=30&ordenar=stock`
     console.log(`\n[prerender] Buscando productos populares desde API...`)
@@ -164,10 +167,11 @@ async function main() {
       const body = await response.text()
       const data = JSON.parse(body)
       const productos = data?.data ?? []
+      cantidadProductos = productos.length
 
       console.log(`[prerender] → ${productos.length} productos encontrados`)
 
-      for (const prod of productos.slice(0, 20)) { // Top 20
+      for (const prod of productos.slice(0, 100)) { // Top 100
         const slug = prod.slug || prod.id
         const url = `${BASE_URL}/productos/${slug}`
 
@@ -195,6 +199,54 @@ async function main() {
           console.warn(`  ⚠️  Error en producto ${slug}: ${err.message}`)
         }
       }
+
+      // ── Pre-renderizar páginas de categorías populares ──
+      try {
+        const catUrl = `${BASE_URL.replace(/:\d+$/, ':3000')}/api/v1/categorias`
+        console.log(`[prerender] Buscando categorías...`)
+        const catPage = await context.newPage()
+        const catResponse = await catPage.goto(catUrl, { waitUntil: 'networkidle', timeout: 10000 })
+
+        if (catResponse?.ok()) {
+          const catBody = await catResponse.text()
+          const catData = JSON.parse(catBody)
+          const categorias = catData?.data ?? []
+          cantidadCategorias = categorias.length
+          const CATEGORIA_LIMIT = 15
+
+          console.log(`[prerender] → ${categorias.length} categorías encontradas, pre-renderizando top ${CATEGORIA_LIMIT}`)
+
+          for (const cat of categorias.slice(0, CATEGORIA_LIMIT)) {
+            const slug = cat.slug || cat.nombre || cat.id
+            const url = `${BASE_URL}/productos?categoria=${encodeURIComponent(cat.nombre || cat.id)}`
+
+            try {
+              const catProdPage = await context.newPage()
+              await catProdPage.goto(url, { waitUntil: 'networkidle', timeout: RENDER_TIMEOUT })
+              await catProdPage.waitForTimeout(300)
+
+              const html = await catProdPage.content()
+              const safeCatSlug = slugify(String(slug))
+
+              const dirPath = join(DIST, 'categoria', safeCatSlug)
+              mkdirSync(dirPath, { recursive: true })
+              writeFileSync(join(dirPath, 'index.html'), html, 'utf-8')
+
+              console.log(`  ✅ categoria/${safeCatSlug} (${(html.length / 1024).toFixed(1)} KB)`)
+              totalPrendered++
+              await catProdPage.close()
+            } catch (err) {
+              console.warn(`  ⚠️  Error en categoría ${slug}: ${err.message}`)
+            }
+          }
+        } else {
+          console.log(`  ⚠️  API de categorías no disponible (${catResponse?.status()}), saltando`)
+        }
+
+        await catPage.close()
+      } catch (err) {
+        console.log(`[prerender] ⚠️  API de categorías no disponible: ${err.message}`)
+      }
     } else {
       console.log(`  ⚠️  API no disponible (${response?.status()}), saltando productos`)
     }
@@ -209,6 +261,7 @@ async function main() {
   server.close()
 
   console.log(`\n[prerender] 🎯 ${totalPrendered} páginas pre-renderizadas → ${DIST}`)
+  console.log(`[prerender] 📄 ${STATIC_ROUTES.length} estáticas, ${Math.min(cantidadProductos, 100)} productos, ${Math.min(cantidadCategorias, 15)} categorías`)
 }
 
 main().catch(err => {

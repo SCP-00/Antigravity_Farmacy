@@ -6,7 +6,14 @@
 // ══════════════════════════════════════════════════════════
 import { Router, Request, Response } from 'express'
 import { autenticar } from '../../middlewares/index'
-import { guardarSuscripcion, eliminarSuscripcion, eliminarTodasSuscripciones, getVapidPublicKey } from '../../services/push.service'
+import {
+  guardarSuscripcion,
+  eliminarSuscripcion,
+  eliminarTodasSuscripciones,
+  eliminarDispositivoPorId,
+  listarDispositivos,
+  getVapidPublicKey,
+} from '../../services/push.service'
 import { logger } from '../../utils/logger'
 
 export const pushRouter: ReturnType<typeof Router> = Router()
@@ -56,6 +63,22 @@ pushRouter.post('/subscribir', async (req: Request, res: Response) => {
   }
 })
 
+// ── GET /dispositivos ────────────────────────────────────
+pushRouter.get('/dispositivos', async (req: Request, res: Response) => {
+  try {
+    const empleadoId = (req as any).usuario?.id
+    if (!empleadoId) {
+      return res.status(401).json({ ok: false, error: 'No autenticado' })
+    }
+
+    const dispositivos = await listarDispositivos(empleadoId)
+    res.json({ ok: true, data: dispositivos })
+  } catch (err) {
+    logger.error('[Push] Error al listar dispositivos:', err)
+    res.status(500).json({ ok: false, error: 'Error al listar dispositivos' })
+  }
+})
+
 // ── DELETE /subscribir ────────────────────────────────────
 interface UnsubscribeBody {
   endpoint: string
@@ -80,5 +103,25 @@ pushRouter.delete('/subscribir', async (req: Request, res: Response) => {
   } catch (err) {
     logger.error('[Push] Error al eliminar suscripción:', err)
     res.status(500).json({ ok: false, error: 'Error al eliminar suscripción' })
+  }
+})
+
+// ── DELETE /subscribir/:id ────────────────────────────────
+pushRouter.delete('/subscribir/:id', async (req: Request, res: Response) => {
+  try {
+    const empleadoId = (req as any).usuario?.id
+    if (!empleadoId) {
+      return res.status(401).json({ ok: false, error: 'No autenticado' })
+    }
+
+    const eliminado = await eliminarDispositivoPorId(req.params.id, empleadoId)
+    if (!eliminado) {
+      return res.status(404).json({ ok: false, error: 'Dispositivo no encontrado' })
+    }
+
+    res.json({ ok: true, message: 'Dispositivo eliminado' })
+  } catch (err) {
+    logger.error('[Push] Error al eliminar dispositivo:', err)
+    res.status(500).json({ ok: false, error: 'Error al eliminar dispositivo' })
   }
 })

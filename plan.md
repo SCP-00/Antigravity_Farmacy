@@ -136,10 +136,10 @@ Y **cuando aplique**:
 | Eje | Item | Impacto | Esfuerzo | Estado |
 |---|---|---|---|---|
 | UX | Modo oscuro extendido a todo admin + tienda | 🟡 Medio | 🟡 Medio | ✅ |
-| Interacción dinámica | Push notifications multi-dispositivo | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
-| SEO / Deploy | SSR más amplio para catálogo público | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
+| Interacción dinámica | Push notifications multi-dispositivo (gestor en panel admin) | 🟡 Medio | 🔴 Alto | ✅ |
+| SEO / Deploy | SSR más amplio para catálogo público (top 100 + categorías) | 🟡 Medio | 🔴 Alto | ✅ |
 | Seguridad | Allowlist IP por proveedor webhook | 🟡 Medio | 🟡 Medio | ✅ |
-| Seguridad | Alertas automáticas de secretos expuestos en PR | 🟡 Medio | 🟢 Bajo | ⏳ Pendiente |
+| Seguridad | Alertas automáticas de secretos expuestos en todos los PRs | 🟡 Medio | 🟢 Bajo | ✅ |
 
 ### ⚪ Won't have (por ahora)
 
@@ -397,8 +397,8 @@ Eliminar polling innecesario y mover tareas pesadas fuera del request-response c
 - [x] Diseñar contrato de eventos y política de reconexión
 
 #### Tareas opcionales de la fase
-- [ ] WebSocket para chatbot en vivo (pendiente)
-- [ ] Notificaciones push para alertas de inventario (pendiente)
+- [x] WebSocket para chatbot en vivo (completado en Fase 19)
+- [x] Notificaciones push para alertas de inventario (completado en Fase 20)
 
 ---
 
@@ -456,7 +456,8 @@ Pre-renderizar landing pública con SSR/SSG parcial para SEO: Playwright build-t
 
 #### Tareas
 - [x] Build-time prerender con Playwright para 7 rutas públicas estáticas
-- [x] Pre-renderizar top 20 productos populares desde API (graceful fallback)
+- [x] Pre-renderizar top 100 productos populares desde API (graceful fallback)
+- [x] Pre-renderizar top 15 categorías populares
 - [x] Crawler detection middleware (28+ bots) para deployments sin Docker
 - [x] Sitemap XML dinámico desde DB con productos activos
 - [x] Nginx `try_files $uri.html $uri $uri/ /index.html` para SSG + SPA fallback
@@ -526,20 +527,21 @@ Implementar notificaciones push nativas (Web Push API) para alertas de inventari
 - [x] Audit de security headers con Helmet
 - [x] Seguridad de webhooks con firmas HMAC + anti-replay + idempotencia
 - [x] Sanitización de inputs en chatbot
-- [x] Secret scanning automation (`.gitleaks.toml`)
+- [x] Secret scanning automation (`.gitleaks.toml` + trigger en todos los PRs)
 
 ### 3) Interacción dinámica
 - [x] WebSockets para POS en tiempo real
 - [x] SSE para dashboard en vivo
 - [x] WebSocket para chatbot en vivo
-- [x] Push notifications para inventario
+- [x] Push notifications para inventario (multi-dispositivo)
+- [x] Gestor de dispositivos push en panel admin
 - [x] Bull/BullMQ para jobs asíncronos
 
 ### 4) SEO / Performance / Deploy
 - [x] Meta tags
 - [x] Open Graph / Twitter Cards
 - [x] `sitemap.xml` + `robots.txt`
-- [x] Pre-render o SSR/SSG parcial público
+- [x] Pre-render o SSR/SSG parcial público (top 100 productos + categorías)
 - [x] Lazy loading de rutas admin
 - [x] Brotli
 - [x] CDN de assets estáticos
