@@ -114,7 +114,56 @@ export function manejarErrores(err: Error, req: Request, res: Response, _next: N
   return responder.serverError(res, err)
 }
 
-// ── Rate Limiters granulares por rol ────────────────────────
+// ── Helpers IP ──────────────────────────────────────────────
+function ipv4ANumero(ip: string): number {
+  return ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct, 10), 0) >>> 0
+}
+
+function ipEnCidr(ip: string, cidr: string): boolean {
+  const [rangeIp, bits] = cidr.split('/')
+  const mask = bits ? (~(2 ** (32 - parseInt(bits, 10)) - 1) >>> 0) : 0xFFFFFFFF
+  const ipNum = ipv4ANumero(ip)
+  const rangeNum = ipv4ANumero(rangeIp)
+  return (ipNum & mask) === (rangeNum & mask)
+}
+
+// ── Allowlist de IPs para webhooks (configurable vía env) ──
+// Si WEBHOOK_IP_ALLOWLIST no está configurada, permite todo (con warning)
+let _allowlistAdvertido = false
+
+export function verificarIpPermitida(allowedList: string[]) {
+  const ranges = allowedList
+    .flatMap(s => s.split(',').map(x => x.trim()))
+    .filter(Boolean)
+
+  if (ranges.length === 0) {
+    if (!_allowlistAdvertido) {
+      logger.warn('[IP Allowlist] No hay IPs configuradas — todas las IPs pueden acceder a webhooks')
+      _allowlistAdvertido = true
+    }
+    // Si no hay allowlist, middleware pasa (no bloquea)
+    return (_req: Request, _res: Response, next: NextFunction) => next()
+  }
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = req.ip ?? req.socket.remoteAddress ?? 'unknown'
+    const ipLimpia = clientIp.replace(/^::ffff:/, '') // Normalizar IPv4 mapeado a IPv6
+
+    const permitido = ranges.some(r => {
+      if (r.includes('/')) return ipEnCidr(ipLimpia, r)
+      return ipLimpia === r
+    })
+
+    if (!permitido) {
+      logger.warn(`[IP Allowlist] Bloqueado — IP ${ipLimpia} no está en allowlist`)
+      return res.status(403).json({ ok: false, error: 'Acceso denegado por seguridad' })
+    }
+
+    next()
+  }
+}
+
+// ── Rate Limiters granulares por endpoint ───────────────────
 export const limitarPeticiones: RateLimitRequestHandler = rateLimit({
   windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS),
   max: parseInt(env.RATE_LIMIT_MAX),
@@ -134,10 +183,28 @@ export const limitarLogin: RateLimitRequestHandler = rateLimit({
 // Rate limiter para webhooks (alta frecuencia permitida, pero controlada)
 export const limitarWebhook: RateLimitRequestHandler = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: parseInt(env.RATE_LIMIT_WEBHOOK_MAX),
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, error: 'Demasiadas solicitudes de webhook' },
+})
+
+// Rate limiter para endpoints de creación/escritura (POST, PUT, PATCH)
+export const limitarCreacion: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 1000,
+  max: parseInt(env.RATE_LIMIT_CREACION_MAX),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Demasiadas solicitudes de creación. Intenta más tarde.' },
+})
+
+// Rate limiter para endpoints de búsqueda pública
+export const limitarBusqueda: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 1000,
+  max: parseInt(env.RATE_LIMIT_BUSQUEDA_MAX),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Demasiadas búsquedas. Intenta más tarde.' },
 })
 
 export function loggerHttp(req: Request, _res: Response, next: NextFunction) {

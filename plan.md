@@ -103,7 +103,7 @@ Y **cuando aplique**:
 | Seguridad | Historial de cambios en precios y productos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
 | Seguridad | Fix de HEADLESS mode en `run.ps1` | 🟡 Medio | 🟢 Bajo | ✅ |
 | Seguridad | Tests E2E con Playwright para flujos críticos | 🔴 Alto | 🟡 Medio | ✅ (29 tests) |
-| Seguridad | Rate limiting más granular por rol/ruta | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Rate limiting más granular por rol/ruta | 🔴 Alto | 🟡 Medio | ✅ |
 | Seguridad | Validación de CORS de producción | 🔴 Alto | 🟢 Bajo | ✅ |
 | Seguridad | Audit de Helmet / security headers | 🔴 Alto | 🟢 Bajo | ✅ |
 | Seguridad | Sanitización de inputs en chatbot | 🔴 Alto | 🟢 Bajo | ✅ |
@@ -138,7 +138,7 @@ Y **cuando aplique**:
 | UX | Modo oscuro extendido a todo admin + tienda | 🟡 Medio | 🟡 Medio | ✅ |
 | Interacción dinámica | Push notifications multi-dispositivo | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
 | SEO / Deploy | SSR más amplio para catálogo público | 🟡 Medio | 🔴 Alto | ⏳ Pendiente |
-| Seguridad | Allowlist IP por proveedor webhook | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Allowlist IP por proveedor webhook | 🟡 Medio | 🟡 Medio | ✅ |
 | Seguridad | Alertas automáticas de secretos expuestos en PR | 🟡 Medio | 🟢 Bajo | ⏳ Pendiente |
 
 ### ⚪ Won't have (por ahora)
@@ -520,7 +520,8 @@ Implementar notificaciones push nativas (Web Push API) para alertas de inventari
 - [x] Historial de cambios en precios y productos
 - [x] Fix HEADLESS mode en `run.ps1`
 - [x] Tests E2E con Playwright
-- [x] Rate limiting granular por rol
+- [x] Rate limiting granular por endpoint
+- [x] Allowlist IP webhooks (Wompi, Stripe, MercadoPago)
 - [x] CORS de producción validado
 - [x] Audit de security headers con Helmet
 - [x] Seguridad de webhooks con firmas HMAC + anti-replay + idempotencia
@@ -566,7 +567,8 @@ Implementar notificaciones push nativas (Web Push API) para alertas de inventari
 | 10 | **Fase 19** — Polish extendido | ✅ COMPLETADA |
 | 11 | **Fase 20** — Push notifications | ✅ COMPLETADA |
 | 12 | **Fase 21** — Pre-render SEO (SSG parcial) | ✅ COMPLETADA |
-| --- | **Roadmap completado** — 12 fases, 21 features | ✅ PRODUCCIÓN |
+| 13 | **Fase 22** — Endurecimiento final: allowlist IP webhooks + rate limiting granular | ✅ COMPLETADA |
+| --- | **Roadmap completado** — 13 fases, 22 features | ✅ PRODUCCIÓN |
 
 ---
 

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar } from '../../middlewares/index'
+import { autenticar, autorizar, limitarCreacion } from '../../middlewares/index'
 
 export const comprasRouter: Router = Router()
 
@@ -29,7 +29,7 @@ comprasRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-comprasRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+comprasRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
   async (req: Request, res: Response) => {
     const { proveedorId, detalles, notas: notes, fechaEntregaEst } = req.body
     try {
@@ -73,7 +73,7 @@ comprasRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-comprasRouter.post('/:id/recibir', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+comprasRouter.post('/:id/recibir', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
   async (req: Request, res: Response) => {
     try {
       const orden = await prisma.ordenCompra.findUnique({

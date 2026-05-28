@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
 import { registrarVentaSchema } from '../../schemas/ventas.schema'
 import { VentasService } from '../../services/ventas.service'
 import { eventBus, Eventos } from '../../services/eventbus.service'
@@ -91,7 +91,7 @@ ventasRouter.get('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
 )
 
 // ── POST / — Registrar venta (transacción atómica limpia) ─
-ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
+ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'), limitarCreacion,
   validarCuerpo(registrarVentaSchema), async (req: Request, res: Response) => {
     try {
       // Delegamos la complejidad al Servicio de Dominio
@@ -123,7 +123,7 @@ ventasRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
 )
 
 // ── POST /:id/devolucion ──────────────────────────────────
-ventasRouter.post('/:id/devolucion', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'),
+ventasRouter.post('/:id/devolucion', autenticar, autorizar('ADMINISTRADOR', 'FARMACEUTA'), limitarCreacion,
   async (req: Request, res: Response) => {
     const { motivo, reintegraStock = true } = req.body
     const ventaId = req.params.id

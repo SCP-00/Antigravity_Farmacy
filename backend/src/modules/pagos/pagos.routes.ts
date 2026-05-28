@@ -14,9 +14,15 @@ import { MercadoPagoConfig, Preference } from 'mercadopago'
 import crypto from 'crypto'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticar, autenticarCliente, limitarWebhook } from '../../middlewares/index'
+import { autenticar, autenticarCliente, limitarWebhook, verificarIpPermitida } from '../../middlewares/index'
 import { env } from '../../config/env'
 import { logger } from '../../utils/logger'
+
+// ── Construir middleware de IP allowlist para webhooks ────
+const webhookIpAllowlist = env.WEBHOOK_IP_ALLOWLIST
+  ? env.WEBHOOK_IP_ALLOWLIST.split(',').map(s => s.trim()).filter(Boolean)
+  : []
+const verificarIpWebhook = verificarIpPermitida(webhookIpAllowlist)
 
 // ── Anti-replay: caché en memoria de nonces/timestamps ────
 const webhookNonces = new Set<string>()
@@ -119,7 +125,7 @@ pagosRouter.post('/wompi/crear', autenticarCliente, async (req: Request, res: Re
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/wompi/webhook', limitarWebhook, async (req: Request, res: Response) => {
+pagosRouter.post('/wompi/webhook', verificarIpWebhook, limitarWebhook, async (req: Request, res: Response) => {
   const evento = req.body
   const firma  = req.headers['x-event-checksum'] as string
   const timestamp = req.headers['x-event-timestamp'] as string
@@ -207,7 +213,7 @@ pagosRouter.post('/stripe/crear-intent', autenticarCliente, async (req: Request,
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/stripe/webhook', limitarWebhook, async (req: Request, res: Response) => {
+pagosRouter.post('/stripe/webhook', verificarIpWebhook, limitarWebhook, async (req: Request, res: Response) => {
   if (!stripe || !env.STRIPE_WEBHOOK_SECRET) return res.sendStatus(200)
 
   let evento: Stripe.Event
@@ -292,7 +298,7 @@ pagosRouter.post('/mercadopago/crear', autenticarCliente, async (req: Request, r
   } catch (err) { return responder.serverError(res, err) }
 })
 
-pagosRouter.post('/mercadopago/webhook', limitarWebhook, async (req: Request, res: Response) => {
+pagosRouter.post('/mercadopago/webhook', verificarIpWebhook, limitarWebhook, async (req: Request, res: Response) => {
   const { type, data, action } = req.body
 
   // Validar firma HMAC (MercadoPago envía x-signature y x-request-id)

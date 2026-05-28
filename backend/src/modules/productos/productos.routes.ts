@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { prisma } from '../../config/database'
 import { cache } from '../../config/redis'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar, validarCuerpo, validarQuery } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, validarQuery, limitarCreacion, limitarBusqueda } from '../../middlewares/index'
 
 export const productosRouter: Router = Router()
 
@@ -24,7 +24,7 @@ const buscarSchema = z.object({
 // ══════════════════════════════════════════════════════════
 //  GET /buscar — Búsqueda pública (Excluye Muestras Médicas)
 // ══════════════════════════════════════════════════════════
-productosRouter.get('/buscar', validarQuery(buscarSchema), async (req: Request, res: Response) => {
+productosRouter.get('/buscar', limitarBusqueda, validarQuery(buscarSchema), async (req: Request, res: Response) => {
   const { q, categoria, rx, ordenar, pagina, limite } = req.query as any
   const { skip, limite: lim, pagina: pag } = parsePaginacion(req.query as any)
 
@@ -181,7 +181,7 @@ productosRouter.get('/:id', async (req: Request, res: Response) => {
 })
 
 // ── POST / ────────────────────────────────────────────────
-productosRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), async (req: Request, res: Response) => {
+productosRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), limitarCreacion, async (req: Request, res: Response) => {
   const data = req.body
   const slug = data.nombre.toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -207,7 +207,7 @@ productosRouter.post('/', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), as
 // Registra automáticamente cambios en precio + campos críticos en HistorialCambio
 const CAMPOS_TRACKING = ['precioVenta', 'precioPromedio', 'stockMinimo', 'nombre', 'requiereRx', 'activo', 'laboratorio', 'presentacion', 'concentracion', 'descripcion']
 
-productosRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), async (req: Request, res: Response) => {
+productosRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR', 'AUXILIAR'), limitarCreacion, async (req: Request, res: Response) => {
   try {
     const anterior = await prisma.producto.findUnique({
       where: { id: req.params.id },

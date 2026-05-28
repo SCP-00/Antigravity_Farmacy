@@ -338,6 +338,37 @@ netstat -ano | findstr :3000
 
 ---
 
+## 🛡️ Fase 22 — IP Allowlist + Rate limiting granular
+
+### IP Allowlist para webhooks
+- `backend/src/middlewares/index.ts` → `verificarIpPermitida(allowedList: string[])`:
+  - Middleware factory que verifica `req.ip` contra lista de IPs/CIDR
+  - Normaliza IPv6-mapped-IPv4 (`::ffff:xxx` → `xxx`)
+  - Si la allowlist está vacía: pasa con `next()` (warning logueado una vez)
+  - Si IP no coincide: retorna 403 `{ error: 'IP no autorizada' }`
+  - Helper `ipv4ANumero()` y `ipEnCidr()` para CIDR matching
+- `backend/src/modules/pagos/pagos.routes.ts` → `verificarIpWebhook` aplicado a Wompi, Stripe, MercadoPago
+- `backend/src/config/env.ts` → `WEBHOOK_IP_ALLOWLIST` (optional, comma-separated IPs/CIDRs)
+- `backend/src/app.ts` → `app.set('trust proxy', 1)` necesario para leer IP real detrás de Nginx
+
+### Rate limiters granulares
+| Middleware | Límite | Aplica en |
+|---|---|---|
+| `limitarCreacion` | 30 req/min | POST/PUT/PATCH (productos, ventas, compras) |
+| `limitarBusqueda` | 60 req/min | GET /buscar (productos, ventas) |
+| `limitarWebhook` | `RATE_LIMIT_WEBHOOK_MAX` env var | Webhooks Wompi/Stripe/MercadoPago |
+| `limitarLogin` | `RATE_LIMIT_AUTH_MAX` env var | Login admin + cliente |
+
+### Variables de entorno nuevas
+| Variable | Default | Descripción |
+|---|---|---|
+| `WEBHOOK_IP_ALLOWLIST` | — | IPs/CIDR permitidos para webhooks (comma-separated) |
+| `RATE_LIMIT_WEBHOOK_MAX` | 60 | Máx requests/min para webhooks |
+| `RATE_LIMIT_CREACION_MAX` | 30 | Máx requests/min para POST/PUT/PATCH |
+| `RATE_LIMIT_BUSQUEDA_MAX` | 60 | Máx requests/min para búsqueda pública |
+
+---
+
 ## 🛡️ Fase 10 — Seguridad hardening
 
 Esta sección documenta las medidas de seguridad implementadas en Fase 10.

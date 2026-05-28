@@ -2,6 +2,61 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 22: Endurecimiento final — allowlist IP webhooks + rate limiting granular por endpoint
+
+**Objetivo:** Endurecer la seguridad perimetral con allowlist de IPs por proveedor de pago (Wompi, Stripe, MercadoPago) y rate limiting granular por tipo de endpoint (creación, búsqueda, webhook).
+
+### Cambios realizados
+
+#### 1. IP Allowlist middleware (`backend/src/middlewares/index.ts`)
+- Nueva función `verificarIpPermitida(allowedList: string[])` — fábrica de middleware Express que:
+  - Si allowlist vacía: pasa con `next()` (warning logueado una vez)
+  - Si allowlist configurada: verifica `req.ip` contra lista de IPs/CIDR
+  - Normaliza IPv6-mapped-IPv4 (`::ffff:xxx` → `xxx`)
+  - Soporta CIDR con `ipv4ANumero()` + `ipEnCidr()` helper functions
+  - Retorna 403 con `{ error: 'IP no autorizada' }` si no coincide
+- Helper `ipv4ANumero(ip)` — convierte IPv4 a entero de 32 bits sin signo (`>>> 0`)
+- Helper `ipEnCidr(ip, cidr, bits)` — verifica si IP está dentro de rango CIDR
+
+#### 2. Rate limiters granulares (`backend/src/middlewares/index.ts`)
+- `limitarCreacion`: 30 req/min para operaciones de escritura (POST/PUT/PATCH)
+- `limitarBusqueda`: 60 req/min para endpoints de búsqueda pública
+- `limitarWebhook`: ahora lee `env.RATE_LIMIT_WEBHOOK_MAX` (antes hardcoded 60)
+- `limitarLogin`: lee `env.RATE_LIMIT_AUTH_MAX` (antes hardcoded 10)
+
+#### 3. Nuevas variables de entorno (`backend/src/config/env.ts`)
+- `RATE_LIMIT_WEBHOOK_MAX` (default `'60'`)
+- `RATE_LIMIT_CREACION_MAX` (default `'30'`)
+- `RATE_LIMIT_BUSQUEDA_MAX` (default `'60'`)
+- `WEBHOOK_IP_ALLOWLIST` (optional, comma-separated IPs/CIDRs)
+
+#### 4. Trust proxy fix (`backend/src/app.ts`)
+- `app.set('trust proxy', 1)` agregado **antes** de passport init
+- Necesario para que `req.ip` lea la IP real detrás de Nginx en Docker
+
+#### 5. Webhook IP allowlist en pagos (`backend/src/modules/pagos/pagos.routes.ts`)
+- Creado middleware `verificarIpWebhook` desde `WEBHOOK_IP_ALLOWLIST` env var
+- Aplicado a los 3 webhooks: Wompi, Stripe, MercadoPago
+- Middleware order: `verificarIpWebhook → limitarWebhook → handler`
+
+#### 6. Rate limiters en rutas existentes
+| Archivo | Endpoints protegidos |
+|---|---|
+| `productos.routes.ts` | `POST /` (crear), `GET /buscar` (búsqueda) |
+| `ventas.routes.ts` | `POST /` (crear venta), `GET /buscar` (búsqueda) |
+| `compras.routes.ts` | `POST /` (crear orden) |
+
+#### 7. .env.example
+- Nuevas vars documentadas: `WEBHOOK_IP_ALLOWLIST`, `RATE_LIMIT_WEBHOOK_MAX`, `RATE_LIMIT_CREACION_MAX`, `RATE_LIMIT_BUSQUEDA_MAX`
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado (2 iteraciones)
+
+---
+
 ## 2026-05-28 — Fase 21: Pre-render SEO (SSG parcial) — Playwright prerender + sitemap dinámico + crawler middleware
 
 **Objetivo:** Pre-renderizar landing pública con SSR/SSG parcial para SEO. Build-time prerender con Playwright para rutas públicas estáticas + productos populares, Nginx `try_files` para servir HTML pre-renderizado, crawler detection middleware opcional para deployments sin Docker, y sitemap XML dinámico desde DB.

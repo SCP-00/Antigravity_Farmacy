@@ -47,6 +47,11 @@ export function createApp(): Express {
   const app = express()
   const prefix = env.API_PREFIX   // '/api/v1'
 
+  // ── Trust proxy — permite leer IP real detrás de Nginx/Docker ───
+  // Necesario para IP allowlist de webhooks (verificarIpPermitida)
+  // req.ip usará X-Forwarded-For en lugar de la IP del proxy
+  app.set('trust proxy', 1)
+
   // ── Inicialización de Passport OAuth ──────────────────
   configurePassport()
   app.use(passport.initialize())

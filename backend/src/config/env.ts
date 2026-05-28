@@ -93,6 +93,14 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.string().default('900000'),
   RATE_LIMIT_MAX: z.string().default('100'),
   RATE_LIMIT_AUTH_MAX: z.string().default('10'),
+  RATE_LIMIT_WEBHOOK_MAX: z.string().default('60'),
+  RATE_LIMIT_CREACION_MAX: z.string().default('30'),
+  RATE_LIMIT_BUSQUEDA_MAX: z.string().default('60'),
+
+  // Webhook IP allowlist (IPs o CIDR separadas por coma)
+  // Stripe webhook IPs: https://stripe.com/files/ips/ips_webhooks.txt
+  // Wompi y MercadoPago no publican IPs fijas — usar firma HMAC como respaldo
+  WEBHOOK_IP_ALLOWLIST: z.string().optional(),
 
   // Logs
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('debug'),
