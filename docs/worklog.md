@@ -2,6 +2,73 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 21: Pre-render SEO (SSG parcial) — Playwright prerender + sitemap dinámico + crawler middleware
+
+**Objetivo:** Pre-renderizar landing pública con SSR/SSG parcial para SEO. Build-time prerender con Playwright para rutas públicas estáticas + productos populares, Nginx `try_files` para servir HTML pre-renderizado, crawler detection middleware opcional para deployments sin Docker, y sitemap XML dinámico desde DB.
+
+### Cambios realizados
+
+#### 1. Prerender script (`frontend/scripts/prerender.mjs` — NUEVO)
+- Servidor HTTP estático integrado para servir `dist/` durante build
+- Pre-renderiza 7 rutas públicas: `/`, `/productos`, `/quienes-somos`, `/contacto`, `/sucursales`, `/privacidad`, `/terminos`
+- Playwright con User-Agent Googlebot para simular crawler
+- **Espera inteligente**: `waitForFunction(() => document.title !== 'Farmacy')` para asegurar que Helmet inyectó meta tags reales
+- Guarda como `nombre.html` y `nombre/index.html` (compatibilidad Nginx `try_files $uri $uri/`)
+- Pre-renderiza top 20 productos vía API (graceful fallback si no hay backend disponible)
+- `executablePath` configurable vía `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` (para Docker Alpine con Chromium del sistema)
+- `--port` y `--base` flags para uso en diferentes entornos
+
+#### 2. Backend — Prerender middleware (`backend/src/services/prerender.service.ts` — NUEVO)
+- Express middleware que detecta **28+ crawlers** por User-Agent (Googlebot, Bing, Facebook, Twitter, LinkedIn, etc.)
+- Sirve HTML pre-renderizado desde disco con headers `X-Prerendered: true` y `X-Robots-Tag: index, follow`
+- Soporta rutas estáticas + dinámicas (`/productos/<slug>`)
+- Fallback automático: prueba `slug.html` → `slug/index.html` → SPA normal
+- **Condicional:** Se activa solo si `PRERENDER_DIST_PATH` está configurado en `env.ts`
+
+#### 3. Sitemap generador (`database/scripts/generar-sitemap.ts` — NUEVO)
+- Script Prisma que conecta a DB y genera `sitemap.xml` en `frontend/public/`
+- Incluye 8 URLs estáticas + top 500 productos activos (no muestras médicas)
+- `lastmod` dinámico desde `producto.updatedAt`
+- `SITE_URL` configurable vía env var
+- Uso: `npx tsx database/scripts/generar-sitemap.ts`
+
+#### 4. Frontend — Scripts de build (`frontend/package.json`)
+- `"prerender": "node scripts/prerender.mjs"` — prerender standalone sobre dist/ existente
+- `"build:seo": "pnpm run build && node scripts/prerender.mjs"` — build + prerender en un paso
+
+#### 5. Frontend — Dockerfile multi-stage (`frontend/Dockerfile`)
+- Builder stage: instala Playwright + Chromium via `apk add chromium` + `playwright install --with-deps chromium`
+- `RUN pnpm run build && node scripts/prerender.mjs` — build + prerender en capa única
+- Nginx config con `try_files $uri.html $uri $uri/ /index.html` — SPA fallback con preferencia SSG
+- Gzip dinámico, cache de assets con hashes (1 año), HTML con cache moderado (1 hora)
+- Proxy `/api/` → `backend:3000`, healthcheck endpoint
+
+#### 6. Backend — Config + Wiring (`backend/src/config/env.ts` + `backend/src/app.ts`)
+- `env.ts`: Nueva variable `PRERENDER_DIST_PATH: z.string().optional()`
+- `app.ts`: Prerender middleware condicional — se activa solo si `PRERENDER_DIST_PATH` existe y el directorio es válido
+
+#### 7. Fixes aplicados durante code review
+- `prerender.mjs`: Eliminado try/catch innecesario en `executablePath`, simplificado a `process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined`
+- `prerender.service.ts`: Eliminado `/carrito` de `PUBLIC_ROUTES` (consistente con prerender.mjs que lo excluye)
+- `prerender.mjs`: Documentado que productos pre-render no se ejecutan en Docker build (no hay backend)
+
+### Arquitectura
+
+| Componente | Rol | Activa en |
+|---|---|---|
+| `prerender.mjs` | Build-time Playwright prerender | Docker build / `pnpm run build:seo` |
+| Nginx `try_files` | Sirve HTML estático a crawlers y usuarios | Docker producción |
+| `prerender.service.ts` | Crawler detection + serve (fallback) | Deploy manual sin Docker |
+| `generar-sitemap.ts` | Sitemap dinámico desde DB | Manual post-deploy |
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado tras 2 iteraciones de fixes
+
+---
+
 ## 2026-05-28 — Fase 20: Notificaciones Push para alertas de inventario (Push API + VAPID)
 
 **Objetivo:** Implementar notificaciones push nativas (Web Push API) para alertas de inventario en el panel admin, con suscripción persistente por empleado, VAPID configurable, y un service worker custom.

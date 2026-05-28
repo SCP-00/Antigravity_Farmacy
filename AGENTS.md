@@ -64,6 +64,12 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
   - Backend: `push.service.ts` (CRUD + envío), `push.routes.ts` (endpoints protegidos)
   - Frontend: `usePushNotifications()` hook, `PushToggle` en AdminLayout
   - Se activan automáticamente vía EventBus para alertas de inventario
+- **Pre-render SEO (SSG parcial):** Build-time prerender con Playwright + sitemap dinámico
+  - Script: `frontend/scripts/prerender.mjs` — 7 rutas estáticas + top 20 productos
+  - Sitemap: `database/scripts/generar-sitemap.ts` — desde DB con productos activos
+  - Nginx: `try_files $uri.html $uri $uri/ /index.html` para servir HTML pre-renderizado
+  - Crawler middleware: `backend/src/services/prerender.service.ts` (28+ bots)
+  - Docker: `frontend/Dockerfile` incluye Chromium + prerender en builder stage
 
 ## Script entrypoints
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)

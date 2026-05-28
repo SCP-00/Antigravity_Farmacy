@@ -126,7 +126,7 @@ Y **cuando aplique**:
 | UX | Modo oscuro | 🟡 Medio | 🟡 Medio | ✅ |
 | Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio | ✅ |
 | Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio | ✅ |
-| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ⏳ Pendiente (futuro) |
+| SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ✅ |
 | SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo | ✅ |
 | SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio | ✅ |
 | SEO / Deploy | Monitoreo operativo básico con rutina de revisión de logs | 🔴 Alto | 🟢 Bajo | ✅ |
@@ -441,7 +441,34 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [x] **WebSocket chatbot** — conexión en vivo con el backend
 - [x] **Transiciones y consistencia visual** en páginas admin
 - [x] **Limpieza:** scripts test muertos, spec obsoleto, artefactos E2E
-- [ ] Pre-render de landing pública o SSR/SSG parcial (futuro)
+- [x] Pre-render de landing pública o SSR/SSG parcial (movido a Fase 21)
+
+---
+
+### Fase 21 — Pre-render SEO (SSG parcial) ✅
+
+**Estimación:** 2 a 3 días
+**Prioridad:** 🔴 Must have
+**Estado:** ✅ COMPLETADA (2026-05-28)
+
+#### Objetivo
+Pre-renderizar landing pública con SSR/SSG parcial para SEO: Playwright build-time prerender + sitemap dinámico + crawler detection middleware.
+
+#### Tareas
+- [x] Build-time prerender con Playwright para 7 rutas públicas estáticas
+- [x] Pre-renderizar top 20 productos populares desde API (graceful fallback)
+- [x] Crawler detection middleware (28+ bots) para deployments sin Docker
+- [x] Sitemap XML dinámico desde DB con productos activos
+- [x] Nginx `try_files $uri.html $uri $uri/ /index.html` para SSG + SPA fallback
+- [x] Script `build:seo` — build + prerender en un paso
+- [x] Dockerfile actualizado con Chromium + prerender en builder stage
+- [x] Fixes: executablePath en Alpine, /carrito removido de PUBLIC_ROUTES
+
+#### Validaciones
+- [x] TypeScript backend: 0 errores
+- [x] TypeScript frontend: 0 errores
+- [x] Tests: 521/521 pasan (27 archivos)
+- [x] Code review: aprobado
 
 ---
 
@@ -511,7 +538,7 @@ Implementar notificaciones push nativas (Web Push API) para alertas de inventari
 - [x] Meta tags
 - [x] Open Graph / Twitter Cards
 - [x] `sitemap.xml` + `robots.txt`
-- [ ] Pre-render o SSR/SSG parcial público
+- [x] Pre-render o SSR/SSG parcial público
 - [x] Lazy loading de rutas admin
 - [x] Brotli
 - [x] CDN de assets estáticos
@@ -538,6 +565,8 @@ Implementar notificaciones push nativas (Web Push API) para alertas de inventari
 | 9 | **Fase 18** — CI/CD + monitoreo | ✅ COMPLETADA |
 | 10 | **Fase 19** — Polish extendido | ✅ COMPLETADA |
 | 11 | **Fase 20** — Push notifications | ✅ COMPLETADA |
+| 12 | **Fase 21** — Pre-render SEO (SSG parcial) | ✅ COMPLETADA |
+| --- | **Roadmap completado** — 12 fases, 21 features | ✅ PRODUCCIÓN |
 
 ---
 

@@ -13,6 +13,11 @@ import { configurePassport } from './config/passport'
 import { manejarErrores, limitarPeticiones, loggerHttp } from './middlewares/index'
 import { logger } from './utils/logger'
 
+// ── Prerender (SSG) middleware ─────────────────────────
+import { existsSync } from 'fs'
+import path from 'path'
+import { prerenderMiddleware } from './services/prerender.service'
+
 // ── Módulos ─────────────────────────────────────────────
 import { authRouter } from './modules/auth/auth.routes'
 import { authClienteRouter } from './modules/auth-cliente/authCliente.routes'
@@ -122,6 +127,21 @@ export function createApp(): Express {
       timestamp: new Date().toISOString(),
     })
   })
+
+  // ── Prerender middleware: sirve HTML estático a crawlers ─
+  // En producción, si PRERENDER_DIST_PATH está configurado,
+  // detecta User-Agents de crawlers y sirve HTML pre-renderizado.
+  // NOTA: En Docker con Nginx, esto no es necesario porque
+  // Nginx maneja el static serving con try_files.
+  if (env.PRERENDER_DIST_PATH) {
+    const distPath = path.resolve(env.PRERENDER_DIST_PATH)
+    if (existsSync(distPath)) {
+      app.use(prerenderMiddleware({ distPath }))
+      logger.info(`[Prerender] Middleware activo — distPath: ${distPath}`)
+    } else {
+      logger.warn(`[Prerender] PRERENDER_DIST_PATH configurado pero no encontrado: ${distPath}`)
+    }
+  }
 
   // ── Rutas públicas / autenticación ───────────────────
   app.use(`${prefix}/auth`, authRouter)

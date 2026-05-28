@@ -113,6 +113,9 @@ const envSchema = z.object({
 
   // Info farmacia
   FARMACIA_NOMBRE: z.string().default('Farmacy'),
+
+  // Prerender: path absoluto al dist del frontend con HTML pre-renderizado
+  PRERENDER_DIST_PATH: z.string().optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
