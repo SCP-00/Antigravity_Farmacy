@@ -109,12 +109,12 @@ export default function ResetPassword() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Nueva contraseña</label>
+          <label htmlFor="reset-password" className="block text-xs font-medium text-gray-700 mb-1.5">Nueva contraseña</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type={verPass ? 'text' : 'password'} value={password}
+            <input id="reset-password" type={verPass ? 'text' : 'password'} value={password}
               onChange={e => setPassword(e.target.value)}
-              className="input-base pl-10 pr-10" placeholder="••••••••" required minLength={8} />
+              className="input-base pl-10 pr-10" placeholder="••••••••" autoComplete="new-password" required minLength={8} />
             <button type="button" onClick={() => setVerPass(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               {verPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -124,13 +124,13 @@ export default function ResetPassword() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Confirmar contraseña</label>
+          <label htmlFor="reset-confirmar" className="block text-xs font-medium text-gray-700 mb-1.5">Confirmar contraseña</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type={verPass ? 'text' : 'password'} value={confirmar}
+            <input id="reset-confirmar" type={verPass ? 'text' : 'password'} value={confirmar}
               onChange={e => setConfirmar(e.target.value)}
               className={`input-base pl-10 ${confirmar && !passwordCoincide ? 'border-red-300 focus:border-red-400' : ''}`}
-              placeholder="••••••••" required minLength={8} />
+              placeholder="••••••••" autoComplete="new-password" required minLength={8} />
           </div>
           {confirmar && !passwordCoincide && (
             <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>

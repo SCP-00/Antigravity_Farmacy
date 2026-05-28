@@ -1,0 +1,30 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/app.ts",
+    "src/server.ts",
+    "src/config/env.ts",
+    "src/config/database.ts",
+    "src/config/redis.ts",
+    "src/config/mailer.ts",
+    "src/config/passport.ts",
+    "src/config/sentry.ts",
+    "src/config/swagger.ts",
+    "src/middlewares/index.ts",
+    "src/utils/logger.ts",
+    "src/utils/respuesta.utils.ts",
+    "src/utils/jwt.utils.ts",
+    "src/services/ventas.service.ts",
+    "src/services/inventario.service.ts",
+    "src/services/interacciones.service.ts"
+  ],
+  "out": "docs/api/backend",
+  "name": "Farmacy Backend API",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "disableSources": true,
+  "theme": "default",
+  "plugin": []
+}

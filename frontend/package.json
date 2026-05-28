@@ -13,7 +13,6 @@
     "test": "vitest",
     "docs": "typedoc",
     "docs:serve": "typedoc --watch"
-
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -46,6 +45,10 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jsdom": "^28.0.3",
     "@types/node": "^20.19.41",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
@@ -54,6 +57,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "jsdom": "^29.1.1",
     "playwright": "^1.60.0",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.0",

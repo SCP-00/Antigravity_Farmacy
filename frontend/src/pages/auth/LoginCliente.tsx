@@ -44,20 +44,20 @@ export function LoginClienteComponent() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Correo</label>
+          <label htmlFor="cliente-email" className="block text-xs font-medium text-gray-700 mb-1.5">Correo</label>
           <div className="relative">
             <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="input-base pl-10" placeholder="tu@correo.com" required/>
+            <input id="cliente-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
+              className="input-base pl-10" placeholder="tu@correo.com" autoComplete="email" required/>
           </div>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Contraseña</label>
+          <label htmlFor="cliente-password" className="block text-xs font-medium text-gray-700 mb-1.5">Contraseña</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
-            <input type={verPass ? 'text' : 'password'} value={password}
+            <input id="cliente-password" type={verPass ? 'text' : 'password'} value={password}
               onChange={e => setPassword(e.target.value)}
-              className="input-base pl-10 pr-10" placeholder="••••••••" required/>
+              className="input-base pl-10 pr-10" placeholder="••••••••" autoComplete="current-password" required/>
             <button type="button" onClick={() => setVerPass(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               {verPass ? <EyeOff size={16}/> : <Eye size={16}/>}

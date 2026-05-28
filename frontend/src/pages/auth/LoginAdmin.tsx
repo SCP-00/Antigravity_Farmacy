@@ -25,12 +25,13 @@ export default function LoginAdmin() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="admin-email" className="block text-sm font-medium text-gray-700 mb-1.5">
             Correo electrónico
           </label>
           <div className="relative">
             <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
             <input
+              id="admin-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -43,12 +44,13 @@ export default function LoginAdmin() {
 
         {/* Password */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="admin-password" className="block text-sm font-medium text-gray-700 mb-1.5">
             Contraseña
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
             <input
+              id="admin-password"
               type={verPass ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}

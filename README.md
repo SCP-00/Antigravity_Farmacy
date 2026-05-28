@@ -68,6 +68,12 @@ Farmacy/
 ├── docker-compose.yml      # Producción (backend + frontend + DB)
 ├── run.ps1           # Inicio rápido — PowerShell (recomendado)
 ├── setup.bat         # Setup inicial (Windows)
+├── setup.sh          # Setup inicial (Linux / macOS)
+├── test-e2e-cliente.mjs     # Test E2E flujo cliente (API)
+├── test-e2e-proveedores.mjs # Test E2E flujo compras (API)
+├── test-e2e-browser.mjs     # Test E2E flujo cliente (Playwright/browser)
+├── verify-email-helper.mjs  # Helper verificación email por DB
+├── actualizar-precios.sql   # SQL precios reales Colombia
 └── .env.example      # Template de variables de entorno
 ```
 
@@ -132,7 +138,7 @@ curl http://localhost:3000/api/v1/clientes/auth/me -H "Authorization: Bearer <to
 
 ---
 
-## 🚀 Inicio rápido (Windows)
+## 🚀 Inicio rápido
 
 ### Prerrequisitos
 
@@ -140,11 +146,15 @@ curl http://localhost:3000/api/v1/clientes/auth/me -H "Authorization: Bearer <to
 |---|---|---|
 | [Node.js](https://nodejs.org/) | ≥ 18 | `node --version` |
 | [pnpm](https://pnpm.io/) | ≥ 8 | `pnpm --version` |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Cualquiera | `docker info` |
+| [Docker](https://docs.docker.com/engine/install/) | Cualquiera | `docker info` |
 
-### Paso a paso
+> **⚠️ Windows:** Usa [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
-```bash
+---
+
+### Windows (PowerShell)
+
+```powershell
 # 1. Clonar el repositorio
 git clone https://github.com/tu-usuario/farmacy.git
 cd farmacy
@@ -167,6 +177,39 @@ setup.bat
 #    Tienda: http://localhost:5173
 #    Admin:  http://localhost:5173/admin/login
 ```
+
+---
+
+### Linux / macOS
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/farmacy.git
+cd farmacy
+
+# 2. Configurar variables de entorno
+cp .env.example .env
+# Edita .env con tus valores reales
+# REQUERIDO: DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, JWT_CLIENTE_SECRET
+
+# 3. Iniciar PostgreSQL y Redis con Docker
+docker compose -f docker-compose.dev.yml up -d
+
+# 4. Setup automático (instala dependencias, genera Prisma, corre seeds)
+chmod +x setup.sh && ./setup.sh
+
+# 5. Iniciar backend (Terminal 1)
+cd backend && pnpm run dev
+
+# 6. Iniciar frontend (Terminal 2)
+cd frontend && pnpm run dev
+
+# 7. Abrir en el navegador
+#    Tienda: http://localhost:5173
+#    Admin:  http://localhost:5173/admin/login
+```
+
+---
 
 ### Variables REQUERIDAS (en .env)
 
@@ -208,6 +251,9 @@ setup.bat
 | Backend + coverage | `cd backend && pnpm test -- --coverage` | 95.35% statements |
 | Frontend | `cd frontend && pnpm test` | Tests de componentes |
 | Pentest automático | `bash scripts/security-pentest-avanzado.sh` | ~109 tests de seguridad |
+| E2E Cliente (API) | `node test-e2e-cliente.mjs` | 41 pasos — registro, login, favoritos, venta POS, pedidos, puntos |
+| E2E Proveedores (API) | `node test-e2e-proveedores.mjs` | 46 pasos — OC, recepción, lotes, movimientos |
+| E2E Browser | `node test-e2e-browser.mjs` | 8 páginas, 12 screenshots — Playwright con Chromium |
 
 ---
 

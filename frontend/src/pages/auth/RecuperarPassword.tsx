@@ -54,11 +54,11 @@ export default function RecuperarPassword() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Correo electrónico</label>
+          <label htmlFor="recuperar-email" className="block text-xs font-medium text-gray-700 mb-1.5">Correo electrónico</label>
           <div className="relative">
             <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="input-base pl-10" placeholder="tucorreo@ejemplo.com" required />
+            <input id="recuperar-email" type="email" value={email} onChange={e => setEmail(e.target.value)}
+              className="input-base pl-10" placeholder="tucorreo@ejemplo.com" autoComplete="email" required />
           </div>
         </div>
 

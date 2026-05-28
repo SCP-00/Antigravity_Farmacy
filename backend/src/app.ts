@@ -12,6 +12,7 @@ import { env } from './config/env'
 import { configurePassport } from './config/passport'
 import { manejarErrores, limitarPeticiones, loggerHttp } from './middlewares/index'
 import { logger } from './utils/logger'
+import { setupSwagger } from './config/swagger'
 
 // ── Prerender (SSG) middleware ─────────────────────────
 import { existsSync } from 'fs'
@@ -122,6 +123,9 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true }))
   app.use(loggerHttp)
   app.use(limitarPeticiones)
+
+  // ── Swagger / OpenAPI docs ────────────────────────────
+  setupSwagger(app)
 
   // ── Health check ──────────────────────────────────────
   app.get(`${prefix}/health`, (_req: Request, res: Response) => {

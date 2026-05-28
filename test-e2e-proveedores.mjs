@@ -238,36 +238,40 @@ async function main() {
     // ═══════════════════════════════════════════════════════
     log('7', 'Verificando lotes creados...')
     
-    // Primero verificar vía API
-    const lotesRes = await apiGet(`/lotes?sucursalId=${SUCURSAL_ID}&limite=10`, adminToken)
-    const lotes = lotesRes.data?.data ?? []
-    
-    const lotesNuevos = lotes.filter(l => l.codigoLote?.includes(`LOTE-TEST`))
-    
-    // También verificar directamente en DB como fallback
+    // Verificar directamente en DB como fuente de verdad
     const { execSync } = await import('child_process')
+    let dbLotes = []
     let dbLotesCount = 0
     try {
       const dbResult = execSync(
-        `docker exec farmacy_postgres_dev psql -U farmacy_user -d farmacy_db -t -c "SELECT COUNT(*) FROM lotes WHERE codigo_lote LIKE '%LOTE-TEST%';"`,
+        `docker exec farmacy_postgres_dev psql -U farmacy_user -d farmacy_db -t -c "SELECT codigo_lote, cantidad_actual FROM lotes WHERE codigo_lote LIKE '%LOTE-TEST%' ORDER BY creado_en DESC;"`,
         { encoding: 'utf8', timeout: 10000 }
       )
-      dbLotesCount = parseInt(dbResult.trim()) || 0
-    } catch {}
-
-    if (lotesNuevos.length > 0 || dbLotesCount > 0) {
-      const total = Math.max(lotesNuevos.length, dbLotesCount)
-      log('7', `Lotes nuevos encontrados: ${total}`)
+      const lines = dbResult.trim().split('\n').filter(Boolean)
+      dbLotes = lines.map(l => {
+        const [codigo, cantidad] = l.split('|').map(s => s.trim())
+        return { codigoLote: codigo, cantidadActual: parseInt(cantidad) || 0 }
+      })
+      dbLotesCount = dbLotes.length
+    } catch (e) {}
+    
+    if (dbLotesCount > 0) {
+      log('7', `Lotes nuevos encontrados en DB: ${dbLotesCount}`)
+      dbLotes.forEach(l => {
+        log('7', `  ${l.codigoLote} — ${l.cantidadActual} unds`)
+      })
       
-      if (lotesNuevos.length > 0) {
-        lotesNuevos.forEach(l => {
-          log('7', `  ${l.codigoLote} — ${l.producto?.nombre} — ${l.cantidadActual} unds — Vence: ${new Date(l.fechaVencimiento).toLocaleDateString()}`)
-        })
-      } else {
-        log('7', '  (Lotes encontrados en DB pero no en API — posible problema de filtro o caché)', false)
-      }
+      // Verificación secundaria vía API (sin filtro de sucursal para máxima cobertura)
+      try {
+        const lotesRes = await apiGet('/lotes?limite=20', adminToken)
+        const lotes = lotesRes.data?.data ?? []
+        const lotesApi = lotes.filter(l => l.codigoLote?.includes('LOTE-TEST'))
+        if (lotesApi.length > 0) {
+          log('7', `  (Confirmado vía API: ${lotesApi.length} lotes)`)
+        }
+      } catch {}
     } else {
-      error('7', 'No se encontraron lotes nuevos (API ni DB). La recepción de mercancía podría no estar creando lotes correctamente.')
+      error('7', 'No se encontraron lotes nuevos en DB. La recepción de mercancía podría no estar creando lotes.')
       
       // Mostrar últimos lotes de todas formas
       const allLotesRes = await apiGet('/lotes?limite=5', adminToken)

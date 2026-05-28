@@ -72,36 +72,36 @@ export default function RegistroCliente() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Nombre</label>
+            <label htmlFor="reg-nombre" className="block text-xs font-medium text-gray-700 mb-1.5">Nombre</label>
             <div className="relative">
               <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input type="text" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)}
-                className="input-base pl-10" placeholder="Juan" required />
+              <input id="reg-nombre" type="text" value={form.nombre} onChange={e => handleChange('nombre', e.target.value)}
+                className="input-base pl-10" placeholder="Juan" autoComplete="given-name" required />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1.5">Apellido</label>
-            <input type="text" value={form.apellido} onChange={e => handleChange('apellido', e.target.value)}
-              className="input-base" placeholder="Pérez" required />
+            <label htmlFor="reg-apellido" className="block text-xs font-medium text-gray-700 mb-1.5">Apellido</label>
+            <input id="reg-apellido" type="text" value={form.apellido} onChange={e => handleChange('apellido', e.target.value)}
+              className="input-base" placeholder="Pérez" autoComplete="family-name" required />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Correo electrónico</label>
+          <label htmlFor="reg-email" className="block text-xs font-medium text-gray-700 mb-1.5">Correo electrónico</label>
           <div className="relative">
             <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="email" value={form.email} onChange={e => handleChange('email', e.target.value)}
-              className="input-base pl-10" placeholder="tucorreo@ejemplo.com" required />
+            <input id="reg-email" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)}
+              className="input-base pl-10" placeholder="tucorreo@ejemplo.com" autoComplete="email" required />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Contraseña</label>
+          <label htmlFor="reg-password" className="block text-xs font-medium text-gray-700 mb-1.5">Contraseña</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type={verPass ? 'text' : 'password'} value={form.password}
+            <input id="reg-password" type={verPass ? 'text' : 'password'} value={form.password}
               onChange={e => handleChange('password', e.target.value)}
-              className="input-base pl-10 pr-10" placeholder="••••••••" required minLength={8} />
+              className="input-base pl-10 pr-10" placeholder="••••••••" autoComplete="new-password" required minLength={8} />
             <button type="button" onClick={() => setVerPass(v => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               {verPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -111,29 +111,29 @@ export default function RegistroCliente() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">Confirmar contraseña</label>
+          <label htmlFor="reg-confirmar" className="block text-xs font-medium text-gray-700 mb-1.5">Confirmar contraseña</label>
           <div className="relative">
             <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type={verPass ? 'text' : 'password'} value={form.confirmar}
+            <input id="reg-confirmar" type={verPass ? 'text' : 'password'} value={form.confirmar}
               onChange={e => handleChange('confirmar', e.target.value)}
               className={`input-base pl-10 pr-10 ${form.confirmar && !passwordCoincide ? 'border-red-300 focus:border-red-400' : ''}`}
-              placeholder="••••••••" required minLength={8} />
+              placeholder="••••••••" autoComplete="new-password" required minLength={8} />
           </div>
           {form.confirmar && !passwordCoincide && (
             <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
           )}
         </div>
 
-        <label className="flex items-start gap-3 cursor-pointer group">
-          <input type="checkbox" checked={aceptoTerminos} onChange={e => setAceptoTerminos(e.target.checked)}
+        <div className="flex items-start gap-3 cursor-pointer group">
+          <input id="reg-terminos" type="checkbox" checked={aceptoTerminos} onChange={e => setAceptoTerminos(e.target.checked)}
             className="mt-0.5 rounded border-gray-300 text-teal-700 focus:ring-teal-500" />
-          <span className="text-xs text-gray-600 group-hover:text-gray-800">
+          <label htmlFor="reg-terminos" className="text-xs text-gray-600 group-hover:text-gray-800 cursor-pointer">
             Acepto los{' '}
             <Link to="/terminos" target="_blank" className="text-teal-700 hover:underline font-medium">Términos y Condiciones</Link>{' '}
             y la{' '}
             <Link to="/privacidad" target="_blank" className="text-teal-700 hover:underline font-medium">Política de Privacidad</Link>, incluyendo el tratamiento de mis datos personales.
-          </span>
-        </label>
+          </label>
+        </div>
 
         <button type="submit" disabled={cargando || !passwordCoincide || !passwordValida}
           className="w-full py-3 bg-teal-700 text-white rounded-xl font-semibold text-sm

@@ -13,8 +13,12 @@ import { iniciarWorkers, detenerWorkers } from './jobs/queue'
 import { initVapid, enviarAlertaInventario } from './services/push.service'
 import { eventBus, Eventos } from './services/eventbus.service'
 import { logger } from './utils/logger'
+import { initSentry } from './config/sentry'
 
 async function main() {
+  // 0. Inicializar Sentry (error tracking)
+  initSentry()
+
   // 1. Verificar conexión a PostgreSQL
   await connectDB()
 

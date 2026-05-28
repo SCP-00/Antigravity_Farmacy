@@ -12,12 +12,14 @@
     "test": "vitest run",
     "db:generate": "npx prisma generate --schema=../database/prisma/schema.prisma",
     "db:migrate": "npx prisma migrate dev --schema=../database/prisma/schema.prisma",
+    "db:migrate:deploy": "npx prisma migrate deploy --schema=../database/prisma/schema.prisma",
     "db:push": "npx prisma db push --schema=../database/prisma/schema.prisma",
     "db:seed": "npx ts-node ../database/seeds/seed.ts",
     "db:studio": "npx prisma studio --schema=../database/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0",
+    "@sentry/node": "^10.54.0",
     "@types/compression": "^1.8.1",
     "@types/express": "4.17.21",
     "@types/web-push": "^3.6.4",
@@ -41,9 +43,13 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "rate-limit-redis": "^5.0.0",
     "stripe": "^14.10.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "web-push": "^3.6.7",
     "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "ws": "^8.21.0",
     "zod": "^3.22.4"
   },
@@ -64,6 +70,7 @@
     "prisma": "^5.7.0",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
+    "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
     "vitest": "^3.2.4"
   }

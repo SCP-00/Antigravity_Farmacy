@@ -4,9 +4,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'react-hot-toast'
+import * as Sentry from '@sentry/react'
 import App from './app'
 import { PWAUpdatePrompt } from './components/shared/PWAUpdatePrompt'
 import './index.css'
+
+// Sentry — error tracking (solo si SENTRY_DSN está configurado)
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    environment: import.meta.env.PROD ? 'production' : 'development',
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 0.0,
+    replaysSessionSampleRate: import.meta.env.PROD ? 0.01 : 0.0,
+    replaysOnErrorSampleRate: import.meta.env.PROD ? 1.0 : 0.0,
+  })
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
