@@ -26,15 +26,15 @@
   --color-red-800: #7F1330;
   --color-red-900: #5E0E23;
 
-  --color-dark-bg: #0A0F1A;
-  --color-dark-surface: #131826;
-  --color-dark-surface-elevated: #1C2233;
+  --color-dark-bg: #1e1e1e;
+  --color-dark-surface: #252526;
+  --color-dark-surface-elevated: #2d2d2d;
   --color-dark-border: rgba(255,255,255,0.10);
-  --color-dark-text: #E8EDF5;
-  --color-dark-text-secondary: #94A3B8;
-  --color-dark-text-muted: #64748B;
-  --color-dark-accent: #5B9CF6;
-  --color-dark-hover: rgba(148,163,184,0.12);
+  --color-dark-text: #d4d4d4;
+  --color-dark-text-secondary: #a0a0a0;
+  --color-dark-text-muted: #868686;
+  --color-dark-accent: #569cd6;
+  --color-dark-hover: rgba(255,255,255,0.07);
 
   --font-sans: 'DM Sans', 'system-ui', 'sans-serif';
   --font-serif: 'DM Serif Display', 'serif';
@@ -133,9 +133,9 @@
 
   .dark body {
     background-image:
-      radial-gradient(circle at top left, rgba(66, 153, 225, 0.06), transparent 34%),
-      radial-gradient(circle at top right, rgba(180, 60, 80, 0.05), transparent 24%),
-      linear-gradient(180deg, #0A0F1A 0%, #131826 100%);
+      radial-gradient(circle at top left, rgba(86, 156, 214, 0.06), transparent 40%),
+      radial-gradient(circle at top right, rgba(180, 60, 80, 0.04), transparent 30%),
+      linear-gradient(180deg, #1e1e1e 0%, #252526 100%);
   }
 
   a {
@@ -153,7 +153,7 @@
 
   .dark ::selection {
     background-color: var(--color-teal-600);
-    color: #0A0F1E;
+    color: #1e1e1e;
   }
 }
 
@@ -313,6 +313,10 @@
   letter-spacing: 0.05em;
 }
 
+.dark .badge-low {
+  color: rgb(255 230 180);
+}
+
 @utility section-shell {
   max-width: 80rem;
   margin-left: auto;
@@ -385,13 +389,11 @@
   background-image:
     radial-gradient(circle at top left, rgba(255,255,255,0.28), transparent 30%),
     linear-gradient(135deg, #0f6e56 0%, #145fdd 100%);
-}
-
-.dark .hero-panel {
-  background-image:
-    radial-gradient(circle at top left, rgba(255,255,255,0.10), transparent 30%),
-    linear-gradient(135deg, #0A1628 0%, #0F1F40 100%);
-}
+}  .dark .hero-panel {
+    background-image:
+      radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 30%),
+      linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
 
 @utility feature-pill {
   display: inline-flex;
