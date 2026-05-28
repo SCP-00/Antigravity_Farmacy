@@ -60,6 +60,10 @@ Guía rápida para desarrolladores IA y humanos que trabajan en este proyecto.
 - **CI/CD:** GitHub Actions (3 workflows)
 - **Monitoreo:** Rutina documentada en `docs/monitoreo.md`
 - **Tiempo real:** WebSocket para POS + chatbot, SSE para dashboard, BullMQ para jobs asíncronos
+- **Push notifications:** VAPID configurable en `backend/src/config/env.ts`, service worker custom en `frontend/sw.ts`
+  - Backend: `push.service.ts` (CRUD + envío), `push.routes.ts` (endpoints protegidos)
+  - Frontend: `usePushNotifications()` hook, `PushToggle` en AdminLayout
+  - Se activan automáticamente vía EventBus para alertas de inventario
 
 ## Script entrypoints
 - Backend: `backend/src/server.ts` (conecta DB antes de HTTP)

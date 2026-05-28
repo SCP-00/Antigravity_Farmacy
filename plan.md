@@ -125,7 +125,7 @@ Y **cuando aplique**:
 | UX | Transiciones suaves y polish visual consistente | 🟡 Medio | 🟢 Bajo | ✅ |
 | UX | Modo oscuro | 🟡 Medio | 🟡 Medio | ✅ |
 | Interacción dinámica | WebSocket para chatbot en vivo | 🟡 Medio | 🟡 Medio | ✅ |
-| Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | Notificaciones push para alertas de inventario | 🟡 Medio | 🟡 Medio | ✅ |
 | SEO / Deploy | Pre-render de landing pública o SSR/SSG parcial | 🔴 Alto | 🟡 Medio | ⏳ Pendiente (futuro) |
 | SEO / Deploy | Compresión Brotli | 🟡 Medio | 🟢 Bajo | ✅ |
 | SEO / Deploy | CDN para assets estáticos | 🟡 Medio | 🟡 Medio | ✅ |
@@ -442,7 +442,36 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [x] **Transiciones y consistencia visual** en páginas admin
 - [x] **Limpieza:** scripts test muertos, spec obsoleto, artefactos E2E
 - [ ] Pre-render de landing pública o SSR/SSG parcial (futuro)
-- [ ] Push notifications multi-dispositivo (futuro)
+
+---
+
+### Fase 20 — Notificaciones Push para alertas de inventario ✅
+
+**Estimación:** 2 a 3 días
+**Prioridad:** 🟡 Should have
+**Estado:** ✅ COMPLETADA (2026-05-28)
+
+#### Objetivo
+Implementar notificaciones push nativas (Web Push API) para alertas de inventario, con VAPID configurable, suscripción persistente por empleado, y service worker custom.
+
+#### Tareas
+- [x] Modelo Prisma `PushSubscription` con relación a Empleado
+- [x] Backend service `push.service.ts` — CRUD suscripciones, VAPID init, envío a admins/sucursal
+- [x] Backend routes `push.routes.ts` — POST/DELETE /subscribir, GET /vapid-public-key
+- [x] EventBus wiring — `STOCK_CRITICO` e `INVENTARIO_ALERTA` → push automático
+- [x] VAPID env vars en `env.ts` (opcionales: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`)
+- [x] Service Worker custom (`sw.ts`) — injectManifest, push listener, notificationclick, offline fallback
+- [x] Hook `usePushNotifications()` — permiso, suscripción, desuscripción, detección de estado
+- [x] Componente `PushToggle` en AdminLayout — toggle visual con estados (BellOff/BellRing/Bell)
+- [x] Vite config — migrado a `injectManifest` strategy, workbox packages instalados
+- [x] Limpieza de código muerto: `workbox` block eliminado de vite.config.ts
+- [x] Fixes: TS2883 router type, Uint8Array cast TS6, EventBus validation guard, offline fallback handler
+
+#### Validaciones
+- [x] TypeScript backend: 0 errores
+- [x] TypeScript frontend: 0 errores
+- [x] Tests: 521/521 pasan (27 archivos)
+- [x] Code review: aprobado tras 3 iteraciones de fixes
 
 ---
 
@@ -475,7 +504,7 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 - [x] WebSockets para POS en tiempo real
 - [x] SSE para dashboard en vivo
 - [x] WebSocket para chatbot en vivo
-- [ ] Push notifications para inventario
+- [x] Push notifications para inventario
 - [x] Bull/BullMQ para jobs asíncronos
 
 ### 4) SEO / Performance / Deploy
@@ -508,6 +537,7 @@ Cerrar detalles no bloqueantes que elevan la percepción de calidad.
 | 8 | **Fase 17** — Tiempo real + jobs asíncronos | ✅ COMPLETADA |
 | 9 | **Fase 18** — CI/CD + monitoreo | ✅ COMPLETADA |
 | 10 | **Fase 19** — Polish extendido | ✅ COMPLETADA |
+| 11 | **Fase 20** — Push notifications | ✅ COMPLETADA |
 
 ---
 

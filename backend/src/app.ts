@@ -36,6 +36,7 @@ import { sucursalesRouter } from './modules/sucursales/sucursales.routes'
 import { reportesRouter } from './modules/reportes/reportes.routes'
 import { sseRouter } from './modules/reportes/reportes.sse'
 import { auditoriaRouter } from './modules/auditoria/auditoria.routes'
+import { pushRouter } from './modules/push/push.routes'
 
 export function createApp(): Express {
   const app = express()
@@ -147,6 +148,7 @@ export function createApp(): Express {
   app.use(`${prefix}/reportes`, sseRouter)  // SSE endpoint
   app.use(`${prefix}/auditoria`, auditoriaRouter)
   app.use(`${prefix}/pagos`, pagosRouter)
+  app.use(`${prefix}/push`, pushRouter)
 
   // ── 404 y manejador global de errores ─────────────────
   app.use((_req: Request, res: Response) => {

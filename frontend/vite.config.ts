@@ -22,6 +22,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // injectManifest: service worker custom con push notifications
+      srcDir: '.',
+      filename: 'sw.ts',
+      strategies: 'injectManifest',
       includeAssets: [
         'favicon.ico',
         'robots.txt',
@@ -63,71 +67,8 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,xml,txt,woff2}'],
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [
-          /^\/api\//,
-          /^\/admin\//,
-          /^\/auth\//,
-        ],
-        runtimeCaching: [
-          // API: catálogo público (productos, categorías, sucursales) — CacheFirst
-          {
-            urlPattern: /^\/api\/productos\/(?:buscar|lista-rapida)/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'api-productos',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^\/api\/categorias/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'api-categorias',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^\/api\/sucursales/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'api-sucursales',
-              expiration: { maxEntries: 5, maxAgeSeconds: 60 * 60 * 24 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // Google Fonts
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 60 },
-            },
-          },
-          // External images (icons8)
-          {
-            urlPattern: /^https:\/\/img\.icons8\.com/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'external-images',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            },
-          },
-        ],
-      },
+      // injectManifest: self.__WB_MANIFEST se inyecta en sw.ts durante build
+      // navigateFallback se maneja en el SW custom (sw.ts) para tener control total
       devOptions: {
         enabled: true,
         type: 'module',

@@ -3,12 +3,12 @@ import {
   LayoutDashboard, ShoppingCart, Package, Truck, Users,
   BarChart3, Settings, LogOut, Bell,
   ChevronRight, CreditCard, UserCheck, PanelRightClose, PanelRightOpen,
-  Shield,
+  Shield, BellOff, BellRing,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { inventarioService } from '@/services'
-import { useAuth, usePermisos } from '@/hooks'
+import { useAuth, usePermisos, usePushNotifications } from '@/hooks'
 import { useUiStore } from '@/store/uiStore'
 import ThemeToggle from '@/components/shared/ThemeToggle'
 
@@ -160,6 +160,9 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Push toggle */}
+            <PushToggle />
+
             {/* Theme toggle */}
             <ThemeToggle compact />
 
@@ -237,6 +240,75 @@ export default function AdminLayout() {
           <Outlet />
         </div>
       </main>
+    </div>
+  )
+}
+
+// ── Push Toggle Component ────────────────────────────────
+function PushToggle() {
+  const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
+  const { darkMode } = useUiStore()
+
+  if (!supported) return null
+
+  const handleToggle = async () => {
+    if (subscribed) {
+      await unsubscribe()
+    } else {
+      await subscribe()
+    }
+  }
+
+  // Si está denegado permanentemente, mostrar como deshabilitado
+  const isDenied = permission === 'denied'
+
+  return (
+    <div className="relative group">
+      <button
+        onClick={handleToggle}
+        disabled={loading || isDenied}
+        title={
+          isDenied
+            ? 'Notificaciones bloqueadas — habilítalas desde la configuración del navegador'
+            : subscribed
+              ? 'Desactivar notificaciones push'
+              : 'Activar notificaciones push'
+        }
+        className={`relative p-2 rounded-xl transition-all duration-200
+          ${loading ? 'animate-pulse' : ''}
+          ${isDenied
+            ? darkMode
+              ? 'text-dark-text-muted opacity-40 cursor-not-allowed'
+              : 'text-gray-300 opacity-40 cursor-not-allowed'
+            : subscribed
+              ? darkMode
+                ? 'text-teal-400 bg-teal-500/10 hover:bg-teal-500/20'
+                : 'text-teal-600 bg-teal-50 hover:bg-teal-100'
+              : darkMode
+                ? 'text-dark-text-secondary hover:bg-dark-hover hover:text-dark-text'
+                : 'text-gray-500 hover:text-teal-700 hover:bg-teal-50'
+          }`}
+        aria-label={subscribed ? 'Desactivar notificaciones' : 'Activar notificaciones'}
+      >
+        {loading ? (
+          <Bell className="animate-pulse" size={18} />
+        ) : subscribed ? (
+          <BellRing size={18} />
+        ) : (
+          <BellOff size={18} />
+        )}
+      </button>
+
+      {/* Tooltip en desktop */}
+      <div className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md text-[10px]
+        whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50
+        ${darkMode ? 'bg-dark-surface text-dark-text border border-dark-border' : 'bg-gray-800 text-white'}`}>
+        {isDenied
+          ? 'Bloqueado' : loading
+            ? '...' : subscribed
+              ? 'Push activado' : 'Activar push'
+        }
+      </div>
     </div>
   )
 }

@@ -10,6 +10,9 @@ import { iniciarJobAlertas } from './jobs/alertas'
 import { sseManager } from './services/sse.service'
 import { wsManager } from './services/websocket.service'
 import { iniciarWorkers, detenerWorkers } from './jobs/queue'
+import { initVapid, enviarAlertaInventario } from './services/push.service'
+import { eventBus, Eventos } from './services/eventbus.service'
+import { logger } from './utils/logger'
 
 async function main() {
   // 1. Verificar conexión a PostgreSQL
@@ -17,6 +20,9 @@ async function main() {
 
   // 2. Conectar Redis (fallo no bloqueante)
   await connectRedis()
+
+  // 2b. Inicializar VAPID push notifications
+  initVapid()
 
   // 3. Crear Express con todos los middlewares y rutas
   const app = createApp()
@@ -41,10 +47,31 @@ async function main() {
 
     console.log(`   🌐 SSE : /reportes/stream`)
     console.log(`   🔌 WS  : /ws`)
-    console.log(`   📨 Queue: csv-export, emails\n`)
+    console.log(`   📨 Queue: csv-export, emails`)
+    console.log(`   🔔 Push: ${env.VAPID_PUBLIC_KEY ? 'activado' : 'no configurado'}\n`)
   })
 
-  // 9. Cierre limpio (Ctrl+C, Docker stop)
+  // 9. Wire EventBus → Push notifications (alertas de inventario)
+  eventBus.on(Eventos.STOCK_CRITICO, async (payload) => {
+    if (!payload?.data?.mensaje) return
+    logger.warn(`[Push] Stock crítico detectado: ${JSON.stringify(payload.data)}`)
+    await enviarAlertaInventario(
+      'STOCK_CRITICO',
+      String(payload.data.mensaje),
+      payload.data.producto ? String(payload.data.producto) : undefined,
+    )
+  })
+
+  eventBus.on(Eventos.INVENTARIO_ALERTA, async (payload) => {
+    if (!payload?.data?.mensaje) return
+    await enviarAlertaInventario(
+      'INVENTARIO',
+      String(payload.data.mensaje),
+      payload.data.producto ? String(payload.data.producto) : undefined,
+    )
+  })
+
+  // 10. Cierre limpio (Ctrl+C, Docker stop)
   const shutdown = async (signal: string) => {
     console.log(`\n[${signal}] Cerrando servidor...`)
     wsManager.destroy()

@@ -106,6 +106,11 @@ const envSchema = z.object({
   // Content Security Policy — deshabilitar en desarrollo si causa problemas
   CSP_ENABLED: z.string().default('true'),
 
+  // Push notifications (VAPID)
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_EMAIL: z.string().default('farmacy@farmacy.co'),
+
   // Info farmacia
   FARMACIA_NOMBRE: z.string().default('Farmacy'),
 })

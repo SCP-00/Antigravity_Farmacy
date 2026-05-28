@@ -2,6 +2,107 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 20: Notificaciones Push para alertas de inventario (Push API + VAPID)
+
+**Objetivo:** Implementar notificaciones push nativas (Web Push API) para alertas de inventario en el panel admin, con suscripción persistente por empleado, VAPID configurable, y un service worker custom.
+
+### Cambios realizados
+
+#### 1. Prisma schema — PushSubscription model
+- `database/prisma/schema.prisma` — Nuevo modelo `PushSubscription` con:
+  - `id` (UUID), `empleadoId` (FK → Empleado), `endpoint`, `p256dh`, `auth`, `userAgent`, `creadoEn`
+  - Relación inversa en `Empleado` (`pushSubscriptions`)
+  - Unique compuesto `[empleadoId, endpoint]` — un empleado puede tener múltiples dispositivos
+- Migración vía `prisma db push`
+
+#### 2. Backend — Push service (`backend/src/services/push.service.ts` — NUEVO)
+- `initVapid()`: Inicializa VAPID desde variables de entorno (VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_EMAIL)
+- `guardarSuscripcion()`: UPSERT de suscripción por empleado + endpoint
+- `eliminarSuscripcion()` / `eliminarTodasSuscripciones()`: Cleanup de endpoints inválidos
+- `enviarAAdministradores()`: Envía push a TODOS los administradores con suscripción activa
+  - Auto-cleanup de endpoints 410/404 (PushSubscription expirados o revocados)
+  - Promise.allSettled para tolerancia a fallos parciales
+- `enviarASucursal()`: Envía push a empleados de una sucursal específica
+- `enviarAlertaInventario()`: Construye notificación tipada con tag, icono, data (url, tipo, fecha)
+
+#### 3. Backend — Push routes (`backend/src/modules/push/push.routes.ts` — NUEVO)
+- `GET /push/vapid-public-key` — Clave pública VAPID para el frontend
+- `POST /push/subscribir` — Guardar suscripción (validación de endpoint, p256dh, auth)
+- `DELETE /push/subscribir` — Eliminar suscripción específica o todas las del empleado
+- Todas las rutas protegidas con middleware `autenticar`
+
+#### 4. Backend — EventBus wiring (`backend/src/server.ts`)
+- `initVapid()` llamado al arrancar el servidor
+- EventBus `STOCK_CRITICO` e `INVENTARIO_ALERTA` → `enviarAlertaInventario()`
+- Guard de validación `if (!payload?.data?.mensaje) return` antes de enviar
+
+#### 5. Backend — Config (`backend/src/config/env.ts`)
+- Nuevas variables VAPID (opcionales): `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`
+- Dependencias: `web-push` + `@types/web-push`
+
+#### 6. Frontend — Service Worker custom (`frontend/sw.ts` — NUEVO)
+- Migrado de `generateSW` a `injectManifest` strategy (SW custom con control total)
+- **Workbox precaching**: `precacheAndRoute(self.__WB_MANIFEST)`
+- **Runtime caching**: productos, categorías, sucursales, Google Fonts, icons8
+- **Push event listener**: parsea JSON o muestra texto plano, con `vibrate`, `requireInteraction`, `actions`
+- **Notification click handler**: enfoca ventana existente o abre nueva, navega a `data.url`
+- **Navigation fallback**: `fetch` handler con `mode === 'navigate'`, fallback a `offline.html` en cache, response 503 como último recurso
+- **Auto-update**: `skipWaiting()` en install + `clients.claim()` en activate
+- Dependencias: `workbox-precaching`, `workbox-routing`, `workbox-strategies`, `workbox-expiration`
+
+#### 7. Frontend — Push hook (`frontend/src/hooks/usePushNotifications.ts` — NUEVO)
+- `usePushNotifications()` con estado completo:
+  - `supported`: detección de ServiceWorker + PushManager
+  - `permission`: `Notification.permission` con listener reactivo (`navigator.permissions.query`)
+  - `subscribed` / `loading`: estados de suscripción
+  - `subscribe()`: solicita permiso → obtiene VAPID key → `pushManager.subscribe()` → guarda en backend
+  - `unsubscribe()`: elimina en backend → `pushSubscription.unsubscribe()`
+- Caché de VAPID key en localStorage (`farmacy-vapid-public-key`)
+- Conversión URL-safe base64 ↔ Uint8Array ↔ ArrayBuffer
+- Exportado desde `frontend/src/hooks/index.ts`
+
+#### 8. Frontend — AdminLayout PushToggle (`frontend/src/components/layout/AdminLayout.tsx`)
+- Componente `PushToggle` inline con 3 estados visuales:
+  - `BellOff` (desactivado, gris) — no suscrito
+  - `BellRing` (verde teal) — suscrito activo
+  - `Bell` con `animate-pulse` (cargando)
+- Deshabilitado si permiso denegado (`opacity-40`, `cursor-not-allowed`)
+- Tooltip flotante desktop: "Activar push" / "Push activado" / "Bloqueado" / "..."
+- `role="alert"`, `aria-label` para accesibilidad
+
+#### 9. Frontend — Vite config (`frontend/vite.config.ts`)
+- `VitePWA` cambiado a `strategies: 'injectManifest'` con `srcDir: '.', filename: 'sw.ts'`
+- Eliminado bloque `workbox` (muerto en injectManifest)
+- Comentario documentando dónde se maneja el navigateFallback
+
+#### 10. Frontend — Types (`frontend/src/vite-env.d.ts`)
+- `/// <reference types="vite-plugin-pwa/inject" />` para `self.__WB_MANIFEST`
+- Declaración de módulo `virtual:pwa-register`
+
+#### 11. Dependencias agregadas
+| Paquete | Ubicación | Tipo |
+|---|---|---|
+| `web-push` + `@types/web-push` | backend | dependency |
+| `workbox-precaching` | frontend | devDependency |
+| `workbox-routing` | frontend | devDependency |
+| `workbox-strategies` | frontend | devDependency |
+| `workbox-expiration` | frontend | devDependency |
+
+### Fixes aplicados durante code review
+1. `push.routes.ts`: `export const pushRouter: ReturnType<typeof Router> = Router()` (TS2883)
+2. `usePushNotifications.ts`: Uint8Array type cast para TS6 (`as unknown as BufferSource`)
+3. `server.ts`: EventBus guard `if (!payload?.data?.mensaje) return` + `String()` en lugar de `as`
+4. `sw.ts`: Added navigation fallback fetch handler + response guard 503
+5. `vite.config.ts`: Removed dead `workbox` block (ignored in injectManifest)
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 521/521 pasan (27 archivos)
+- ✅ Code review: aprobado tras 3 iteraciones de fixes
+
+---
+
 ## 2026-05-28 — Fase 19: Polish extendido — Brotli, CDN, WebSocket chatbot, limpieza
 
 **Objetivo:** Cerrar detalles no bloqueantes que elevan la percepción de calidad: compresión Brotli, CDN configurable, WebSocket para chatbot en vivo, y limpieza de archivos muertos.
