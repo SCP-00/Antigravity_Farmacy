@@ -271,8 +271,8 @@ export default function PuntoVenta() {
         {/* Panel izquierdo: productos */}
         <div className="flex-1 flex flex-col bg-[#F5F8F6] dark:bg-dark-surface/50 p-4 overflow-hidden min-h-[50vh] lg:min-h-0">
           {!cajaActual && (
-            <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
-              <span className="text-sm text-amber-700 font-medium">⚠️ Tu caja se encuentra cerrada</span>
+            <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-xl flex items-center justify-between">
+              <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">⚠️ Tu caja se encuentra cerrada</span>
               <button onClick={() => abrirCajaMutation.mutate()} disabled={abrirCajaMutation.isPending} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-medium hover:bg-amber-700 transition-colors">
                 Abrir caja base $100k
               </button>
@@ -290,17 +290,16 @@ export default function PuntoVenta() {
               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {isFetching
                   ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="card animate-pulse h-28"/>)
-                  : productos.length === 0
-                    ? <p className="col-span-full text-center py-12 text-gray-400 text-sm">Sin resultados para "{busqueda}"</p>
-                    : productos.map((p: any) => (
-                        <button key={p.id} onClick={() => agregar(p)} disabled={p.stockTotal === 0} className="card text-left hover:border-teal-300 hover:bg-teal-50 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed p-3">
+                  : productos.length === 0              ? <p className="col-span-full text-center py-12 text-gray-400 dark:text-dark-text-muted text-sm">Sin resultados para "{busqueda}"</p>
+              : productos.map((p: any) => (
+                        <button key={p.id} onClick={() => agregar(p)} disabled={p.stockTotal === 0} className="card text-left hover:border-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed p-3">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-2xl">{CATEGORIAS_ICONOS[p.categoria?.nombre] ?? '💊'}</span>
                             {p.requiereRx && <span className="badge-rx text-[10px]">RX</span>}
                           </div>
-                          <p className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight mb-1">{p.nombre} {p.concentracion}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5">{p.stockTotal > 0 ? `${p.stockTotal} disponibles` : 'Agotado'}</p>
-                          <p className="text-sm font-bold text-teal-700 mt-1">{cop(p.precioVenta)}</p>
+                          <p className="text-xs font-semibold text-gray-900 dark:text-dark-text line-clamp-2 leading-tight mb-1">{p.nombre} {p.concentracion}</p>
+                          <p className="text-[10px] text-gray-400 dark:text-dark-text-muted mt-0.5">{p.stockTotal > 0 ? `${p.stockTotal} disponibles` : 'Agotado'}</p>
+                          <p className="text-sm font-bold text-teal-700 dark:text-teal-400 mt-1">{cop(p.precioVenta)}</p>
                         </button>
                       ))
                 }
@@ -308,45 +307,46 @@ export default function PuntoVenta() {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <span className="text-6xl mb-4">🛒</span>
-                <p className="text-gray-500 font-medium">POS Farmacy</p>
-                <p className="text-sm text-gray-400 mt-1">Busca un producto o usa el lector de código de barras</p>
+                <p className="text-gray-500 dark:text-dark-text-secondary font-medium">POS Farmacy</p>
+                <p className="text-sm text-gray-400 dark:text-dark-text-muted mt-1">Busca un producto o usa el lector de código de barras</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Panel derecho: carrito y cobro */}
+        {/* Panel derecho: carrito y cobro */}
         <div className="w-full lg:w-80 flex-shrink-0 bg-white dark:bg-dark-surface border-l border-[#D8EBE4] dark:border-dark-border flex flex-col">
-          <div className="px-4 py-3 border-b border-[#D8EBE4] flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-[#D8EBE4] dark:border-dark-border flex items-center justify-between">
             <div>
-              <p className="font-semibold text-sm text-gray-900">Venta actual</p>
-              <p className="text-xs text-gray-400">{cajaActual ? `Caja abierta · ${fechaCorta(cajaActual.abiertaEn)}` : 'Sin caja abierta'}</p>
+              <p className="font-semibold text-sm text-gray-900 dark:text-dark-text">Venta actual</p>
+              <p className="text-xs text-gray-400 dark:text-dark-text-muted">{cajaActual ? `Caja abierta · ${fechaCorta(cajaActual.abiertaEn)}` : 'Sin caja abierta'}</p>
             </div>
             {carrito.length > 0 && (
-              <button onClick={() => setCarrito([])} aria-keyshortcuts="F4" className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"><X size={12}/> Limpiar</button>
+              <button onClick={() => setCarrito([])} aria-keyshortcuts="F4" className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 flex items-center gap-1"><X size={12}/> Limpiar</button>
             )}
           </div>
 
           <div className="flex-1 overflow-y-auto">
             {carrito.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-6">
-                <p className="text-sm text-gray-400">Sin productos agregados</p>
+                <p className="text-sm text-gray-400 dark:text-dark-text-muted">Sin productos agregados</p>
               </div>
             ) : (
-              <div className="divide-y divide-[#D8EBE4]">
+              <div className="divide-y divide-[#D8EBE4] dark:divide-dark-border">
                 {carrito.map(item => (
-                  <div key={item.productoId} className="px-4 py-3 flex gap-3 items-center hover:bg-gray-50">
+                  <div key={item.productoId} className="px-4 py-3 flex gap-3 items-center hover:bg-gray-50 dark:hover:bg-dark-hover">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-900 truncate">{item.nombre}</p>
-                      <p className="text-[10px] text-gray-400">{item.concentracion}</p>
-                      <p className="text-xs text-teal-700 font-semibold mt-0.5">{cop(item.precioUnitario * item.cantidad)}</p>
+                      <p className="text-xs font-semibold text-gray-900 dark:text-dark-text truncate">{item.nombre}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-dark-text-muted">{item.concentracion}</p>
+                      <p className="text-xs text-teal-700 dark:text-teal-400 font-semibold mt-0.5">{cop(item.precioUnitario * item.cantidad)}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-white border border-[#D8EBE4] rounded-full px-1 py-0.5">
-                      <button onClick={() => cambiarCantidad(item.productoId, -1)} className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
-                        {item.cantidad === 1 ? <Trash2 size={10} className="text-red-400"/> : <Minus size={10}/>}
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-dark-surface border border-[#D8EBE4] dark:border-dark-border rounded-full px-1 py-0.5">
+                      <button onClick={() => cambiarCantidad(item.productoId, -1)} className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-dark-hover transition-colors">
+                        {item.cantidad === 1 ? <Trash2 size={10} className="text-red-400"/> : <Minus size={10} className="dark:text-dark-text-secondary"/>}
                       </button>
-                      <span className="text-xs font-bold w-4 text-center">{item.cantidad}</span>
-                      <button onClick={() => cambiarCantidad(item.productoId, 1)} className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={10}/></button>
+                      <span className="text-xs font-bold w-4 text-center dark:text-dark-text">{item.cantidad}</span>
+                      <button onClick={() => cambiarCantidad(item.productoId, 1)} className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-dark-hover transition-colors"><Plus size={10} className="dark:text-dark-text-secondary"/></button>
                     </div>
                   </div>
                 ))}
@@ -354,19 +354,19 @@ export default function PuntoVenta() {
             )}
           </div>
 
-          <div className="border-t border-[#D8EBE4] p-4 space-y-3 bg-gray-50">
+          <div className="border-t border-[#D8EBE4] dark:border-dark-border p-4 space-y-3 bg-gray-50 dark:bg-dark-bg">
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-gray-600 whitespace-nowrap">Descuento $</label>
-              <input type="number" min="0" max={subtotal} value={descuento} onChange={e => setDescuento(Math.min(subtotal, Number(e.target.value)))} className="flex-1 text-sm px-2 py-1.5 border border-[#D8EBE4] rounded-lg outline-none focus:border-teal-400 text-right bg-white" />
+              <label className="text-xs font-medium text-gray-600 dark:text-dark-text-secondary whitespace-nowrap">Descuento $</label>
+              <input type="number" min="0" max={subtotal} value={descuento} onChange={e => setDescuento(Math.min(subtotal, Number(e.target.value)))} className="flex-1 text-sm px-2 py-1.5 border border-[#D8EBE4] dark:border-dark-border rounded-lg outline-none focus:border-teal-400 text-right bg-white dark:bg-dark-surface dark:text-dark-text" />
             </div>
 
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between text-gray-500"><span>Subtotal</span><span>{cop(subtotal)}</span></div>
-              {descuento > 0 && <div className="flex justify-between text-teal-600"><span>Descuento</span><span>- {cop(descuento)}</span></div>}
-              <div className="flex justify-between font-bold text-base pt-2 border-t border-[#D8EBE4]"><span>Total</span><span className="text-teal-700">{cop(total)}</span></div>
+              <div className="flex justify-between text-gray-500 dark:text-dark-text-muted"><span>Subtotal</span><span className="dark:text-dark-text-secondary">{cop(subtotal)}</span></div>
+              {descuento > 0 && <div className="flex justify-between text-teal-600 dark:text-teal-400"><span>Descuento</span><span>- {cop(descuento)}</span></div>}
+              <div className="flex justify-between font-bold text-base pt-2 border-t border-[#D8EBE4] dark:border-dark-border"><span className="dark:text-dark-text">Total</span><span className="text-teal-700 dark:text-teal-400">{cop(total)}</span></div>
             </div>
 
-            <select value={metodo} onChange={e => setMetodo(e.target.value)} className="w-full text-sm px-3 py-2 border border-[#D8EBE4] rounded-xl outline-none focus:border-teal-400 bg-white">
+            <select value={metodo} onChange={e => setMetodo(e.target.value)} className="w-full text-sm px-3 py-2 border border-[#D8EBE4] dark:border-dark-border rounded-xl outline-none focus:border-teal-400 bg-white dark:bg-dark-surface dark:text-dark-text">
               {Object.entries(METODO_PAGO_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
 

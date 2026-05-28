@@ -26,14 +26,15 @@
   --color-red-800: #7F1330;
   --color-red-900: #5E0E23;
 
-  --color-dark-surface: #222940;
-  --color-dark-bg: #1a2033;
-  --color-dark-border: rgba(255,255,255,0.08);
-  --color-dark-text: #e2e8f0;
-  --color-dark-text-secondary: #a0aec0;
-  --color-dark-text-muted: #7a8ba6;
-  --color-dark-accent: #4299e1;
-  --color-dark-hover: rgba(148,163,184,0.08);
+  --color-dark-bg: #0A0F1A;
+  --color-dark-surface: #131826;
+  --color-dark-surface-elevated: #1C2233;
+  --color-dark-border: rgba(255,255,255,0.10);
+  --color-dark-text: #E8EDF5;
+  --color-dark-text-secondary: #94A3B8;
+  --color-dark-text-muted: #64748B;
+  --color-dark-accent: #5B9CF6;
+  --color-dark-hover: rgba(148,163,184,0.12);
 
   --font-sans: 'DM Sans', 'system-ui', 'sans-serif';
   --font-serif: 'DM Serif Display', 'serif';
@@ -108,9 +109,9 @@
     --color-red-800: #eba3b1;
     --color-red-900: #f5c4ce;
 
-    --shadow-soft: 0 1px 4px rgba(0,0,0,0.25);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.35);
+    --shadow-soft: 0 1px 4px rgba(0,0,0,0.35);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
   }
 
   html {
@@ -132,9 +133,9 @@
 
   .dark body {
     background-image:
-      radial-gradient(circle at top left, rgba(66, 153, 225, 0.05), transparent 34%),
-      radial-gradient(circle at top right, rgba(180, 60, 80, 0.04), transparent 24%),
-      linear-gradient(180deg, #1a2033 0%, #222940 100%);
+      radial-gradient(circle at top left, rgba(66, 153, 225, 0.06), transparent 34%),
+      radial-gradient(circle at top right, rgba(180, 60, 80, 0.05), transparent 24%),
+      linear-gradient(180deg, #0A0F1A 0%, #131826 100%);
   }
 
   a {
@@ -170,7 +171,8 @@
 .dark .surface,
 .surface.dark-mode {
   border-color: var(--color-dark-border);
-  background-color: var(--color-dark-surface);
+  background-color: var(--color-dark-surface-elevated);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 @utility card {
@@ -186,7 +188,8 @@
 .dark .card,
 .card.dark-mode {
   border-color: var(--color-dark-border);
-  background-color: var(--color-dark-surface);
+  background-color: var(--color-dark-surface-elevated);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.25);
 }
 
 @utility btn-primary {

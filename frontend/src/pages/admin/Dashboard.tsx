@@ -1,13 +1,14 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, AlertTriangle, Calendar as CalendarIcon, BarChart3 } from 'lucide-react'
 import { ventasService, inventarioService, reportesService } from '@/services'
 import { useFormateo, useSSE } from '@/hooks'
 import type { SSEEvent } from '@/hooks'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { subDays, subMonths, subYears } from 'date-fns'
 import { SkeletonBlock, SkeletonChart } from '@/components/shared/Skeleton'
+import { useUiStore } from '@/store/uiStore'
 
 function KpiCard({ label, value, sub, icon: Icon, color, loading }: any) {
   const colors = {
@@ -48,6 +49,8 @@ export default function Dashboard() {
   const { cop, fechaCorta } = useFormateo()
   const qc = useQueryClient()
   const [rango, setRango] = useState<'SEMANA' | 'MES' | 'AÑO'>('SEMANA')
+
+  const darkMode = useUiStore((s) => s.darkMode)
 
   // SSE: refetch automático cuando llegan eventos en vivo
   const handleSSEEvent = useCallback((event: SSEEvent) => {
@@ -134,7 +137,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Gráfica de Rentabilidad ── */}
-      <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-gray-100 dark:border-dark-border shadow-sm">
+      <div className="bg-white dark:bg-dark-surface-elevated p-5 rounded-xl border border-gray-100 dark:border-dark-border shadow-sm">
         <h2 className="font-semibold text-gray-900 dark:text-dark-text mb-4">Evolución de Ventas ({rango.toLowerCase()})</h2>
         <div className="h-72 w-full">
           {reportesLoading ? (
@@ -142,12 +145,12 @@ export default function Dashboard() {
           ) : datosGrafica.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={datosGrafica}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="fecha" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} tickFormatter={(val) => `$${val / 1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? '#2A3045' : '#E5E7EB'} />
+                <XAxis dataKey="fecha" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: darkMode ? '#94A3B8' : '#6B7280' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: darkMode ? '#94A3B8' : '#6B7280' }} tickFormatter={(val) => `$${val / 1000}k`} />
                 <Tooltip
-                  cursor={{ fill: '#F3F4F6' }}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  cursor={{ fill: darkMode ? '#1C2233' : '#F3F4F6' }}
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', backgroundColor: darkMode ? '#131826' : 'white', color: darkMode ? '#E8EDF5' : '#111827' }}
                   formatter={(value: number) => [cop(value), 'Total']}
                 />
                 <Bar dataKey="total" fill="#0D9488" radius={[4, 4, 0, 0]} maxBarSize={50} />
@@ -160,13 +163,13 @@ export default function Dashboard() {
       </div>
 
       {/* ── Alertas ── */}
-      <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-border shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-surface/80">
+      <div className="bg-white dark:bg-dark-surface-elevated rounded-xl border border-gray-100 dark:border-dark-border shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-dark-bg/80">
           <h2 className="font-semibold text-gray-900 dark:text-dark-text">Alertas Activas del Inventario</h2>
         </div>
         <div className="divide-y divide-gray-100 dark:divide-dark-border max-h-60 overflow-y-auto">
           {(Array.isArray(alertas) ? alertas : []).map((a: any) => (
-            <div key={a.id} className="flex items-start gap-3 p-4 hover:bg-gray-50/50 dark:hover:bg-dark-surface/80 transition-colors">
+            <div key={a.id} className="flex items-start gap-3 p-4 hover:bg-gray-50/50 dark:hover:bg-dark-hover transition-colors">
               <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${a.tipo === 'STOCK_MINIMO' ? 'bg-red-400' :
                   a.tipo === 'PROXIMO_VENCER' ? 'bg-amber-400' : 'bg-blue-400'
                 }`} />

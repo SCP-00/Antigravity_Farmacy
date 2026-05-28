@@ -147,8 +147,8 @@ export default function ListaProductos() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Inventario de Medicamentos</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{data?.meta?.total ?? 0} presentaciones comerciales (CUM) registradas</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-dark-text">Inventario de Medicamentos</h1>
+          <p className="text-sm text-gray-400 dark:text-dark-text-muted mt-0.5">{data?.meta?.total ?? 0} presentaciones comerciales (CUM) registradas</p>
         </div>
         <button onClick={() => { setEditando(null); reset(); setModalOpen(true) }}
           className="btn-primary">
@@ -168,11 +168,11 @@ export default function ListaProductos() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-[#F5F8F6] border-b border-[#D8EBE4]">
+            <thead className="bg-[#F5F8F6] dark:bg-dark-bg border-b border-[#D8EBE4] dark:border-dark-border">
               <tr>
                 {['CUM / Medicamento', 'Principio Activo', 'Stock', 'Mínimo', 'Precio Venta', 'Reglamento', 'Muestra', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold
-                                         text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                                         text-gray-500 dark:text-dark-text-secondary uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -181,10 +181,10 @@ export default function ListaProductos() {
             <tbody>
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="border-t border-[#D8EBE4]">
+                    <tr key={i} className="border-t border-[#D8EBE4] dark:border-dark-border">
                       {Array.from({ length: 8 }).map((_, j) => (
                         <td key={j} className="px-4 py-3">
-                          <div className="h-4 bg-gray-100 rounded animate-pulse"/>
+                          <div className="h-4 bg-gray-100 dark:bg-dark-surface rounded animate-pulse"/>
                         </td>
                       ))}
                     </tr>
@@ -193,32 +193,32 @@ export default function ListaProductos() {
                     const stockBajo = p.stockTotal <= p.stockMinimo
                     return (
                       <tr key={p.id}
-                        className="border-t border-[#D8EBE4] hover:bg-teal-50/50 transition-colors">
+                        className="border-t border-[#D8EBE4] dark:border-dark-border hover:bg-teal-50/50 dark:hover:bg-dark-hover transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono font-bold text-teal-800 bg-teal-100 px-1.5 py-0.5 rounded">
+                            <span className="text-[10px] font-mono font-bold text-teal-800 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/40 px-1.5 py-0.5 rounded">
                               {p.cum}
                             </span>
                           </div>
-                          <p className="font-semibold text-gray-900 mt-1">{p.nombre}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="font-semibold text-gray-900 dark:text-dark-text mt-1">{p.nombre}</p>
+                          <p className="text-xs text-gray-400 dark:text-dark-text-muted">
                             {p.concentracion} · {p.laboratorio}
                           </p>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-700 max-w-[150px] truncate">{p.principioActivo}</p>
-                          <p className="text-[10px] text-gray-400 font-mono">{p.atc || 'ATC N/A'}</p>
+                          <p className="font-medium text-gray-700 dark:text-dark-text-secondary max-w-[150px] truncate">{p.principioActivo}</p>
+                          <p className="text-[10px] text-gray-400 dark:text-dark-text-muted font-mono">{p.atc || 'ATC N/A'}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`font-semibold ${stockBajo ? 'text-red-600' : 'text-gray-900'}`}>
+                          <span className={`font-semibold ${stockBajo ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-dark-text'}`}>
                             {p.stockTotal ?? 0}
                           </span>
                           {stockBajo && (
-                            <AlertTriangle size={12} className="inline ml-1 text-amber-500"/>
+                            <AlertTriangle size={12} className="inline ml-1 text-amber-500 dark:text-amber-400"/>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500">{p.stockMinimo}</td>
-                        <td className="px-4 py-3 font-semibold text-teal-700">
+                        <td className="px-4 py-3 text-gray-500 dark:text-dark-text-muted">{p.stockMinimo}</td>
+                        <td className="px-4 py-3 font-semibold text-teal-700 dark:text-teal-400">
                           {cop(p.precioVenta)}
                         </td>
                         <td className="px-4 py-3">
@@ -228,12 +228,12 @@ export default function ListaProductos() {
                         </td>
                         <td className="px-4 py-3">
                           {p.esMuestraMedica
-                            ? <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold uppercase rounded-md border border-red-200">Muestra (Bloqueada)</span>
-                            : <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-medium rounded-md border border-slate-200">Comercial</span>}
+                            ? <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold uppercase rounded-md border border-red-200 dark:border-red-800/50">Muestra (Bloqueada)</span>
+                            : <span className="px-2 py-0.5 bg-slate-100 dark:bg-dark-surface text-slate-700 dark:text-dark-text-secondary text-[10px] font-medium rounded-md border border-slate-200 dark:border-dark-border">Comercial</span>}
                         </td>
                         <td className="px-4 py-3">
                           <button onClick={() => abrirEditar(p)}
-                            className="text-xs text-teal-700 hover:underline font-semibold">
+                            className="text-xs text-teal-700 dark:text-teal-400 hover:underline font-semibold">
                             Editar ficha
                           </button>
                         </td>
@@ -243,8 +243,8 @@ export default function ListaProductos() {
               {!isLoading && productos.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-16 text-center">
-                    <Package size={40} className="mx-auto text-gray-200 mb-3"/>
-                    <p className="text-gray-400">Sin productos registrados en esta sede</p>
+                    <Package size={40} className="mx-auto text-gray-200 dark:text-dark-border mb-3"/>
+                    <p className="text-gray-400 dark:text-dark-text-muted">Sin productos registrados en esta sede</p>
                   </td>
                 </tr>
               )}
