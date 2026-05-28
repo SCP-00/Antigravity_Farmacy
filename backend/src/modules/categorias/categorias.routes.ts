@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { prisma } from '../../config/database'
 import { cache } from '../../config/redis'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
 
 export const categoriasRouter: Router = Router()
 
@@ -39,7 +39,7 @@ categoriasRouter.get('/', async (_req: Request, res: Response) => {
 })
 
 // POST /
-categoriasRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
+categoriasRouter.post('/', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
   validarCuerpo(crearSchema), async (req: Request, res: Response) => {
     try {
       const cat = await prisma.categoria.create({ data: req.body })
@@ -53,7 +53,7 @@ categoriasRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
 )
 
 // PATCH /:id
-categoriasRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'),
+categoriasRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
   async (req: Request, res: Response) => {
     try {
       const cat = await prisma.categoria.update({

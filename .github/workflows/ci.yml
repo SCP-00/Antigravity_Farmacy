@@ -65,7 +65,7 @@ jobs:
 
       - name: Generate Prisma Client
         working-directory: ./backend
-        run: pnpm run db:generate
+        run: npx prisma generate --schema=../database/prisma/schema.prisma
         env:
           DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
 
@@ -121,7 +121,7 @@ jobs:
         working-directory: ./frontend
         run: npx tsc --noEmit
 
-      - name: Build
+      - name: Build (CI sin prerender — sin backend disponible)
         working-directory: ./frontend
         run: pnpm run build
         env:
@@ -160,6 +160,6 @@ jobs:
 
       - name: Generate Prisma Client
         working-directory: ./backend
-        run: pnpm run db:generate
+        run: npx prisma generate --schema=../database/prisma/schema.prisma
         env:
           DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"

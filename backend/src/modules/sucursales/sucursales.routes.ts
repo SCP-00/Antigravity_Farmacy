@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder } from '../../utils/respuesta.utils'
-import { autenticar, autorizar } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
+import { crearSucursalSchema, actualizarSucursalSchema } from '../../schemas/inventario.schema'
 
 export const sucursalesRouter: Router = Router()
 
@@ -14,8 +15,8 @@ sucursalesRouter.get('/', async (_req: Request, res: Response) => {
   } catch (err) { return responder.serverError(res, err) }
 })
 
-sucursalesRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
-  async (req: Request, res: Response) => {
+sucursalesRouter.post('/', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
+  validarCuerpo(crearSucursalSchema), async (req: Request, res: Response) => {
     try {
       const sede = await prisma.sucursal.create({ data: req.body })
       return responder.creado(res, sede)
@@ -23,8 +24,8 @@ sucursalesRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
   }
 )
 
-sucursalesRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'),
-  async (req: Request, res: Response) => {
+sucursalesRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
+  validarCuerpo(actualizarSucursalSchema), async (req: Request, res: Response) => {
     try {
       const sede = await prisma.sucursal.update({
         where: { id: parseInt(req.params.id) }, data: req.body,

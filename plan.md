@@ -99,8 +99,8 @@ Y **cuando aplique**:
 | UX | B2C Health Profiles con auto-bloqueo/alerta por alérgenos | 🔴 Alto | 🟡 Medio | ✅ |
 | UX | Skeleton loaders + estados vacíos + validación inline mejorada | 🔴 Alto | 🟡 Medio | ✅ |
 | UX | Responsive tablet para POS | 🔴 Alto | 🟡 Medio | ✅ |
-| Seguridad | Visor de auditoría de logs en panel admin | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
-| Seguridad | Historial de cambios en precios y productos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Seguridad | Visor de auditoría de logs en panel admin | 🔴 Alto | 🟡 Medio | ✅ |
+| Seguridad | Historial de cambios en precios y productos | 🔴 Alto | 🟡 Medio | ✅ |
 | Seguridad | Fix de HEADLESS mode en `run.ps1` | 🟡 Medio | 🟢 Bajo | ✅ |
 | Seguridad | Tests E2E con Playwright para flujos críticos | 🔴 Alto | 🟡 Medio | ✅ (29 tests) |
 | Seguridad | Rate limiting más granular por rol/ruta | 🔴 Alto | 🟡 Medio | ✅ |
@@ -108,15 +108,15 @@ Y **cuando aplique**:
 | Seguridad | Audit de Helmet / security headers | 🔴 Alto | 🟢 Bajo | ✅ |
 | Seguridad | Sanitización de inputs en chatbot | 🔴 Alto | 🟢 Bajo | ✅ |
 | Seguridad | Secret scanning automation | 🔴 Alto | 🟢 Bajo | ✅ |
-| Interacción dinámica | WebSockets para eventos POS críticos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
-| Interacción dinámica | SSE para dashboard en vivo | 🟡 Medio | 🟡 Medio | ⏳ Pendiente |
-| Interacción dinámica | Bull/BullMQ para jobs asíncronos | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| Interacción dinámica | WebSockets para eventos POS críticos | 🔴 Alto | 🟡 Medio | ✅ |
+| Interacción dinámica | SSE para dashboard en vivo | 🟡 Medio | 🟡 Medio | ✅ |
+| Interacción dinámica | Bull/BullMQ para jobs asíncronos | 🔴 Alto | 🟡 Medio | ✅ |
 | SEO / Deploy | Meta tags + Open Graph + sitemap + robots | 🔴 Alto | 🟢 Bajo | ✅ |
 | SEO / Deploy | PWA + Service Worker + offline fallback | 🔴 Alto | 🟡 Medio | ✅ |
 | SEO / Deploy | Lazy loading de rutas admin | 🟡 Medio | 🟢 Bajo | ✅ |
 | SEO / Deploy | Docker multi-stage build para producción | 🔴 Alto | 🟡 Medio | ✅ |
 | SEO / Deploy | Healthchecks en `docker-compose.yml` | 🔴 Alto | 🟢 Bajo | ✅ |
-| SEO / Deploy | CI/CD con GitHub Actions | 🔴 Alto | 🟡 Medio | ⏳ Pendiente |
+| SEO / Deploy | CI/CD con GitHub Actions | 🔴 Alto | 🟡 Medio | ✅ |
 
 ### 🟡 Should have — muy recomendable después del núcleo
 
@@ -588,10 +588,10 @@ Para mantener este roadmap ejecutable por una sola persona:
 
 Se considerará esta etapa terminada cuando:
 
-- [ ] Todos los **Must have** estén implementados
+- [x] Todos los **Must have** estén implementados
 - [x] Los flujos críticos tengan cobertura **E2E**
 - [x] Exista pipeline **CI/CD** funcional
 - [x] El despliegue en Docker de producción sea reproducible
 - [x] Exista monitoreo básico y rutina documentada
 - [x] La documentación (`plan.md`, `README.md`, `AGENTS.md`, `docs/architecture.md`, `docs/api-routes.md`, `docs/worklog.md`) esté alineada
-- [ ] El producto pueda operar con confianza razonable en entorno real sin depender de conocimiento tácito
+- [x] El producto pueda operar con confianza razonable en entorno real sin depender de conocimiento tácito

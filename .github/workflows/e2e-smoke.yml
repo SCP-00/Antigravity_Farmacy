@@ -87,9 +87,13 @@ jobs:
         working-directory: ./frontend
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: pnpm exec playwright install chromium --with-deps
+
       - name: Generate Prisma Client
         working-directory: ./backend
-        run: pnpm run db:generate
+        run: npx prisma generate --schema=../database/prisma/schema.prisma
         env:
           DATABASE_URL: "postgresql://farmacy_user:farmacy_pass@localhost:5432/farmacy_db"
 
@@ -113,11 +117,9 @@ jobs:
         working-directory: ./backend
         run: |
           npx tsx src/server.ts &
-          BACKEND_PID=$!
-          echo "BACKEND_PID=$BACKEND_PID" >> $GITHUB_ENV
-          # Esperar a que el backend esté listo
+          echo "BACKEND_PID=$!" >> $GITHUB_ENV
           for i in $(seq 1 30); do
-            curl -s http://localhost:3000/api/v1/health && break
+            curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/health | grep -q "200" && break
             sleep 1
           done
         env:
@@ -134,11 +136,9 @@ jobs:
         working-directory: ./frontend
         run: |
           npx vite --host 0.0.0.0 --port 5173 &
-          FRONTEND_PID=$!
-          echo "FRONTEND_PID=$FRONTEND_PID" >> $GITHUB_ENV
-          # Esperar a que Vite esté listo
+          echo "FRONTEND_PID=$!" >> $GITHUB_ENV
           for i in $(seq 1 15); do
-            curl -s http://localhost:5173 && break
+            curl -s -o /dev/null http://localhost:5173 && break
             sleep 2
           done
 
@@ -160,5 +160,5 @@ jobs:
       - name: Stop servers
         if: always()
         run: |
-          kill $BACKEND_PID 2>/dev/null || true
-          kill $FRONTEND_PID 2>/dev/null || true
+          kill ${{ env.BACKEND_PID }} 2>/dev/null || true
+          kill ${{ env.FRONTEND_PID }} 2>/dev/null || true

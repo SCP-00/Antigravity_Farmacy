@@ -2,6 +2,54 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 22b: Hardening seguridad complementario — GitHub Actions fixes + pentest automation
+
+**Objetivo:** Resolver vulnerabilidades identificadas en auditoría: mass assignment, path traversal en Cloudinary, workflows CI/CD inconsistentes, y agregar tests de penetración automatizados.
+
+### Cambios realizados
+
+#### 1. GitHub Actions fixes
+- **ci.yml**: Prisma generate con ruta explícita (`--schema=../database/prisma/schema.prisma`), frontend build sin prerender (no hay backend en CI)
+- **e2e-smoke.yml**: Playwright install con `--with-deps`, healthcheck con `-w "%{http_code}"`
+- **secret-scanning.yml**: Restaurado `GITLEAKS_CONFIG: backend/.gitleaks.toml` (se había perdido en refactor anterior, el `.gitleaks.toml` está en `backend/` no en raíz)
+
+#### 2. Mass assignment hardening
+| Archivo | Cambio |
+|---|---|
+| `inventario.schema.ts` | Creados Zod schemas: `crearProveedorSchema`, `actualizarProveedorSchema`, `crearSucursalSchema`, `actualizarSucursalSchema` |
+| `proveedores.routes.ts` | POST/PATCH con `validarCuerpo()` + `limitarCreacion` |
+| `sucursales.routes.ts` | POST/PATCH con `validarCuerpo()` + `limitarCreacion` |
+| `categorias.routes.ts` | PATCH con `limitarCreacion` |
+| `empleados.routes.ts` | POST/PATCH con `limitarCreacion` |
+| `lotes.routes.ts` | POST con `limitarCreacion` |
+
+#### 3. Path traversal fix — Cloudinary (`imagenes.routes.ts`)
+- Sanitización de `publicId` en DELETE mejorada a 4 pasos:
+  1. Whitelist chars: alfanum, `_`, `-`, `/`, `.`
+  2. Eliminar `..` (2+ dots consecutivos) — path traversal prevention
+  3. Normalizar slashes múltiples
+  4. Eliminar leading/trailing slashes
+
+#### 4. Security tests (`backend/src/__tests__/security.test.ts` — NUEVO)
+- 9 suites: SQL Injection (11 payloads), XSS (10 payloads), Path Traversal (5 payloads), Mass Assignment, Prototype Pollution, HTTP Headers, Rate Limiting, Zod Validation, Prisma Query Safety
+- Helper functions que replican sanitización real del chatbot y Cloudinary
+
+#### 5. Pentest scripts
+- `scripts/security-pentest.sh`: 9 tests vía curl (existente, actualizado)
+- `scripts/security-pentest.ps1`: Versión PowerShell del mismo suite (NUEVO)
+
+### Fixes durante code review
+- `sanitizarPublicId()` en test alineado con implementación real (`\.{2,}` en lugar de `\.+`, whitelist incluye `.`)
+- `security-pentest.ps1`: `[System.Web.HttpUtility]::UrlEncode()` → `[System.Uri]::EscapeDataString()` (compatibilidad cross-platform)
+
+### Validaciones
+- ✅ TypeScript backend: 0 errores
+- ✅ TypeScript frontend: 0 errores
+- ✅ Tests: 536/536 pasan (28 archivos, +1 security.test.ts)
+- ✅ Code review: aprobado
+
+---
+
 ## 2026-05-28 — Fase 22: Endurecimiento final — allowlist IP webhooks + rate limiting granular por endpoint
 
 **Objetivo:** Endurecer la seguridad perimetral con allowlist de IPs por proveedor de pago (Wompi, Stripe, MercadoPago) y rate limiting granular por tipo de endpoint (creación, búsqueda, webhook).

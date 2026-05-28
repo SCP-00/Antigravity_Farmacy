@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar } from '../../middlewares/index'
+import { autenticar, autorizar, limitarCreacion } from '../../middlewares/index'
 
 export const empleadosRouter: Router = Router()
 
@@ -28,7 +28,7 @@ empleadosRouter.get('/', autenticar, autorizar('ADMINISTRADOR'),
   }
 )
 
-empleadosRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
+empleadosRouter.post('/', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
   async (req: Request, res: Response) => {
     const { nombre, apellido, email, password, rol, sucursalId } = req.body
     try {
@@ -45,7 +45,7 @@ empleadosRouter.post('/', autenticar, autorizar('ADMINISTRADOR'),
   }
 )
 
-empleadosRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'),
+empleadosRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
   async (req: Request, res: Response) => {
     const { password, ...rest } = req.body
     try {

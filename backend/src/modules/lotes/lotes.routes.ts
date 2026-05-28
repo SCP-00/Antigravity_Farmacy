@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar, validarCuerpo } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
 import { crearLoteSchema } from '../../schemas/inventario.schema'
 import { InventarioService } from '../../services/inventario.service'
 
@@ -42,7 +42,7 @@ lotesRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-lotesRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
+lotesRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
   validarCuerpo(crearLoteSchema), async (req: Request, res: Response) => {
     try {
       const lote = await prisma.lote.create({

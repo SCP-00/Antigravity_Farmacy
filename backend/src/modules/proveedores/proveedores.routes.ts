@@ -2,7 +2,8 @@ import { Router, Request, Response } from 'express'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/database'
 import { responder, parsePaginacion } from '../../utils/respuesta.utils'
-import { autenticar, autorizar } from '../../middlewares/index'
+import { autenticar, autorizar, validarCuerpo, limitarCreacion } from '../../middlewares/index'
+import { crearProveedorSchema, actualizarProveedorSchema } from '../../schemas/inventario.schema'
 
 export const proveedoresRouter: Router = Router()
 
@@ -34,8 +35,8 @@ proveedoresRouter.get('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-proveedoresRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
-  async (req: Request, res: Response) => {
+proveedoresRouter.post('/', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
+  validarCuerpo(crearProveedorSchema), async (req: Request, res: Response) => {
     try {
       const prov = await prisma.proveedor.create({ data: req.body })
       return responder.creado(res, prov)
@@ -59,8 +60,8 @@ proveedoresRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-proveedoresRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
-  async (req: Request, res: Response) => {
+proveedoresRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
+  validarCuerpo(actualizarProveedorSchema), async (req: Request, res: Response) => {
     try {
       const p = await prisma.proveedor.update({ where: { id: req.params.id }, data: req.body })
       return responder.ok(res, p)

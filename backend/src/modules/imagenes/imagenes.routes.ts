@@ -21,12 +21,16 @@ if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SE
 }
 
 // Multer en memoria (el buffer se sube directo a Cloudinary)
+// Límite estricto de tamaño para evitar DoS por subida de archivos gigantes
+const UPLOAD_MAX_SIZE = 5 * 1024 * 1024 // 5 MB
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits:  { fileSize: 5 * 1024 * 1024 }, // 5 MB máximo
+  limits:  { fileSize: UPLOAD_MAX_SIZE },
   fileFilter: (_req, file, cb) => {
+    // Solo aceptar imágenes — evitar subida de scripts maliciosos
     if (file.mimetype.startsWith('image/')) cb(null, true)
-    else cb(new Error('Solo se permiten imágenes'))
+    else cb(new Error('Solo se permiten imágenes (JPEG, PNG, GIF, WebP)'))
   },
 })
 
@@ -80,7 +84,16 @@ imagenesRouter.delete(
   autorizar('ADMINISTRADOR'),
   async (req: Request, res: Response) => {
     try {
-      await cloudinary.v2.uploader.destroy(req.params.publicId)
+      // Validar formato del publicId — solo caracteres seguros
+      const publicId = req.params.publicId
+        .replace(/[^a-zA-Z0-9_\-\/.]/g, '')  // solo alfanum, _, -, /, .
+        .replace(/\.\.+/g, '')                // eliminar .. (path traversal)
+        .replace(/\/+/g, '/')                  // normalizar slashes múltiples
+        .replace(/^\/+|\/+$/g, '')            // eliminar leading/trailing /
+      if (!publicId || publicId.length < 2 || publicId.length > 200) {
+        return responder.error(res, 'ID de imagen inválido')
+      }
+      await cloudinary.v2.uploader.destroy(publicId)
       return responder.ok(res, null, 'Imagen eliminada')
     } catch (err) {
       return responder.serverError(res, err)
