@@ -25,20 +25,28 @@ This folder is the living documentation hub for Farmacy (SGF).
 - 🔒 **Security**:
   - [Seguridad y Compliance](security/compliance.md) — Pentest, medidas, INVIMA, persistencia DB
 
-## Estado del proyecto (2026-05-26)
+## Estado del proyecto (2026-05-28)
 
 | Métrica | Valor |
 |---|---|
 | Backend TypeScript 6.0 | ✅ 0 errores |
 | Frontend TypeScript 6.0 | ✅ 0 errores |
-| Tests | ✅ 510/510 pasan (27 archivos) |
-| Cobertura | 95.35% statements (94.87% functions) |
+| Tests unitarios | ✅ **536/536** pasan (28 archivos) |
+| Cobertura | **95.35%** statements (94.87% functions) |
+| Tests E2E (Playwright) | ✅ **29 tests** (chromium + mobile) |
+| Pentest automático | ✅ **109 tests** (88 PASS, 0 vulnerabilidades) |
 | React | 19.2.6 |
 | Tailwind CSS | 4.3.0 |
-| Módulos backend | 18 activos |
+| Módulos backend | **19** activos (+Push +Auditoría +SSE +WS +Jobs) |
 | Páginas frontend | 40+ (tienda + admin + auth) |
 | Pasarelas de pago | Wompi, Stripe, MercadoPago, Efectivo |
-| Docker services | PostgreSQL 15, Redis 7, pgAdmin |
+| Roadmap | ✅ **13 fases completadas** (Must/Should/Could) |
+| RBAC | ✅ ADMINISTRADOR / FARMACEUTA / AUXILIAR |
+| Tiempo real | ✅ WebSockets + SSE + BullMQ + Push + Chatbot WS |
+| PWA | ✅ Service Worker + offline fallback + installable |
+| SEO | ✅ Meta tags + OG + sitemap + robots + SSG parcial |
+| CI/CD | ✅ GitHub Actions (3 workflows) |
+| Docker producción | ✅ Caddy SSL + resource limits + healthchecks + backup |
+| Secret scanning | ✅ Gitleaks en todos los PRs |
 | Vite | 6.4.2 |
-| React | 19.2.6 |
-| Tailwind CSS | 4.3.0 |
+| Node.js | 24.x |

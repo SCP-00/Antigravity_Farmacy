@@ -2,6 +2,44 @@
 
 Use this log to record completed milestones and the files changed for each phase.
 
+## 2026-05-28 — Fase 25: Backup Dockerizado + resource limits review + documentación de progreso
+
+**Objetivo:** Integrar backup automático de PostgreSQL en Docker, evaluar resource limits contra estándares de industria, y documentar el estado completo del proyecto.
+
+### Cambios realizados
+
+#### 1. Backup Dockerizado
+- `database/scripts/backup-docker.sh` (NUEVO) — Script de backup diseñado para ejecutarse como sidecar Docker:
+  - Soporta 4 comandos: `backup`, `restore [file]`, `list`, `loop`
+  - `loop` ejecuta pg_dump comprimido cada 24h (configurable vía `BACKUP_INTERVAL`)
+  - Rotación automática: elimina backups > 30 días (`RETENTION_DAYS`)
+  - Verificación de integridad post-backup
+  - Restaura con confirmación de 5 segundos
+  - Variables de entorno: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS, BACKUP_DIR, RETENTION_DAYS, BACKUP_INTERVAL
+- `docker-compose.yml`:
+  - Nuevo servicio `db-backup` (comentado por defecto) con postgres:15-alpine + script montado
+  - Nuevo volumen `farmacy_backup_data` (comentado)
+  - Cabecera actualizada con requisitos e instrucciones de backup
+
+#### 2. Documentación de Backup
+- `docs/monitoreo.md` — Nueva sección 8 "Estrategia de Backup y Restore"
+
+#### 3. Documentación de progreso
+- `docs/index.md` — Estado del proyecto actualizado a 2026-05-28
+- `docs/worklog.md` — Esta entrada
+
+### Resource limits — veredicto
+
+| Servicio | Mi asignación | Estándar industria pequeña | Veredicto |
+|---|---|---|---|
+| PostgreSQL | 512MB RAM, 1.0 CPU | 1-2GB, 1-2 CPU | 🟡 **Ajustado** — funcional para DB pequeña/mediana, subir a 1GB recomendado |
+| Backend (Express) | 512MB RAM, 0.5 CPU | 256-512MB, 0.5-1 CPU | ✅ Normal |
+| Redis | 256MB RAM, 0.5 CPU | 128-256MB, 0.25-0.5 CPU | ✅ Normal |
+| Frontend (Nginx) | 128MB RAM | 64-128MB | ✅ Normal |
+| Caddy | 128MB RAM, 0.25 CPU | 64-128MB | ✅ Normal |
+
+---
+
 ## 2026-05-28 — Fase 24: Documentación completa + persistencia DB + puntos cash + cleanup repo
 
 **Objetivo:** Responder a todas las preguntas del usuario sobre persistencia de datos, asignación de puntos en efectivo, validación de compras, seguridad, y limpiar el repo para entrega pública.

@@ -320,6 +320,124 @@ fi
 
 ---
 
+## 8. Estrategia de Backup y Restore
+
+### 8.1 Backup automático (Docker)
+
+El servicio `db-backup` en `docker-compose.yml` está comentado por defecto (para no ralentizar el primer deploy). Actívalo descomentando el bloque.
+
+#### Cómo activar
+
+```bash
+# 1. Descomentar el servicio db-backup en docker-compose.yml
+# 2. Descomentar el volumen farmacy_backup_data
+# 3. Recrear el servicio:
+docker compose up -d db-backup
+```
+
+#### Cómo funciona
+
+| Aspecto | Detalle |
+|---|---|
+| **Frecuencia** | Cada 24h (`BACKUP_INTERVAL=86400`) |
+| **Formato** | `pg_dump` comprimido gzip (nivel 9) |
+| **Retención** | 30 días (`RETENTION_DAYS=30`) |
+| **Destino** | Volumen Docker `farmacy_backup_data` |
+| **Nombrado** | `farmacy_backup_YYYY-MM-DD_HH-MM-SS.sql.gz` |
+
+#### Comandos manuales
+
+```bash
+# Backup inmediato
+docker exec farmacy_db_backup backup
+
+# Listar backups disponibles
+docker exec farmacy_db_backup list
+
+# Restaurar el backup más reciente ⚠️
+docker exec farmacy_db_backup restore
+
+# Restaurar un backup específico
+docker exec farmacy_db_backup restore /backups/farmacy_backup_2026-05-28_03-00-00.sql.gz
+```
+
+> **⚠️ Restaurar SOBREESCRIBE todos los datos actuales.** El script da 5 segundos para cancelar.
+
+#### Qué incluye el backup
+
+El backup incluye TODOS los datos de PostgreSQL:
+- Productos, lotes, inventario
+- Clientes, empleados, proveedores
+- Ventas, compras, transacciones de pago
+- Historial de cambios, logs de auditoría
+- Suscripciones push, sesiones de caja
+- Configuración (categorías, sucursales)
+
+#### Qué NO incluye
+
+| Dato | Dónde está | Cómo respaldarlo |
+|---|---|---|
+| Redis (caché, sesiones, rate limiting) | Volumen `farmacy_redis_data` | Se regenera solo; no crítico |
+| Assets subidos (Cloudinary) | Externo (Cloudinary) | Fuera del alcance; Cloudinary tiene su propio backup |
+| .env / secrets | Host (`.env`) | Incluir en backup del host (ej. `tar -czf backup.tar.gz .env Caddyfile`) |
+
+### 8.2 Backup manual (host, sin Docker)
+
+#### Windows (PowerShell)
+```powershell
+.\database\scripts\backup.ps1
+# Requiere: pg_dump en PATH (instalación local de PostgreSQL)
+```
+
+#### Linux / WSL
+```bash
+chmod +x database/scripts/backup.sh
+PGPASSWORD="farmacy_pass" ./database/scripts/backup.sh
+```
+
+### 8.3 Automatización fuera de Docker
+
+#### Windows — Task Scheduler
+```powershell
+$action = New-ScheduledTaskAction -Execute "powershell.exe" `
+  -Argument "-NoProfile -File C:\ruta\database\scripts\backup.ps1"
+$trigger = New-ScheduledTaskTrigger -Daily -At 03:00AM
+Register-ScheduledTask -TaskName "Farmacy Backup" -Action $action -Trigger $trigger
+```
+
+#### Linux — cron
+```bash
+# Editar crontab: crontab -e
+# Agregar:
+0 3 * * * /ruta/al/proyecto/database/scripts/backup.sh
+```
+
+### 8.4 Verificación periódica
+
+Cada semana, verificar que los backups sean válidos:
+
+```bash
+# 1. Listar backups
+docker exec farmacy_db_backup list
+
+# 2. Verificar integridad del más reciente
+docker exec farmacy_db_backup sh -c "
+  gunzip -t \$(ls -t /backups/*.sql.gz | head -1) &&
+  echo '✅ Backup íntegro' ||
+  echo '❌ Backup corrupto'
+"
+
+# 3. Verificar tamaño razonable (debe ser > 1MB)
+docker exec farmacy_db_backup sh -c "
+  du -h \$(ls -t /backups/*.sql.gz | head -1)
+"
+
+# 4. Verificar espacio disponible en el volumen
+docker exec farmacy_db_backup df -h /backups
+```
+
+---
+
 ## Apéndice A: Referencia rápida de variables de entorno
 
 | Variable | Dónde se usa | Valor default (desarrollo) |
@@ -335,8 +453,10 @@ fi
 | `API_PREFIX` | Express | `/api/v1` |
 | `FRONTEND_URL` | CORS | `http://localhost:5173` |
 | `CORS_ORIGINS` | CORS producción | — (prod: lista separada por comas) |
+| `SERVER_NAME` | Caddy / SSL | `localhost` (dev: sin SSL) |
+| `VITE_CDN_URL` | Vite build | — (opcional, CDN para assets) |
 
 ---
 
-> **Última actualización:** 2026-05-27
-> **Próxima revisión:** 2026-07-27 (o tras cambios significativos en infraestructura)
+> **Última actualización:** 2026-05-28
+> **Próxima revisión:** 2026-07-28 (o tras cambios significativos en infraestructura)

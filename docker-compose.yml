@@ -4,11 +4,18 @@
 #  Requisitos:
 #    1. cp .env.production.example .env
 #    2. nano .env                   # rellena TODOS los valores
-#    3. nano Caddyfile              # reemplaza TU_DOMINIO
+#    3. SERVER_NAME en .env         # dominio para SSL automático
 #    4. docker compose up -d --build
 #
 #  ⚠️  NUNCA comitees .env con valores reales.
 #      .env está en .gitignore por seguridad.
+#
+#  💾  Backup automático:
+#     El servicio db-backup hace pg_dump comprimido cada 24h.
+#     Los backups se guardan en el volumen farmacy_backup_data.
+#     Para ejecutar un backup manual: docker exec farmacy_db_backup backup
+#     Para restaurar:                docker exec farmacy_db_backup restore [archivo]
+#     Para listar backups:           docker exec farmacy_db_backup list
 # ══════════════════════════════════════════════════════════
 
 # ── Logging con rotación (anchor reutilizable) ──────────
@@ -156,6 +163,56 @@ services:
       retries: 3
       start_period: 10s
 
+  # ── Backup automático PostgreSQL (24h) ─────────────────
+  #   Descomentar para activar backups automáticos.
+  #   Requiere DB_PASS en .env (ya necesaria para postgres).
+  #   Los backups se guardan en el volumen farmacy_backup_data.
+  #
+  #   Comandos:
+  #     docker exec farmacy_db_backup backup      # backup manual
+  #     docker exec farmacy_db_backup list         # listar backups
+  #     docker exec farmacy_db_backup restore [file]  # restaurar
+  #
+  # db-backup:
+  #   image: postgres:15-alpine
+  #   container_name: farmacy_db_backup
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_PORT: "5432"
+  #     DB_NAME: ${POSTGRES_DB:-farmacy_db}
+  #     DB_USER: ${POSTGRES_USER:-farmacy_user}
+  #     DB_PASS: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es requerida}
+  #     BACKUP_DIR: /backups
+  #     RETENTION_DAYS: "30"
+  #     BACKUP_INTERVAL: "86400"     # 24 horas en segundos
+  #   volumes:
+  #     - farmacy_backup_data:/backups
+  #     - ./database/scripts/backup-docker.sh:/usr/local/bin/backup.sh:ro
+  #   networks:
+  #     - farmacy_network
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   entrypoint:
+  #     - /bin/sh
+  #     - -c
+  #     - |
+  #       exec /usr/local/bin/backup.sh loop
+  #   logging: *default-logging
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
+  #       reservations:
+  #         memory: 64M
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -h postgres -U ${POSTGRES_USER:-farmacy_user}"]
+  #     interval: 60s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 10s
+
   # ── Caddy — Reverse Proxy + SSL automático ─────────────
   caddy:
     image: caddy:2-alpine
@@ -200,6 +257,9 @@ volumes:
     name: farmacy_caddy_data_prod
   farmacy_caddy_config:
     name: farmacy_caddy_config_prod
+  # farmacy_backup_data:
+  #   name: farmacy_backup_data_prod
+  #   # Almacena backups comprimidos de PostgreSQL
 
 networks:
   farmacy_network:
