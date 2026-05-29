@@ -330,6 +330,7 @@ authClienteRouter.post('/comprar', autenticarCliente, limitarCreacion, async (re
               cantidad: item.cantidad,
               precioUnitario: item.precioUnitario,
               descuento: 0,
+              subtotal: item.cantidad * item.precioUnitario,
             })),
           },
         },
@@ -375,7 +376,7 @@ authClienteRouter.post('/comprar', autenticarCliente, limitarCreacion, async (re
             monto: total,
             moneda: 'COP',
             estado: 'APROBADO',
-            referencia: `EF-${nuevoNumero}`,
+            referenciaExterna: `EF-${nuevoNumero}`,
           },
         })
       }
