@@ -1,10 +1,24 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
 import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import SEOHead from '@/components/shared/SEOHead'
 
+const COSTOS_ENVIO_POR_CIUDAD: Record<string, number> = {
+  'Pereira': 7000,
+  'Dosquebradas': 8000,
+  'La Virginia': 10000,
+  'Marsella': 12000,
+  'Santa Rosa de Cabal': 12000,
+}
+
+function calcularCostoEnvio(ciudad: string): number {
+  return COSTOS_ENVIO_POR_CIUDAD[ciudad] ?? 10000
+}
+
 export function Carrito() {
   const navigate = useNavigate()
+  const [ciudadEnvio, setCiudadEnvio] = useState('')
   const { items, quitar, cambiarCantidad, subtotal, total, tieneRx, limpiar } = useCarritoStore()
 
   if (items.length === 0) {
@@ -79,14 +93,43 @@ export function Carrito() {
           <aside className="lg:col-span-1">
             <div className="surface p-6 sticky top-24">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Resumen</h2>
+              {/* Costo de envío por ciudad */}
+              <div className="pb-4 border-b border-slate-200">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Ciudad de entrega</label>
+                <select
+                  value={ciudadEnvio}
+                  onChange={(e) => setCiudadEnvio(e.target.value)}
+                  className="input-base text-sm"
+                >
+                  <option value="">Selecciona ciudad</option>
+                  {Object.keys(COSTOS_ENVIO_POR_CIUDAD).map(c => (
+                    <option key={c} value={c}>{c} — ${COSTOS_ENVIO_POR_CIUDAD[c].toLocaleString()}</option>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-3 text-sm pb-4 border-b border-slate-200">
                 <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>${subtotal().toLocaleString()}</span></div>
                 <div className="flex justify-between text-slate-600"><span>IVA (19%)</span><span>${Math.round(subtotal() * 0.19).toLocaleString()}</span></div>
-                <div className="flex justify-between text-slate-600"><span>Envío</span><span className="text-green-600 font-semibold">Gratis</span></div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Envío</span>
+                  {ciudadEnvio ? (
+                    <span className="font-semibold">${calcularCostoEnvio(ciudadEnvio).toLocaleString()}</span>
+                  ) : (
+                    <span className="text-green-600 font-semibold">Gratis</span>
+                  )}
+                </div>
+                {ciudadEnvio && subtotal() >= 50000 && (
+                  <div className="flex justify-between text-xs text-green-600">
+                    <span>🚚 Envío gratis</span>
+                    <span>-${calcularCostoEnvio(ciudadEnvio).toLocaleString()}</span>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between items-end py-4">
                 <span className="text-base font-semibold text-slate-900">Total</span>
-                <span className="text-2xl font-bold text-teal-700">${Math.round(total() * 1.19).toLocaleString()}</span>
+                <span className="text-2xl font-bold text-teal-700">
+                  ${(Math.round(total() * 1.19) + (ciudadEnvio && subtotal() < 50000 ? calcularCostoEnvio(ciudadEnvio) : 0)).toLocaleString()}
+                </span>
               </div>
               {tieneRx() && <div className="mb-4 rounded-2xl border border-orange-200 bg-orange-50 p-3 text-sm text-orange-800">⚠️ El carrito contiene medicamentos que requieren receta.</div>}
               <button onClick={() => navigate('/checkout')} className="btn-primary w-full justify-center">Proceder al pago</button>

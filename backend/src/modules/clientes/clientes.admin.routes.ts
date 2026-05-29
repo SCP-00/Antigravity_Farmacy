@@ -56,7 +56,15 @@ clientesAdminRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','FARMACEUT
         where: { id: req.params.id },
         include: {
           ventas: { take: 10, orderBy: { creadoEn: 'desc' },
-            select: { numero: true, total: true, creadoEn: true, estado: true } },
+            select: {
+              numero: true, total: true, creadoEn: true, estado: true,
+              detalles: {
+                select: {
+                  cantidad: true, precioUnitario: true,
+                  producto: { select: { nombre: true, presentacion: true, concentracion: true } },
+                },
+              },
+            } },
         },
       })
       if (!c) return responder.noEncontrado(res, 'Cliente')

@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, User, Mail, Calendar, Coins, ShoppingBag, CreditCard } from 'lucide-react'
+import { ArrowLeft, User, Mail, Calendar, Coins, ShoppingBag, CreditCard, ChevronDown, ChevronUp, Package } from 'lucide-react'
 import { clientesService } from '@/services'
 import { useFormateo } from '@/hooks'
 
@@ -74,27 +75,69 @@ export default function DetalleCliente() {
           ) : (
             <div className="space-y-4">
               {ventas.map((v: any) => (
-                <div key={v.numero} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-teal-200 transition-colors">
-                  <div className="flex gap-4 items-center">
-                    <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-teal-700">
-                      <CreditCard size={18} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800 text-sm">Factura #F-{String(v.numero).padStart(5, '0')}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{fechaCorta(v.creadoEn)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-teal-700">{cop(Number(v.total))}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${v.estado === 'PAGADO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{v.estado}</span>
-                  </div>
-                </div>
+                <VentaCard key={v.numero} venta={v} cop={cop} fechaCorta={fechaCorta} />
               ))}
             </div>
           )}
         </div>
         
       </div>
+    </div>
+  )
+}
+
+function VentaCard({ venta: v, cop, fechaCorta }: { venta: any; cop: (n: number) => string; fechaCorta: (d: string) => string }) {
+  const [expandida, setExpandida] = useState(false)
+  const detalles = v.detalles ?? []
+
+  return (
+    <div className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden transition-colors">
+      <button
+        onClick={() => setExpandida(!expandida)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-100/50 transition-colors"
+        aria-expanded={expandida}
+      >
+        <div className="flex gap-4 items-center">
+          <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center text-teal-700">
+            <CreditCard size={18} />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-gray-800 text-sm">Factura #F-{String(v.numero).padStart(5, '0')}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{fechaCorta(v.creadoEn)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="font-bold text-teal-700">{cop(Number(v.total))}</p>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${v.estado === 'PAGADO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{v.estado}</span>
+          </div>
+          {detalles.length > 0 && (
+            expandida ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />
+          )}
+        </div>
+      </button>
+
+      {/* Productos de la factura */}
+      {expandida && detalles.length > 0 && (
+        <div className="px-4 pb-4 animate-fade-in">
+          <div className="border-t border-gray-200 pt-3 mt-1">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+              <Package size={12} /> Productos ({detalles.length})
+            </p>
+            <div className="space-y-1.5">
+              {detalles.map((d: any, idx: number) => (
+                <div key={idx} className="flex justify-between items-center text-xs bg-white rounded-lg px-3 py-2 border border-gray-100">
+                  <div>
+                    <p className="font-medium text-gray-800">{d.producto?.nombre ?? 'Producto'}{d.producto?.concentracion ? ` ${d.producto.concentracion}` : ''}</p>
+                    <p className="text-[10px] text-gray-400">{d.producto?.presentacion ?? ''} · {d.cantidad} ud(s)</p>
+                  </div>
+                  <p className="font-semibold text-teal-700">{cop(Number(d.precioUnitario) * d.cantidad)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

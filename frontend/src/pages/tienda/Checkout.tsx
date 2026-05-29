@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart, Heart } from 'lucide-react'
+import { ArrowLeft, CheckCircle, CreditCard, Lock, Tag, Coins, Building2, Banknote, Loader2, Wallet, AlertCircle, RefreshCw, XCircle, Info, ShoppingCart, Heart, Truck } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
-import { ventasService, pagosService, clientesService, chatbotService } from '@/services'
+import { clientesService, pagosService, chatbotService } from '@/services'
 import { useAuthCliente } from '@/hooks'
 import toast from 'react-hot-toast'
 import { METODO_PAGO_LABEL } from '@/config/constants'
@@ -247,7 +247,28 @@ function Checkout() {
   const sub = subtotal()
   const saldoPts = (cliente as unknown as { puntos?: number })?.puntos ?? 0
   const valPts = usarPuntos ? Math.min(saldoPts, sub - descuento) : 0
-  const total = Math.max(0, sub - descuento - valPts)
+
+  // Costo de envío basado en ciudad
+  const TARIFAS_ENVIO: Record<string, number> = {
+    'bogotá': 5000, 'medellín': 7000, 'cali': 8000,
+    'barranquilla': 10000, 'cartagena': 10000, 'pereira': 5000,
+    'manizales': 6000, 'armenia': 6000, 'bucaramanga': 8000,
+    'cúcuta': 10000, 'ibagué': 7000, 'villavicencio': 8000,
+    'pasto': 10000, 'sincelejo': 10000, 'montería': 10000,
+  }
+  const ciudadEnvio = datos.direccion.toLowerCase().includes('bogot') ? 'bogotá'
+    : datos.direccion.toLowerCase().includes('medell') ? 'medellín'
+    : datos.direccion.toLowerCase().includes('cali') ? 'cali'
+    : datos.direccion.toLowerCase().includes('pereira') ? 'pereira'
+    : datos.direccion.toLowerCase().includes('maniza') ? 'manizales'
+    : datos.direccion.toLowerCase().includes('armen') ? 'armenia'
+    : datos.direccion.toLowerCase().includes('bucara') ? 'bucaramanga'
+    : 'otra'
+  const costoEnvio = TARIFAS_ENVIO[ciudadEnvio] ?? 10000
+  const envioGratis = sub >= 50000
+  const costoEnvioFinal = envioGratis ? 0 : costoEnvio
+
+  const total = Math.max(0, sub - descuento - valPts + costoEnvioFinal)
   const ptsGanados = Math.floor(total / 100)
 
   // ── Perfil de salud y alérgenos ───────────────────────
@@ -304,13 +325,15 @@ function Checkout() {
   }
 
   const ventaMut = useMutation({
-    mutationFn: () => ventasService.registrar({
-      sucursalId: 1, clienteId: cliente?.id, metodoPago: metodoPago ?? 'EFECTIVO',
-      descuento, puntosUsados: valPts,
-      items: items.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precioUnitario: i.precioUnitario, descuento: 0 })),
+    mutationFn: () => clientesService.comprar({
+      metodoPago: metodoPago ?? 'EFECTIVO',
+      descuento,
+      ciudad: ciudadEnvio,
+      direccionEnvio: datos.direccion,
+      items: items.map(i => ({ productoId: i.productoId, cantidad: i.cantidad, precioUnitario: i.precioUnitario })),
     }),
     onSuccess: (data: any) => {
-      setPedidoInfo({ numero: data?.ventaNum ?? data?.numero ?? 0, total: data?.total ?? total, puntosGanados: ptsGanados, metodoPago: metodoPago ?? 'EFECTIVO' })
+      setPedidoInfo({ numero: data?.numero ?? 0, total: data?.total ?? total, puntosGanados: data?.puntosGanados ?? ptsGanados, metodoPago: metodoPago ?? 'EFECTIVO' })
       // Para MERCADOPAGO: no mostrar confirmación aún — el mutate() maneja el redirect
       if (metodoPago !== 'MERCADOPAGO') {
         limpiar(); qc.invalidateQueries({ queryKey: ['productos'] }); qc.invalidateQueries({ queryKey: ['cliente'] }); setPaso('confirmacion')
@@ -744,7 +767,17 @@ function Checkout() {
             </div>
             <div className="space-y-2 text-sm text-slate-600">
               <div className="flex justify-between"><span>Subtotal</span><span className="font-medium">${sub.toLocaleString()}</span></div>
-              <div className="flex justify-between"><span>Envio</span><span className="text-green-600 font-semibold">Gratis</span></div>
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1"><Truck size={12} /> Envio</span>
+                {envioGratis ? (
+                  <span className="text-green-600 font-semibold text-xs bg-green-50 px-2 py-0.5 rounded-full">Gratis</span>
+                ) : (
+                  <span className="font-medium">$${costoEnvioFinal.toLocaleString()}</span>
+                )}
+              </div>
+              {!envioGratis && (
+                <p className="text-[10px] text-slate-400 italic">Envío gratis en compras > $50.000. Costo estimado para {ciudadEnvio !== 'otra' ? ciudadEnvio : 'tu ciudad'}.</p>
+              )}
               {descuento > 0 && <div className="flex justify-between text-teal-600 font-medium"><span>Codigo promocional</span><span>-${descuento.toLocaleString()}</span></div>}
               {valPts > 0 && <div className="flex justify-between text-amber-600 font-medium"><span>Puntos redimidos</span><span>-${valPts.toLocaleString()}</span></div>}
             </div>

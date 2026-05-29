@@ -45,14 +45,30 @@ export default function ProductoDetalle() {
     if (!producto) return
     setVerificandoInteraccion(true)
     try {
+      // Mostrar interacciones locales del producto si existen
+      if (producto.interacciones) {
+        setAlertasInteraccion([{
+          tipo: 'INFORMACION',
+          severidad: 'MEDIA',
+          productoA: producto.nombre,
+          descripcion: producto.interacciones,
+        }])
+        return
+      }
+      // Intentar verificación en backend (requiere al menos 2 productos)
       const res = await chatbotService.verificarInteracciones([producto.id])
       if (res?.tieneAlertas && res?.alertas?.length > 0) {
         setAlertasInteraccion(res.alertas)
       } else {
-        toast.success('No se detectaron interacciones medicamentosas para este producto')
+        toast.success('No se detectaron interacciones medicamentosas documentadas para este producto')
       }
-    } catch {
-      toast.error('Error al verificar interacciones. Intenta de nuevo.')
+    } catch (err: any) {
+      // Si el backend requiere 2+ productos, mostrar mensaje claro
+      if (err?.response?.data?.error?.includes?.('dos productos')) {
+        toast('Para verificar interacciones entre medicamentos, agrega otro producto al carrito y vuelve a intentar.', { icon: '💡' })
+      } else {
+        toast.error('Error al verificar interacciones. Intenta de nuevo.')
+      }
     } finally {
       setVerificandoInteraccion(false)
     }

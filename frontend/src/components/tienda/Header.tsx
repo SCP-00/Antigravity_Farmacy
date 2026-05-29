@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ShoppingCart, Search, Menu, X, Heart, User, LogOut } from 'lucide-react'
 import { useCarritoStore } from '@/store/carritoStore'
 import { useAuthClienteStore } from '@/store/authStore'
+import { categoriasService } from '@/services'
 
 /**
  * Header principal de la tienda B2C con navegación, búsqueda, favoritos,
@@ -30,6 +31,11 @@ export function Header() {
   
   const totalItems = useCarritoStore((state: any) => state.totalItems())
   const { cliente, cerrarSesion } = useAuthClienteStore()
+  const [categorias, setCategorias] = useState<Array<{id: string; nombre: string; slug: string}>>([])
+
+  useEffect(() => {
+    categoriasService.listar().then(setCategorias).catch(() => {})
+  }, [])
 
   const handleBuscar = (e: React.FormEvent) => {
     e.preventDefault()
@@ -169,25 +175,22 @@ export function Header() {
             <Link to="/catalogo" className="text-gray-700 hover:text-blue-600 whitespace-nowrap">
               Todos
             </Link>
-            <Link to="/catalogo?categoria=analgesicos" className="text-gray-700 hover:text-blue-600 whitespace-nowrap">
-              Analgésicos
-            </Link>
-            <Link to="/catalogo?categoria=vitaminas" className="text-gray-700 hover:text-blue-600 whitespace-nowrap">
-              Vitaminas
-            </Link>
-            <Link to="/catalogo?categoria=cuidado-personal" className="text-gray-700 hover:text-blue-600 whitespace-nowrap">
-              Cuidado Personal
-            </Link>
-            <Link to="/catalogo?categoria=accesorios" className="text-gray-700 hover:text-blue-600 whitespace-nowrap">
-              Accesorios
-            </Link>
+            {categorias.map((cat) => (
+              <Link
+                key={cat.id}
+                to={`/catalogo?categoria=${cat.slug}`}
+                className="text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              >
+                {cat.nombre}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
       {menuAbierto && (
-        <div className="md:hidden border-t border-gray-200 bg-white py-4">
+        <div className="md:hidden border-t border-gray-200 bg-white py-4 max-h-[60vh] overflow-y-auto">
           <nav className="flex flex-col gap-3 px-4">
             {menuItems.map((item) => (
               <Link
@@ -199,9 +202,23 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
+            {/* Categorías dinámicas en mobile */}
+            <div className="pt-2 pb-1">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Categorías</p>
+              {categorias.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/catalogo?categoria=${cat.slug}`}
+                  className="block text-gray-600 hover:text-blue-600 py-2 pl-2 border-b border-gray-50 text-sm"
+                  onClick={() => setMenuAbierto(false)}
+                >
+                  {cat.nombre}
+                </Link>
+              ))}
+            </div>
             <Link
               to="/auth/login"
-              className="text-blue-600 font-medium py-2"
+              className="text-blue-600 font-medium py-2 mt-2"
               onClick={() => setMenuAbierto(false)}
             >
               {cliente ? 'Mi Cuenta' : 'Iniciar Sesión'}

@@ -3,6 +3,7 @@
 // ══════════════════════════════════════════════════════════
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { useCarritoStore, setClienteIdCarrito } from './carritoStore'
 
 /** Estado y acciones del store de autenticación de empleados (admin).
  * - Almacena token JWT, refresh token y datos del empleado
@@ -81,10 +82,16 @@ export const useAuthClienteStore = create<ClienteState>()(
       token:   null,
       cliente: null,
 
-      setLogin: (token, cliente) => set({ token, cliente }),
+      setLogin: (token, cliente) => {
+        useCarritoStore.getState().limpiar()
+        setClienteIdCarrito(cliente?.id ?? null)
+        set({ token, cliente })
+      },
 
       cerrarSesion: () => {
         set({ token: null, cliente: null })
+        useCarritoStore.getState().limpiar()
+        setClienteIdCarrito(null)
         window.location.href = '/login'
       },
 

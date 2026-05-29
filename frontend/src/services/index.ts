@@ -208,6 +208,16 @@ export const clientesService = {
   solicitarDevolucion: (ventaId: string, motivo: string) =>
     apiCliente.post(`/clientes/auth/pedidos/${ventaId}/devolucion-request`, { motivo }).then(r => r.data),
 
+  // ── Comprar B2C — Cliente autenticado realiza compra
+  comprar: (data: {
+    metodoPago: string;
+    items: { productoId: string; cantidad: number; precioUnitario: number }[];
+    descuento?: number;
+    direccionEnvio?: string;
+    ciudad?: string;
+  }) =>
+    apiCliente.post('/clientes/auth/comprar', data).then(r => r.data.data),
+
   // ── Perfil de Salud ─────────────────────────────────--
   obtenerSalud: () =>
     apiCliente.get('/clientes/auth/salud').then(r => r.data.data),

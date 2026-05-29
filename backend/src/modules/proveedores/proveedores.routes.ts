@@ -68,7 +68,7 @@ proveedoresRouter.get('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'),
   }
 )
 
-proveedoresRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR','AUXILIAR'), limitarCreacion,
+proveedoresRouter.patch('/:id', autenticar, autorizar('ADMINISTRADOR'), limitarCreacion,
   validarCuerpo(actualizarProveedorSchema), async (req: Request, res: Response) => {
     try {
       const p = await prisma.proveedor.update({ where: { id: req.params.id }, data: req.body })

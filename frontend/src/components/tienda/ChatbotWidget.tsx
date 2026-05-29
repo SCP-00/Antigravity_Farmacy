@@ -201,7 +201,7 @@ export default function ChatbotWidget() {
       <button
         onClick={toggleChatbot}
         data-chatbot-fab
-        className={`fixed z-50 w-14 h-14 rounded-full shadow-lg
+        className={`fixed z-[9999] w-14 h-14 rounded-full shadow-lg
                     flex items-center justify-center transition-all duration-300
                     active:scale-90 focus-visible:outline-2 focus-visible:outline-teal-500 focus-visible:outline-offset-2
                     bottom-6 right-6
@@ -236,7 +236,7 @@ export default function ChatbotWidget() {
         role="dialog"
         aria-modal="true"
         aria-label="Asistente virtual Farmabot"
-        className={`fixed z-50 bottom-24 right-6
+        className={`fixed z-[9999] bottom-24 right-6
                     w-[calc(100vw-2rem)] sm:w-80 md:w-96
                     max-h-[75vh] sm:max-h-[70vh]
                     rounded-3xl
@@ -245,7 +245,7 @@ export default function ChatbotWidget() {
                     ${panelAnimation}
                     ${darkMode
                       ? 'bg-dark-surface border border-dark-border shadow-2xl shadow-black/30'
-                      : 'bg-white border border-[#D8EBE4] shadow-xl'
+                      : 'bg-white border border-[#D8EBE4] shadow-xl shadow-teal-900/10'
                     }`}
       >
         {/* Header */}
@@ -299,7 +299,7 @@ export default function ChatbotWidget() {
                   ? 'bg-dark-surface border border-dark-border text-dark-text'
                   : 'bg-white border border-[#D8EBE4]'}`}>
                 <p className={`text-xs leading-relaxed ${darkMode ? 'text-dark-text' : 'text-gray-700'}`}>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 flex-wrap">
                     <HeartHandshake size={14} className="text-teal-500" />
                     ¡Hola! Soy <strong>FarmaBot</strong>, tu asistente de <strong>Farmacy</strong> 🏪
                   </span>

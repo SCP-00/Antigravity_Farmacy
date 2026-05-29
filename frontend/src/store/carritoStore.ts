@@ -2,6 +2,13 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CarritoProducto, ProductoCatalogo } from '@/types/producto.types'
 
+// Flag para evitar que el carrito se persista entre sesiones de diferentes usuarios
+let _clienteIdActual: string | null = null
+
+export function setClienteIdCarrito(id: string | null) {
+  _clienteIdActual = id
+}
+
 /**
  * Estado y acciones del carrito de compras (B2C).
  * - Persiste en localStorage via Zustand `persist` middleware
@@ -28,9 +35,7 @@ const clamp = (valor: number, minimo: number, maximo: number) => Math.min(Math.m
 export const useCarritoStore = create<CarritoState>()(
 	persist(
 		(set, get) => ({
-			items: [],
-
-			agregar: (producto) => set((state) => {
+			items: [],			agregar: (producto) => set((state) => {
 				const cantidadSolicitada = Math.max(1, producto.cantidad ?? 1)
 				const index = state.items.findIndex((item) => item.productoId === producto.productoId)
 

@@ -11,6 +11,7 @@ export function Catalogo() {
   const q = searchParams.get('q') ?? ''
   const categoria = searchParams.get('categoria') ?? ''
   const ordenar = searchParams.get('ordenar') ?? 'nombre'
+  const ventaLibre = searchParams.get('rx') === 'false'
 
   const { data: categorias } = useCategorias()
   
@@ -18,6 +19,7 @@ export function Catalogo() {
     q, 
     categoria, 
     ordenar, 
+    rx: ventaLibre ? false : undefined,
     limite: 50 
   })
 
@@ -78,6 +80,21 @@ export function Catalogo() {
                   </select>
                 </div>
 
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <input
+                      type="checkbox"
+                      id="filtro-venta-libre"
+                      checked={ventaLibre}
+                      onChange={(e) => handleChange('rx', e.target.checked ? 'false' : undefined)}
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <label htmlFor="filtro-venta-libre" className="text-sm font-medium text-slate-700 cursor-pointer">
+                      Solo Venta Libre
+                    </label>
+                  </div>
+                  <p className="text-[10px] text-slate-400 ml-6">Sin receta médica</p>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Ordenar</label>
                   <select value={ordenar} onChange={(e) => handleChange('ordenar', e.target.value)} className="input-base">

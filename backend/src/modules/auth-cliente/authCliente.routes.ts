@@ -246,6 +246,165 @@ authClienteRouter.get('/me', autenticarCliente, async (req: Request, res: Respon
   }
 })
 
+// ── POST /comprar — Cliente autenticado realiza una compra B2C
+// Crea una venta con estado PENDIENTE, registra los items del carrito,
+// y descuenta stock de lotes siguiendo FEFO (First Expiry, First Out).
+authClienteRouter.post('/comprar', autenticarCliente, limitarCreacion, async (req: Request, res: Response) => {
+  const { metodoPago, items, descuento = 0, direccionEnvio, ciudad } = req.body
+  const clienteId = req.cliente!.id
+
+  if (!items?.length) return responder.error(res, 'El carrito está vacío', 400)
+  if (!metodoPago) return responder.error(res, 'Método de pago requerido', 400)
+
+  try {
+    const resultado = await prisma.$transaction(async (tx) => {
+      // 1. Verificar cliente
+      const cliente = await tx.cliente.findUniqueOrThrow({ where: { id: clienteId } })
+      let subtotal = 0
+
+      // 2. Verificar stock y calcular total
+      for (const item of items) {
+        const lotesDisponibles = await tx.lote.findMany({
+          where: {
+            productoId: item.productoId,
+            cantidadActual: { gte: item.cantidad },
+            fechaVencimiento: { gte: new Date() },
+          },
+          orderBy: [{ fechaVencimiento: 'asc' }, { creadoEn: 'asc' }],
+          take: 10,
+        })
+
+        const stockTotal = lotesDisponibles.reduce((s, l) => s + l.cantidadActual, 0)
+        if (stockTotal < item.cantidad) {
+          throw new Error(`Stock insuficiente para producto ${item.productoId}`)
+        }
+
+        const producto = await tx.producto.findUniqueOrThrow({ where: { id: item.productoId } })
+        subtotal += Number(producto.precioVenta) * item.cantidad
+      }
+
+      // 3. Calcular costo de envío por ciudad
+      const TARIFAS_ENVIO: Record<string, number> = {
+        'bogotá': 5000, 'medellín': 7000, 'cali': 8000,
+        'barranquilla': 10000, 'cartagena': 10000, 'pereira': 5000,
+        'manizales': 6000, 'armenia': 6000, 'bucaramanga': 8000,
+        'cúcuta': 10000, 'ibagué': 7000, 'villavicencio': 8000,
+        'pasto': 10000, 'sincelejo': 10000, 'montería': 10000,
+        'neiva': 9000, 'santa marta': 10000, 'valledupar': 10000,
+      }
+      const ciudadLower = (ciudad || cliente.ciudad || '').toLowerCase().trim()
+      const costoEnvio = TARIFAS_ENVIO[ciudadLower] ?? 10000
+
+      // Envío gratis sobre $50.000
+      const envioGratis = subtotal >= 50000
+      const costoEnvioFinal = envioGratis ? 0 : costoEnvio
+
+      const total = Math.max(0, subtotal - descuento + costoEnvioFinal)
+
+      // 4. Generar número de venta
+      // 4. Obtener empleado administrador por defecto para B2C
+      const adminEmpleado = await tx.empleado.findFirst({
+        where: { rol: 'ADMINISTRADOR', activo: true },
+        orderBy: { email: 'asc' },
+      })
+      if (!adminEmpleado) throw new Error('No hay administrador configurado para ventas B2C')
+
+      const ultimaVenta = await tx.venta.findFirst({ orderBy: { numero: 'desc' } })
+      const nuevoNumero = (ultimaVenta?.numero ?? 0) + 1
+
+      // 5. Crear la venta
+      const venta = await tx.venta.create({
+        data: {
+          numero: nuevoNumero,
+          sucursalId: 1, // Sucursal por defecto
+          empleadoId: adminEmpleado.id,
+          clienteId,
+          metodoPago,
+          subtotal,
+          descuento,
+          total,
+          estado: metodoPago === 'EFECTIVO' ? 'COMPLETADA' : 'PENDIENTE',
+          detalles: {
+            create: items.map((item: any) => ({
+              productoId: item.productoId,
+              cantidad: item.cantidad,
+              precioUnitario: item.precioUnitario,
+              descuento: 0,
+            })),
+          },
+        },
+        include: { detalles: true },
+      })
+
+      // 6. Descontar stock FEFO
+      for (const item of items) {
+        let resto = item.cantidad
+        const lotes = await tx.lote.findMany({
+          where: {
+            productoId: item.productoId,
+            cantidadActual: { gt: 0 },
+            fechaVencimiento: { gte: new Date() },
+          },
+          orderBy: [{ fechaVencimiento: 'asc' }, { creadoEn: 'asc' }],
+        })
+
+        for (const lote of lotes) {
+          if (resto <= 0) break
+          const descontar = Math.min(resto, lote.cantidadActual)
+          await tx.lote.update({
+            where: { id: lote.id },
+            data: { cantidadActual: lote.cantidadActual - descontar },
+          })
+          resto -= descontar
+        }
+      }
+
+      // 7. Acumular puntos de fidelidad
+      const puntosGanados = Math.floor(total / 100)
+      await tx.cliente.update({
+        where: { id: clienteId },
+        data: { puntosAcumulados: { increment: puntosGanados } },
+      })
+
+      // 8. Si es efectivo, registrar pago automáticamente
+      if (metodoPago === 'EFECTIVO') {
+        await tx.pagoTransaccion.create({
+          data: {
+            ventaId: venta.id,
+            pasarela: 'EFECTIVO',
+            monto: total,
+            moneda: 'COP',
+            estado: 'APROBADO',
+            referencia: `EF-${nuevoNumero}`,
+          },
+        })
+      }
+
+      return {
+        ventaId: venta.id,
+        numero: nuevoNumero,
+        total,
+        subtotal,
+        descuento,
+        costoEnvio: costoEnvioFinal,
+        puntosGanados,
+        estado: venta.estado,
+      }
+    })
+
+    logger.info(`[B2C Compra] Cliente ${clienteId} — Venta #${resultado.numero} — Total: $${resultado.total}`)
+    return responder.creado(res, resultado, 'Compra realizada exitosamente')
+
+  } catch (err: any) {
+    if (err.message?.includes('Stock insuficiente')) {
+      return responder.error(res, err.message, 400)
+    }
+    logger.error(`[B2C Compra] Error: ${err.message}`)
+    return responder.serverError(res, err)
+  }
+})
+
+// ── GET /pedidos — Historial de pedidos del cliente autenticado
 authClienteRouter.get('/pedidos', autenticarCliente, async (req: Request, res: Response) => {
   try {
     const pedidos = await prisma.venta.findMany({
