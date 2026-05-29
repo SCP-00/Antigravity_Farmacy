@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Search, Filter, ArrowUpDown, Package, User, FileText, AlertTriangle } from 'lucide-react'
+import { Search, Filter, Package, User, FileText, AlertTriangle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { inventarioService } from '@/services'
 import { useFormateo } from '@/hooks'
 
@@ -33,8 +34,8 @@ export default function Movimientos() {
       const data = await inventarioService.movimientos(params)
       setMovs(data.data || data)
       setTotalPaginas(data.meta?.totalPaginas ?? 1)
-    } catch (error) {
-      console.error(error)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Error al cargar movimientos')
     } finally {
       setLoading(false)
     }

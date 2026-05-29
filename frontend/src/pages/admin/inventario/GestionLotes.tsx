@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, AlertTriangle, PackageOpen } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { inventarioService } from '@/services'
 import { useFormateo } from '@/hooks'
 import FormularioLote from './components/FormularioLote'
@@ -16,8 +17,8 @@ export default function GestionLotes() {
     try {
       const data = await inventarioService.listarLotes()
       setLotes(data.data || data)
-    } catch (error) {
-      console.error(error)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Error al cargar lotes')
     } finally {
       setLoading(false)
     }
