@@ -623,7 +623,7 @@ function Checkout() {
                     <ArrowLeft size={16} /> Volver al carrito
                   </button>
                   <button onClick={continuarDatos} className="flex-1 btn-primary justify-center">
-                    Continuar al pago &rarr;
+                    Continuar al pago →
                   </button>
                 </div>
               </div>
@@ -776,7 +776,7 @@ function Checkout() {
                 )}
               </div>
               {!envioGratis && (
-                <p className="text-[10px] text-slate-400 italic">Envío gratis en compras > $50.000. Costo estimado para {ciudadEnvio !== 'otra' ? ciudadEnvio : 'tu ciudad'}.</p>
+                <p className="text-[10px] text-slate-400 italic">Envío gratis en compras {'>'} $50.000. Costo estimado para {ciudadEnvio !== 'otra' ? ciudadEnvio : 'tu ciudad'}.</p>
               )}
               {descuento > 0 && <div className="flex justify-between text-teal-600 font-medium"><span>Codigo promocional</span><span>-${descuento.toLocaleString()}</span></div>}
               {valPts > 0 && <div className="flex justify-between text-amber-600 font-medium"><span>Puntos redimidos</span><span>-${valPts.toLocaleString()}</span></div>}
